@@ -57,6 +57,9 @@ The project uses environment variables for configuration:
 - Use environment variables for all sensitive configuration
 - Maintain clean, readable TypeScript code
 - Keep database operations server-side for security
+- Never use fake/mock/placeholder data - only real authenticated data from Patreon API
+- Implement proper subscription expiration checking - deny access when subscriptions expire
+- Track identification feature requires active subscription (DHR1 or higher)
 
 ## Migration Status
 ✅ **Completed Successfully**: 
@@ -88,11 +91,13 @@ The application is now fully operational on Replit. The Patreon OAuth server end
 ## Enhanced Features
 - Full Patreon subscriber sync with pagination (processes all 1123+ patrons)
 - Detailed subscription management with 4-tier system:
-  - Free (€0)
-  - DHR1 (€3+) - Access to DHR1 channel only
-  - DHR2 (€5+) - Access to DHR1 + DHR2 channels
-  - VIP (€10+) - Full access to all content including VIP section
+  - Free (€0) - Landing page and free stream access only
+  - DHR1 (€3+) - Access to DHR1 channel + track identification
+  - DHR2 (€5+) - Access to DHR1 + DHR2 channels + track identification
+  - VIP (€10+) - Full access to all content including VIP section + track identification
+- Automatic subscription expiration handling - access revoked when subscription expires
 - Comprehensive subscriber table with lifetime value, next charge dates, and status tracking
+- Real-time notifications for subscriber changes and sync results
 - Advanced filtering and search capabilities for subscriber management
 - Export functionality for subscriber data
 - API endpoints for main website premium access control integration
