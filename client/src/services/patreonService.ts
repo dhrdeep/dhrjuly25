@@ -397,12 +397,23 @@ export class PatreonService {
   // Convert Patreon member to DHR subscription tier (API v2)
   getDHRTierFromMember(memberData: any): SubscriptionTier {
     const amount = memberData.currently_entitled_amount_cents || 0;
+    const tier = memberData.tier || '';
     
-    if (amount >= 1000) { // €10 in cents - VIP
+    // First check by tier name for accuracy
+    if (tier.includes('VIP') || tier.includes('Individual Sets')) {
       return 'vip';
-    } else if (amount >= 500) { // €5 in cents - DHR2
+    } else if (tier.includes('2 x Premium') || tier.includes('320kbps + URL')) {
+      return 'dhr2';  
+    } else if (tier.includes('Premium Stream') || tier.includes('320Kbps')) {
+      return 'dhr1';
+    }
+    
+    // Fallback to amount-based detection
+    if (amount >= 1000) { // €10+ - VIP
+      return 'vip';
+    } else if (amount >= 500) { // €5+ - DHR2
       return 'dhr2';
-    } else if (amount >= 300) { // €3 in cents - DHR1
+    } else if (amount >= 300) { // €3+ - DHR1
       return 'dhr1';
     }
     
@@ -478,12 +489,12 @@ export class PatreonService {
   }
 
   private getPatreonTierFromAmount(amountCents: number): string {
-    if (amountCents >= 1000) { // €10 in cents - VIP
-      return 'VIP';
-    } else if (amountCents >= 500) { // €5 in cents - DHR2
-      return 'DHR2';
-    } else if (amountCents >= 300) { // €3 in cents - DHR1
-      return 'DHR1';
+    if (amountCents >= 1000) { // €10+ - VIP
+      return 'DHR VIP + Listen To Individual Sets';
+    } else if (amountCents >= 500) { // €5+ - DHR2  
+      return '2 x Premium Streams @ 320kbps + URL';
+    } else if (amountCents >= 300) { // €3+ - DHR1
+      return 'Premium Stream - 320Kbps';
     }
     return 'Free';
   }
