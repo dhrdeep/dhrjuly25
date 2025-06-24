@@ -295,6 +295,8 @@ export class PatreonService {
       throw new Error('No access token available');
     }
 
+    console.log(`Making API request to: ${PATREON_CONFIG.apiBaseUrl}${endpoint}`);
+
     const response = await fetch(`${PATREON_CONFIG.apiBaseUrl}${endpoint}`, {
       ...options,
       headers: {
@@ -303,6 +305,8 @@ export class PatreonService {
         ...options.headers,
       },
     });
+
+    console.log(`API response status: ${response.status}`);
 
     if (response.status === 401) {
       console.log('Access token expired, attempting refresh...');
@@ -320,7 +324,9 @@ export class PatreonService {
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('API response data:', result);
+    return result;
   }
 
   // Get current user info
