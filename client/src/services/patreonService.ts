@@ -444,7 +444,7 @@ export class PatreonService {
       this.saveTokensToStorage();
     }
 
-    const members = await this.getCampaignPledges(this.campaignId);
+    const members = await this.getAllCampaignMembers(this.campaignId);
     console.log(`Processing ${members.length} Patreon members...`);
     const syncedUsers: User[] = [];
     let successCount = 0;

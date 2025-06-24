@@ -197,25 +197,33 @@ const AdminPage: React.FC = () => {
     }
 
     setIsLoading(true);
-    setSyncStatus('Syncing with Patreon...');
+    setSyncStatus('Fetching all Patreon members (this may take a moment)...');
 
     try {
       const result = await patreonService.syncPatreonSubscribers();
-      setSyncStatus(`Sync completed: ${result.success} users synced, ${result.errors} errors`);
+      setSyncStatus(`Full sync completed: ${result.success} users synced, ${result.errors} errors (${result.users.length} total members processed)`);
       
-      // Update local users list
-      const updatedUsers = [...users];
-      result.users.forEach(patreonUser => {
-        const existingIndex = updatedUsers.findIndex(u => u.email === patreonUser.email);
-        if (existingIndex >= 0) {
-          updatedUsers[existingIndex] = patreonUser;
-        } else {
-          updatedUsers.push(patreonUser);
-        }
-      });
+      // Replace all users with fresh Patreon data
+      setUsers(result.users);
+      calculateStats(result.users);
       
-      setUsers(updatedUsers);
-      calculateStats(updatedUsers);
+      // Update stats with accurate counts
+      const activeUsers = result.users.filter(u => u.subscriptionStatus === 'active');
+      const vipUsers = result.users.filter(u => u.subscriptionTier === 'vip');
+      const premiumUsers = result.users.filter(u => u.subscriptionTier === 'premium');
+      const totalRevenue = result.users.reduce((sum, user) => sum + (user.amount || 0), 0) / 100;
+      
+      setStats(prev => ({
+        ...prev,
+        totalUsers: result.users.length,
+        activeSubscribers: activeUsers.length,
+        patreonSubscribers: result.users.length,
+        vipUsers: vipUsers.length,
+        premiumUsers: premiumUsers.length,
+        freeUsers: result.users.filter(u => u.subscriptionTier === 'free').length,
+        monthlyRevenue: totalRevenue
+      }));
+      
     } catch (error) {
       setSyncStatus(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
