@@ -195,6 +195,63 @@ export class BuyMeCoffeeService {
     }
   }
 
+  // Parse CSV data from Buy Me a Coffee export
+  parseCsvData(csvContent: string): User[] {
+    const lines = csvContent.split('\n').filter(line => line.trim());
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+    const users: User[] = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = this.parseCsvLine(lines[i]);
+      if (values.length < headers.length) continue;
+      
+      const row: Record<string, string> = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] || '';
+      });
+      
+      // Only process active subscriptions
+      if (row['Subscription status'] !== 'Active') continue;
+      
+      const supporter: BuyMeCoffeeSupporter = {
+        id: `bmc_${Date.now()}_${i}`,
+        name: row['Member Name'] || 'Anonymous',
+        email: row['Member Email'],
+        total_donated: parseFloat(row['Membership amount']) || 0,
+        first_donation_date: row['Membership start date'] || new Date().toISOString(),
+        last_donation_date: row['Membership renews on'] || new Date().toISOString(),
+        is_private: false,
+        currency: row['Membership amount currency'] || 'EUR'
+      };
+      
+      users.push(this.convertSupporterToUser(supporter));
+    }
+    
+    return users;
+  }
+  
+  private parseCsvLine(line: string): string[] {
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    values.push(current.trim());
+    return values;
+  }
+
   // Manual supporter addition (for CSV imports or manual entry)
   createManualSupporter(
     name: string,

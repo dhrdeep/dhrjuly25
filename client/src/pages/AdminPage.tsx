@@ -284,6 +284,48 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const handleCsvImport = () => {
+    if (!csvContent.trim()) {
+      setNotifications(prev => [...prev, 'Please paste CSV content first']);
+      return;
+    }
+
+    try {
+      const csvUsers = buyMeCoffeeService.parseCsvData(csvContent);
+      
+      // Merge with existing users, avoiding duplicates
+      const existingEmails = new Set(users.map(u => u.email));
+      const newUsers = csvUsers.filter(user => !existingEmails.has(user.email));
+      const updatedUsers = [...users, ...newUsers];
+      
+      setUsers(updatedUsers);
+      calculateStats(updatedUsers);
+      
+      const notifications = [
+        `Imported ${newUsers.length} new Buy Me a Coffee supporters from CSV`,
+        `Skipped ${csvUsers.length - newUsers.length} duplicates`
+      ];
+      
+      // Count tier distribution
+      const tierCounts = newUsers.reduce((acc, user) => {
+        acc[user.subscriptionTier] = (acc[user.subscriptionTier] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      if (tierCounts.vip) notifications.push(`${tierCounts.vip} VIP supporters added`);
+      if (tierCounts.dhr2) notifications.push(`${tierCounts.dhr2} DHR2 supporters added`);
+      if (tierCounts.dhr1) notifications.push(`${tierCounts.dhr1} DHR1 supporters added`);
+      
+      setNotifications(prev => [...prev, ...notifications]);
+      setShowCsvModal(false);
+      setCsvContent('');
+      
+    } catch (error) {
+      console.error('CSV import failed:', error);
+      setNotifications(prev => [...prev, 'CSV import failed - check format']);
+    }
+  };
+
   const exportUsers = () => {
     const csvContent = [
       ['Username', 'Email', 'Subscription Tier', 'Status', 'Source', 'Start Date', 'Last Login'],
@@ -710,10 +752,10 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
                     </button>
                     
                     <button
-                      onClick={() => setShowUpgradeModal(true)}
+                      onClick={() => setShowCsvModal(true)}
                       className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors text-white text-sm"
                     >
-                      Manual Import
+                      Import CSV
                     </button>
                   </div>
                 </div>
