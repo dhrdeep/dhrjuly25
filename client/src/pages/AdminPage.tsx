@@ -295,7 +295,7 @@ const AdminPage: React.FC = () => {
     try {
       const csvUsers = buyMeCoffeeService.parseCsvData(csvContent);
       
-      // Merge with existing users, avoiding duplicates
+      // Merge with existing users from all sources, avoiding duplicates by email
       const existingEmails = new Set(users.map(u => u.email));
       const newUsers = csvUsers.filter(user => !existingEmails.has(user.email));
       const updatedUsers = [...users, ...newUsers];
@@ -305,7 +305,8 @@ const AdminPage: React.FC = () => {
       
       const notifications = [
         `Imported ${newUsers.length} new Buy Me a Coffee supporters from CSV`,
-        `Skipped ${csvUsers.length - newUsers.length} duplicates`
+        `Skipped ${csvUsers.length - newUsers.length} duplicates`,
+        `Total users now: ${updatedUsers.length}`
       ];
       
       // Count tier distribution
@@ -314,9 +315,9 @@ const AdminPage: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
       
-      if (tierCounts.vip) notifications.push(`${tierCounts.vip} VIP supporters added`);
-      if (tierCounts.dhr2) notifications.push(`${tierCounts.dhr2} DHR2 supporters added`);
-      if (tierCounts.dhr1) notifications.push(`${tierCounts.dhr1} DHR1 supporters added`);
+      if (tierCounts.vip) notifications.push(`${tierCounts.vip} VIP supporters added from CSV`);
+      if (tierCounts.dhr2) notifications.push(`${tierCounts.dhr2} DHR2 supporters added from CSV`);
+      if (tierCounts.dhr1) notifications.push(`${tierCounts.dhr1} DHR1 supporters added from CSV`);
       
       setNotifications(prev => [...prev, ...notifications]);
       setShowCsvModal(false);
