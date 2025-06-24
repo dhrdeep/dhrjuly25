@@ -121,11 +121,11 @@ const AdminPage: React.FC = () => {
         id: 'user_2',
         email: 'sarah@example.com',
         username: 'Sarah Wilson',
-        subscriptionTier: 'premium',
+        subscriptionTier: 'dhr2',
         subscriptionStatus: 'active',
         subscriptionSource: 'patreon',
         subscriptionStartDate: '2024-01-10T00:00:00Z',
-        patreonTier: 'dhr_premium',
+        patreonTier: 'dhr2',
         preferences: {
           emailNotifications: true,
           newReleaseAlerts: true,
@@ -169,7 +169,8 @@ const AdminPage: React.FC = () => {
       activeSubscribers: userList.filter(u => u.subscriptionTier !== 'free').length,
       monthlyRevenue: userList.reduce((total, user) => {
         if (user.subscriptionTier === 'vip') return total + 20;
-        if (user.subscriptionTier === 'premium') return total + 10;
+        if (user.subscriptionTier === 'dhr2') return total + 5;
+        if (user.subscriptionTier === 'dhr1') return total + 3;
         return total;
       }, 0),
       patreonSubscribers: userList.filter(u => u.subscriptionSource === 'patreon').length,
@@ -501,7 +502,8 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
                   >
                     <option value="all">All Tiers</option>
                     <option value="vip">VIP</option>
-                    <option value="premium">Premium</option>
+                    <option value="dhr2">DHR2</option>
+                    <option value="dhr1">DHR1</option>
                     <option value="free">Free</option>
                   </select>
                   
