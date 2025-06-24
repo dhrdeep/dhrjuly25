@@ -32,7 +32,7 @@ export type SubscriptionTier = 'free' | 'dhr1' | 'dhr2' | 'vip';
 
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending';
 
-export type SubscriptionSource = 'patreon' | 'buymeacoffee' | 'wix' | 'direct';
+export type SubscriptionSource = 'patreon' | 'buymeacoffee' | 'wix' | 'direct' | 'manual';
 
 export interface SubscriptionFeatures {
   canAccessDHR1: boolean;

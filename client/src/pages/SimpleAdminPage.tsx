@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Download, RefreshCw, AlertTriangle, Search, Crown, Star, Coffee } from 'lucide-react';
+import { Users, Download, RefreshCw, AlertTriangle, Search, Crown, Star, Coffee, Plus, X } from 'lucide-react';
 import { patreonService } from '@/services/patreonService';
 import { buyMeCoffeeService } from '@/services/buyMeCoffeeService';
 import { User, SubscriptionTier } from '@/types/subscription';
@@ -10,6 +10,15 @@ export default function SimpleAdminPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTier, setFilterTier] = useState<string>('all');
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newSubscriber, setNewSubscriber] = useState({
+    name: '',
+    email: '',
+    tier: 'dhr1' as SubscriptionTier,
+    amount: 3,
+    source: 'manual' as const,
+    notes: ''
+  });
 
   // Filter users based on search and tier
   const filteredUsers = users.filter(user => {
@@ -28,7 +37,8 @@ export default function SimpleAdminPage() {
     free: users.filter(u => u.subscriptionTier === 'free').length,
     patreon: users.filter(u => u.subscriptionSource === 'patreon').length,
     bmac: users.filter(u => u.subscriptionSource === 'buymeacoffee').length,
-    expired: users.filter(u => u.subscriptionEndDate && new Date(u.subscriptionEndDate) < new Date()).length
+    expired: users.filter(u => u.subscriptionEndDate && new Date(u.subscriptionEndDate) < new Date()).length,
+    manual: users.filter(u => u.subscriptionSource === 'manual').length
   };
 
   const syncAllPlatforms = async () => {
@@ -91,6 +101,57 @@ export default function SimpleAdminPage() {
     setNotifications(prev => [...prev, `📁 Exported ${users.length} subscribers to CSV`]);
   };
 
+  const addManualSubscriber = () => {
+    if (!newSubscriber.name || !newSubscriber.email) {
+      setNotifications(prev => [...prev, '❌ Name and email are required']);
+      return;
+    }
+
+    // Check for duplicate email
+    if (users.some(u => u.email.toLowerCase() === newSubscriber.email.toLowerCase())) {
+      setNotifications(prev => [...prev, '❌ Email already exists']);
+      return;
+    }
+
+    const manualUser: User = {
+      id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      email: newSubscriber.email,
+      username: newSubscriber.name,
+      subscriptionTier: newSubscriber.tier,
+      subscriptionStatus: 'active',
+      subscriptionSource: 'manual',
+      subscriptionStartDate: new Date().toISOString(),
+      subscriptionEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+      preferences: {
+        emailNotifications: true,
+        newReleaseAlerts: true,
+        eventNotifications: false,
+        autoPlay: true,
+        preferredGenres: []
+      },
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      amount: newSubscriber.amount,
+      lifetimeSupport: newSubscriber.amount,
+      patreonTier: `Manual ${newSubscriber.tier.toUpperCase()} (€${newSubscriber.amount})`,
+      lastChargeDate: new Date().toISOString()
+    };
+
+    setUsers(prev => [...prev, manualUser]);
+    setNotifications(prev => [...prev, `✅ Added manual subscriber: ${newSubscriber.name} (${newSubscriber.tier.toUpperCase()})`]);
+    
+    // Reset form
+    setNewSubscriber({
+      name: '',
+      email: '',
+      tier: 'dhr1',
+      amount: 3,
+      source: 'manual',
+      notes: ''
+    });
+    setShowAddModal(false);
+  };
+
   const getTierIcon = (tier: SubscriptionTier) => {
     switch (tier) {
       case 'vip': return <Crown className="w-4 h-4 text-yellow-400" />;
@@ -148,6 +209,10 @@ export default function SimpleAdminPage() {
             <div className="text-2xl font-bold text-green-400">{stats.bmac}</div>
             <div className="text-sm text-green-400">Buy Me a Coffee</div>
           </div>
+          <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30">
+            <div className="text-2xl font-bold text-purple-400">{stats.manual}</div>
+            <div className="text-sm text-purple-400">Manual</div>
+          </div>
         </div>
 
         {/* Actions */}
@@ -159,6 +224,14 @@ export default function SimpleAdminPage() {
           >
             <RefreshCw className={`w-5 h-5 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? 'Syncing...' : 'Sync All Platforms'}
+          </button>
+          
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 rounded-lg px-6 py-3 text-white font-medium flex items-center justify-center transition-colors"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Manual Subscriber
           </button>
           
           <button
@@ -293,6 +366,107 @@ export default function SimpleAdminPage() {
             </div>
           )}
         </div>
+
+        {/* Add Manual Subscriber Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 border border-gray-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-white">Add Manual Subscriber</h3>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+                  <input
+                    type="text"
+                    value={newSubscriber.name}
+                    onChange={(e) => setNewSubscriber(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                    placeholder="Subscriber name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    value={newSubscriber.email}
+                    onChange={(e) => setNewSubscriber(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                    placeholder="subscriber@example.com"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Subscription Tier</label>
+                  <select
+                    value={newSubscriber.tier}
+                    onChange={(e) => {
+                      const tier = e.target.value as SubscriptionTier;
+                      let defaultAmount = 3;
+                      if (tier === 'dhr2') defaultAmount = 5;
+                      if (tier === 'vip') defaultAmount = 10;
+                      if (tier === 'free') defaultAmount = 0;
+                      
+                      setNewSubscriber(prev => ({ ...prev, tier, amount: defaultAmount }));
+                    }}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                  >
+                    <option value="free">Free (€0)</option>
+                    <option value="dhr1">DHR1 (€3+)</option>
+                    <option value="dhr2">DHR2 (€5+)</option>
+                    <option value="vip">VIP (€10+)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Monthly Amount (€)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newSubscriber.amount}
+                    onChange={(e) => setNewSubscriber(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Notes (Optional)</label>
+                  <textarea
+                    value={newSubscriber.notes}
+                    onChange={(e) => setNewSubscriber(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                    rows={2}
+                    placeholder="Additional notes..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-white font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addManualSubscriber}
+                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors"
+                >
+                  Add Subscriber
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
