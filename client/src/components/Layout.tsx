@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import backgroundImage from '@assets/274669677_132496182620472_4291978167077834747_n_1750808364035.jpeg';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -123,10 +122,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="floating-dhr-logo">DHR</div>
         <div className="floating-dhr-logo">DHR</div>
         <div className="floating-dhr-logo">DHR</div>
-        <div 
-          className="floating-bg-image pulse-60bpm" 
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        />
       </div>
 
       {/* Single Subtle Background Logo */}
