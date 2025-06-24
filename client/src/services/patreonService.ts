@@ -189,7 +189,7 @@ export class PatreonService {
     return state;
   }
 
-  // Exchange authorization code for access token using Supabase Edge Function
+  // Exchange authorization code for access token using server API
   async exchangeCodeForToken(code: string, state: string): Promise<boolean> {
     const savedState = localStorage.getItem('patreon_oauth_state');
     console.log('State validation:', { received: state, saved: savedState });
@@ -199,16 +199,8 @@ export class PatreonService {
     }
 
     try {
-      console.log('🔄 Starting backend token exchange...');
+      console.log('🔄 Starting server token exchange...');
       console.log('Using redirect URI:', PATREON_CONFIG.redirectUri);
-      
-      // Get Supabase URL from environment or construct it
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const edgeFunctionUrl = supabaseUrl 
-        ? `${supabaseUrl}/functions/v1/patreon-oauth`
-        : '/api/patreon-oauth'; // Fallback for local development
-      
-      console.log('Edge function URL:', edgeFunctionUrl);
       
       const requestBody = {
         code,
@@ -221,29 +213,28 @@ export class PatreonService {
         code: code ? 'Present' : 'Missing'
       });
 
-      const response = await fetch(edgeFunctionUrl, {
+      const response = await fetch('/api/patreon-oauth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`,
         },
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Backend response status:', response.status);
+      console.log('Server response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Backend token exchange failed:', errorText);
-        throw new Error(`Backend Error: ${response.status} - ${errorText}`);
+        console.error('❌ Server token exchange failed:', errorText);
+        throw new Error(`Server Error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Backend token exchange successful');
+      console.log('✅ Server token exchange successful');
       
       if (!data.success) {
-        console.error('❌ Backend returned error:', data);
-        throw new Error(`Backend Error: ${data.error} - ${data.error_description}`);
+        console.error('❌ Server returned error:', data);
+        throw new Error(`Server Error: ${data.error} - ${data.error_description}`);
       }
       
       this.accessToken = data.access_token;
@@ -259,7 +250,7 @@ export class PatreonService {
     }
   }
 
-  // Refresh access token
+  // Refresh access token using server endpoint
   async refreshAccessToken(): Promise<boolean> {
     if (!this.refreshToken) {
       console.warn('No refresh token available');
@@ -269,16 +260,13 @@ export class PatreonService {
     try {
       console.log('Refreshing access token...');
       
-      const response = await fetch('https://www.patreon.com/api/oauth2/token', {
+      const response = await fetch('/api/patreon-refresh', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: this.refreshToken,
-          client_id: PATREON_CONFIG.clientId,
-          client_secret: PATREON_CONFIG.clientSecret,
+        body: JSON.stringify({
+          refresh_token: this.refreshToken
         }),
       });
 
@@ -289,6 +277,11 @@ export class PatreonService {
       }
 
       const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(`Refresh failed: ${data.error_description}`);
+      }
+      
       this.accessToken = data.access_token;
       this.refreshToken = data.refresh_token;
       this.saveTokensToStorage();
