@@ -69,22 +69,8 @@ The project uses environment variables for configuration:
 
 The application is now fully operational on Replit. The Patreon OAuth server endpoints are working correctly.
 
-## Patreon Configuration Fix Required
-To resolve the OAuth error, update your Patreon application settings:
-
-1. Go to https://www.patreon.com/portal/registration/register-clients
-2. Find your DHR application (Client ID: -tv-cVi3LfJC_gV3S1zJ7fjBPAubr2Nj1GXiVZODqBy-XC97Mf9FJIdayBn55iWS)
-3. Update the redirect URI to: `https://ee500d4e-55fe-4cf0-9a54-af444e28ae2e-00-3ti68k53ghp5q.janeway.replit.dev/auth/patreon/callback`
-4. Save the changes
-
-This will resolve the "Redirect URI is not supported by client" error and enable proper Patreon integration.
-
-## Patreon Configuration Fix Required
-To resolve the OAuth error, update your Patreon application settings:
-
-1. Go to https://www.patreon.com/portal/registration/register-clients
-2. Find your DHR application (Client ID: -tv-cVi3LfJC_gV3S1zJ7fjBPAubr2Nj1GXiVZODqBy-XC97Mf9FJIdayBn55iWS)
-3. Update the redirect URI to: `https://ee500d4e-55fe-4cf0-9a54-af444e28ae2e-00-3ti68k53ghp5q.janeway.replit.dev/auth/patreon/callback`
-4. Save the changes
-
-This will resolve the "Redirect URI is not supported by client" error and enable proper Patreon integration.
+## Recent Issues Fixed
+- **June 24, 2025**: Fixed CORS issues by implementing server-side Patreon API endpoints
+- **June 24, 2025**: Resolved Patreon API v2 compatibility issues with invalid field parameters
+- Database connection issues resolved with proper WebSocket configuration for Neon
+- Server-side token storage and retrieval working properly

@@ -169,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Fetching campaigns from server-side...');
-      const campaignsResponse = await fetch('https://www.patreon.com/api/oauth2/v2/campaigns?fields%5Bcampaign%5D=created_at,creation_name,discord_server_id,image_small_url,image_url,is_charged_immediately,is_monthly,is_nsfw,main_video_embed,main_video_url,one_liner,patron_count,pay_per_name,pledge_sum,pledge_url,published_at,summary,thanks_embed,thanks_msg,thanks_video_url,url', {
+      const campaignsResponse = await fetch('https://www.patreon.com/api/oauth2/v2/campaigns?fields%5Bcampaign%5D=created_at,creation_name,patron_count,url', {
         headers: {
           'Authorization': `Bearer ${tokens.accessToken}`,
           'Content-Type': 'application/json',
