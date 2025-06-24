@@ -397,6 +397,21 @@ export class PatreonService {
     return 'free';
   }
 
+  // Convert Patreon member to DHR subscription tier (API v2)
+  getDHRTierFromMember(memberData: any): SubscriptionTier {
+    const amount = memberData.currently_entitled_amount_cents || 0;
+    
+    if (amount >= DHR_PATREON_TIERS.dhr_vip.minAmount) {
+      return 'vip';
+    } else if (amount >= DHR_PATREON_TIERS.dhr_premium.minAmount) {
+      return 'premium';
+    } else if (amount >= DHR_PATREON_TIERS.dhr_supporter.minAmount) {
+      return 'premium';
+    }
+    
+    return 'free';
+  }
+
   // Sync Patreon subscribers to DHR user system
   async syncPatreonSubscribers(): Promise<{ success: number; errors: number; users: User[] }> {
     if (!this.campaignId) {
@@ -408,28 +423,32 @@ export class PatreonService {
       this.saveTokensToStorage();
     }
 
-    const pledges = await this.getCampaignPledges(this.campaignId);
+    const members = await this.getCampaignPledges(this.campaignId);
+    console.log(`Processing ${members.length} Patreon members...`);
     const syncedUsers: User[] = [];
     let successCount = 0;
     let errorCount = 0;
 
-    for (const pledge of pledges) {
+    for (const member of members) {
       try {
-        // Skip declined pledges
-        if (pledge.declined_since) {
+        // Handle API v2 member structure
+        const memberData = member.attributes || {};
+        
+        // Skip inactive members
+        if (memberData.patron_status !== 'active_patron') {
           continue;
         }
 
-        const dhrTier = this.getDHRTierFromPledge(pledge);
+        const dhrTier = this.getDHRTierFromMember(memberData);
         const user: User = {
-          id: `patreon_${pledge.patron.id}`,
-          email: pledge.patron.email,
-          username: pledge.patron.full_name || pledge.patron.first_name || 'Patreon User',
+          id: `patreon_${member.id}`,
+          email: memberData.email || `patron_${member.id}@patreon.local`,
+          username: memberData.full_name || `Patron ${member.id}`,
           subscriptionTier: dhrTier,
           subscriptionStatus: 'active',
           subscriptionSource: 'patreon',
-          subscriptionStartDate: pledge.created_at,
-          patreonTier: this.getPatreonTierFromAmount(pledge.amount_cents),
+          subscriptionStartDate: memberData.pledge_relationship_start || new Date().toISOString(),
+          patreonTier: this.getPatreonTierFromAmount(memberData.currently_entitled_amount_cents || 0),
           preferences: {
             emailNotifications: true,
             newReleaseAlerts: true,
@@ -437,14 +456,14 @@ export class PatreonService {
             autoPlay: true,
             preferredGenres: ['deep-house']
           },
-          createdAt: pledge.created_at,
+          createdAt: memberData.pledge_relationship_start || new Date().toISOString(),
           lastLoginAt: new Date().toISOString()
         };
 
         syncedUsers.push(user);
         successCount++;
       } catch (error) {
-        console.error('Error syncing user:', error);
+        console.error('Error syncing member:', error, member);
         errorCount++;
       }
     }
