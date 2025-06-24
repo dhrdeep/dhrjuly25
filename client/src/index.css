@@ -162,13 +162,15 @@
   }
 }
 
-/* 60 BPM Pulse Animation */
+/* 60 BPM Pulse Animation - exactly 1 beat per second */
 @keyframes pulse60bpm {
   0%, 100% {
     filter: brightness(1);
+    transform: scale(1);
   }
   50% {
-    filter: brightness(1.3);
+    filter: brightness(1.4);
+    transform: scale(1.02);
   }
 }
 
