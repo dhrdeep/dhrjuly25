@@ -94,8 +94,8 @@ const DHR1Page: React.FC = () => {
           <section className="mb-12 flex justify-center">
             <iframe
               src="/evercast-player.html"
-              width="1000"
-              height="500"
+              width="750"
+              height="450"
               frameBorder="0"
               style={{
                 border: 'none',
