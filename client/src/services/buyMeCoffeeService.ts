@@ -125,16 +125,15 @@ export class BuyMeCoffeeService {
       const data = await response.json();
       const supporters = data.data || [];
       
-      console.log(`Found ${supporters.length} Buy Me a Coffee supporters`);
-      if (supporters.length > 0) {
-        console.log('Sample supporter data:', JSON.stringify(supporters[0], null, 2));
-        console.log('All supporter keys:', Object.keys(supporters[0]));
+      if (allSupporters.length > 0) {
+        console.log('Sample supporter data:', JSON.stringify(allSupporters[0], null, 2));
+        console.log('All supporter keys:', Object.keys(allSupporters[0]));
       }
       
       const users: User[] = [];
       let errors = 0;
 
-      for (const supporter of supporters) {
+      for (const supporter of allSupporters) {
         try {
           console.log('Processing supporter:', JSON.stringify(supporter, null, 2));
           
