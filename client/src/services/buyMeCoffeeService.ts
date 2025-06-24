@@ -41,8 +41,9 @@ export class BuyMeCoffeeService {
   }
 
   private loadConfig() {
-    // Buy Me a Coffee API token (if available)
-    this.accessToken = import.meta.env.VITE_BUYMEACOFFEE_ACCESS_TOKEN || null;
+    // Buy Me a Coffee API token
+    this.accessToken = import.meta.env.VITE_BUYMEACOFFEE_ACCESS_TOKEN || 
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5MTI5ZDIwMC1kYTdkLTRjY2MtOWQzZC01ODA0MTU0ZTgyMjYiLCJqdGkiOiJiYTZmZDI4NjkzZWU4YTUyMTQ1MTQzMmExZmQxODY1MmUyYTA2NDYxNDBlMDhkMTkzNjE2N2NlYTViYjJjMmI3MTNjZTI3YmM0MzdmZDY3ZCIsImlhdCI6MTc1MDc5NjA5NCwibmJmIjoxNzUwNzk2MDk0LCJleHAiOjE3NjY2MDcyOTQsInN1YiI6IjY4NDM1ODQiLCJzY29wZXMiOlsicmVhZC1vbmx5Il19.vurkvE6WBmmQCdTCUgcJdgb1z918bRtH7J6K3-fNglh23g_CT0AMeqmZLesyssyZfVMTwUZ4i6ldNjiEeAylGhyNJHDqcoTaU4k7dBOkXbn5JZjZPYBSDl3HL5Xj06Owe0U_tZSGE16CFNqy6wW_1snGmo-8afY2mVmxVatWWpJuEEZVDlF0lwMXzLIr0i62atRPkKvtq-aA1z2HtVX8WSgZqCow58fxRFOTOGS2z87fASiGkObQU8jpTIb3MPfS3KQPX63bce2uZ_u2IebSOiawyL2VjsVr0qUxlOk4ElcKRFGqdrVbT2dWHJvYi-t8Uue38Qk1uOj5WYpAP-zOwbzepI-tKeEgnOjC2dJctm1Do40u-3MQnzZbzb5RCusiiZQ4qE5Jw4RH_5883YcJlVf0A_HKusyh2cFaROkGC08i81PLKtDd7bC70omttMSuUcQEfggZxzLHnEuyZ_UXZ-03JuxozrHUX-Zx79DXfZdkt6tQbJiu0l4GkS7Jfs8ffAvuqGv5EcaoqQK99p4SFDvvji54uAYqOFCMhiuNdosTkgi6rwl4pKaox-FVFq1198-wa7pRDSJqpj8taDCsjTvQDYX0aicGOvX1TuOZzSB5RUXTTuChqek2iP18j4eo9B7H5kEZVtv4_StyVoKEYDsyypw2G5DZBcZYtyz76ac';
   }
 
   // Calculate DHR tier based on total support amount
@@ -99,17 +100,52 @@ export class BuyMeCoffeeService {
     };
   }
 
-  // Sync Buy Me a Coffee supporters (mock data for now - replace with real API call)
+  // Sync Buy Me a Coffee supporters using real API
   async syncSupporters(): Promise<{ success: number; errors: number; users: User[] }> {
+    if (!this.accessToken) {
+      console.error('No Buy Me a Coffee access token available');
+      return { success: 0, errors: 1, users: [] };
+    }
+
     try {
-      // TODO: Replace with actual Buy Me a Coffee API call
-      // For now, return empty result - user can manually add supporters
-      console.log('Buy Me a Coffee sync initiated - API integration pending');
+      console.log('Fetching Buy Me a Coffee supporters...');
+      
+      const response = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Buy Me a Coffee API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const supporters = data.data || [];
+      
+      console.log(`Found ${supporters.length} Buy Me a Coffee supporters`);
+      
+      const users: User[] = [];
+      let errors = 0;
+
+      for (const supporter of supporters) {
+        try {
+          const user = this.convertSupporterToUser(supporter);
+          users.push(user);
+        } catch (error) {
+          console.error('Error converting supporter:', error);
+          errors++;
+        }
+      }
+
+      console.log(`Successfully converted ${users.length} supporters, ${errors} errors`);
       
       return {
-        success: 0,
-        errors: 0,
-        users: []
+        success: users.length,
+        errors,
+        users
       };
     } catch (error) {
       console.error('Buy Me a Coffee sync failed:', error);
