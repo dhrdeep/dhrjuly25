@@ -686,19 +686,35 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
             <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 border border-orange-400/20">
               <h3 className="text-xl font-bold text-white mb-4">DHR Patreon Tiers</h3>
               <div className="grid md:grid-cols-3 gap-4">
-                {Object.values(DHR_PATREON_TIERS).map((tier) => (
-                  <div key={tier.id} className="bg-gray-700/30 rounded-lg p-4 border border-orange-400/20">
+                {Object.values(DHR_PATREON_TIERS).map((tier, index) => (
+                  <div key={index} className="bg-gray-700/30 rounded-lg p-4 border border-orange-400/20">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-white">{tier.name}</h4>
-                      <span className="text-orange-400 font-bold">${(tier.minAmount / 100).toFixed(0)}/mo</span>
+                      <span className="text-orange-400 font-bold">€{(tier.minAmount / 100).toFixed(0)}/mo</span>
                     </div>
                     <div className="space-y-2">
-                      {tier.benefits.map((benefit, index) => (
-                        <div key={index} className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-3 w-3 text-green-400" />
+                        <span className="text-gray-300 text-sm">Access to {tier.name} channel</span>
+                      </div>
+                      {tier.name === 'DHR2' && (
+                        <div className="flex items-center space-x-2">
                           <CheckCircle className="h-3 w-3 text-green-400" />
-                          <span className="text-gray-300 text-sm">{benefit}</span>
+                          <span className="text-gray-300 text-sm">Access to DHR1 channel</span>
                         </div>
-                      ))}
+                      )}
+                      {tier.name === 'VIP' && (
+                        <>
+                          <div className="flex items-center space-x-2">
+                            <CheckCircle className="h-3 w-3 text-green-400" />
+                            <span className="text-gray-300 text-sm">Access to DHR1 & DHR2 channels</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <CheckCircle className="h-3 w-3 text-green-400" />
+                            <span className="text-gray-300 text-sm">VIP exclusive content</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
