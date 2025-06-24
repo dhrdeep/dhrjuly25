@@ -115,6 +115,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
+      {/* Floating DHR Logo Animation */}
+      <div className="dhr-floating-bg">
+        <div className="floating-dhr-logo">DHR</div>
+        <div className="floating-dhr-logo">DHR</div>
+        <div className="floating-dhr-logo">DHR</div>
+        <div className="floating-dhr-logo">DHR</div>
+        <div className="floating-dhr-logo">DHR</div>
+      </div>
+
       {/* Single Subtle Background Logo */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900" />

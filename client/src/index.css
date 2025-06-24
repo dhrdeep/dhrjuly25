@@ -39,3 +39,84 @@
   background: #374151;
   border-radius: 4px;
 }
+
+/* Floating DHR Logo Animation */
+.dhr-floating-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.floating-dhr-logo {
+  position: absolute;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  font-size: 120px;
+  color: rgba(247, 158, 2, 0.08);
+  animation: floatDHR 15s ease-in-out infinite;
+  user-select: none;
+  text-shadow: 0 0 20px rgba(247, 158, 2, 0.1);
+}
+
+.floating-dhr-logo:nth-child(1) {
+  top: 20%;
+  left: -10%;
+  animation-delay: 0s;
+  animation-duration: 20s;
+}
+
+.floating-dhr-logo:nth-child(2) {
+  top: 60%;
+  right: -15%;
+  animation-delay: -7s;
+  animation-duration: 25s;
+  font-size: 80px;
+}
+
+.floating-dhr-logo:nth-child(3) {
+  top: 40%;
+  left: 80%;
+  animation-delay: -12s;
+  animation-duration: 18s;
+  font-size: 100px;
+}
+
+.floating-dhr-logo:nth-child(4) {
+  top: 10%;
+  left: 60%;
+  animation-delay: -20s;
+  animation-duration: 30s;
+  font-size: 90px;
+}
+
+.floating-dhr-logo:nth-child(5) {
+  top: 80%;
+  left: 10%;
+  animation-delay: -15s;
+  animation-duration: 22s;
+  font-size: 110px;
+}
+
+@keyframes floatDHR {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.04;
+  }
+  25% {
+    transform: translate(-30px, -20px) rotate(2deg) scale(1.1);
+    opacity: 0.12;
+  }
+  50% {
+    transform: translate(20px, -40px) rotate(-1deg) scale(0.9);
+    opacity: 0.08;
+  }
+  75% {
+    transform: translate(-10px, 30px) rotate(1deg) scale(1.05);
+    opacity: 0.1;
+  }
+}
