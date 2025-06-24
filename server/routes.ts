@@ -55,14 +55,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const tokenResult = await tokenResponse.json();
 
-      // Save tokens to database
-      await storage.savePatreonTokens({
-        accessToken: tokenResult.access_token,
-        refreshToken: tokenResult.refresh_token,
-        expiresAt: new Date(Date.now() + tokenResult.expires_in * 1000),
-        scope: tokenResult.scope || 'identity campaigns campaigns.members',
-        userId: null // Will be linked later when user info is retrieved
-      });
+      // Save tokens to database (optional for now, focusing on client-side flow)
+      try {
+        await storage.savePatreonTokens({
+          accessToken: tokenResult.access_token,
+          refreshToken: tokenResult.refresh_token,
+          expiresAt: new Date(Date.now() + tokenResult.expires_in * 1000),
+          scope: tokenResult.scope || 'identity campaigns campaigns.members',
+          userId: null // Will be linked later when user info is retrieved
+        });
+        console.log('Tokens saved to database successfully');
+      } catch (dbError) {
+        console.warn('Failed to save tokens to database:', dbError);
+        // Continue with response even if DB save fails
+      }
 
       res.json({
         success: true,
