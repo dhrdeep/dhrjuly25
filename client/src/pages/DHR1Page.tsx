@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Crown, Play, Download, Star, Clock, Users } from 'lucide-react';
-import DHR1Player from '../components/DHR1Player';
 import SubscriptionGate from '../components/SubscriptionGate';
 import { subscriptionService } from '../services/subscriptionService';
 
@@ -69,6 +68,16 @@ const DHR1Page: React.FC = () => {
     alert(`Starting download: ${trackTitle}`);
   };
 
+  // Ensure the Everestcast player script loads after component mounts
+  useEffect(() => {
+    const script = document.querySelector('script[src*="sc_player.js"]');
+    if (script) {
+      script.addEventListener('load', () => {
+        console.log('Everestcast player loaded');
+      });
+    }
+  }, []);
+
   return (
     <SubscriptionGate requiredTier="premium" contentType="dhr1">
       <div className="min-h-screen text-white py-8 px-4">
@@ -110,20 +119,64 @@ const DHR1Page: React.FC = () => {
 
           {/* Premium Player */}
           <section className="mb-12 flex justify-center">
-            <DHR1Player 
-              width="100%"
-              showHistory={true}
-              showVote={true}
-              showShare={false}
-              showProgress={true}
-              className="max-w-5xl"
-              channels={[
-                { id: 1, name: "DHR1 Deep", url: "https://ec1.everestcast.host:2750/stream/1", isActive: true, listeners: 234 },
-                { id: 2, name: "DHR1 Tech", url: "https://ec1.everestcast.host:2750/stream/2", isActive: false, listeners: 187 },
-                { id: 3, name: "DHR1 Minimal", url: "https://ec1.everestcast.host:2750/stream/3", isActive: false, listeners: 156 },
-                { id: 4, name: "DHR1 Progressive", url: "https://ec1.everestcast.host:2750/stream/4", isActive: false, listeners: 98 }
-              ]}
-            />
+            <div style={{ width: "1000px" }} id="sc-player">
+              <div
+                is="player"
+                lang="en" 
+                api-url="https://ec1.everestcast.host:2750/api/v2"
+                server-id="1"
+                station-name=""
+                station-url=""
+                imagecontainer="bottom"
+                imagecontainer-bg="#f79e02"
+                imagecontainer-bg-opacity="1"
+                controlscontainer="bottom"
+                controlscontainer-bg="#000000"
+                controlscontainer-bg-opacity="1"
+                controlscontainer-bg-img="https://ec1.everestcast.host:2750/media/widgets/blob.jpeg"
+                historycontainer="bottom"
+                historycontainer-bg="#cdd8e5"
+                historycontainer-bg-opacity="1"
+                show-history="true"
+                history-limit="5"
+                sharecontainer="both"
+                sharecontainer-bg="#ffffff"
+                sharecontainer-bg-opacity="1"
+                show-share="false"
+                share-url=""
+                share='["facebook","telegram","twitter"]'
+                show-dj="false"
+                default-dj-img="https://ec1.everestcast.host:2750/media/djs/dj.png"
+                show-image="false"
+                default-cover-image="https://ec1.everestcast.host:2750/media/tracks/default_track_img.png"
+                play-button-color="#35495e"
+                play-button-bg="null"
+                visualizer-outline-color="#37679a"
+                visualizer-bar-width="1"
+                channels-displayed="[1,2,3,4]"
+                channels-switch-bg="#ffbf0f"
+                channels-switch-color="#ffffff"
+                channels-switch-bg-active="#dddddd"
+                channels-switch-color-active="#000000"
+                show-vote="true"
+                vote-buttons-color="#35495e"
+                vote-buttons-opacity="1"
+                vote-results-font-color="#FFFFFF"
+                vote-results-font-size="16"
+                progress-show="true"
+                progress-bar-color="#35495e"
+                progress-bar-bg-color="#41b883"
+                progress-bar-bg-opacity="0.1"
+                progress-bar-bg-height="25"
+                progress-bar-opacity="1"
+                progress-font-color="#FFFFFF"
+                progress-font-size="12"
+                progress-bar-bg-radius="10"
+                progress-bar-bg-border="#F5F5F5"
+                player-width="1000px"
+              >
+              </div>
+            </div>
           </section>
 
           {/* Features Grid */}
