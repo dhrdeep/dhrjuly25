@@ -19,6 +19,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const clientId = process.env.PATREON_CLIENT_ID;
       const clientSecret = process.env.PATREON_CLIENT_SECRET;
 
+      console.log('Server environment check:', {
+        clientId: clientId ? 'Present' : 'Missing',
+        clientSecret: clientSecret ? 'Present' : 'Missing'
+      });
+
       if (!clientId || !clientSecret) {
         return res.status(500).json({
           success: false,
