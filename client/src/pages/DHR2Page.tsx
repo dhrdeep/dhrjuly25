@@ -111,10 +111,19 @@ const DHR2Page: React.FC = () => {
           </header>
 
           {/* Premium Player */}
-          <section className="mb-12">
-            <MediaPlayer 
-              streamUrl="https://ec1.everestcast.host:2777/stream" 
-              title="DHR2 Premium Stream"
+          <section className="mb-12 flex justify-center">
+            <iframe
+              src="/evercast-player-dhr2.html"
+              width="300"
+              height="600"
+              frameBorder="0"
+              style={{
+                border: 'none',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                maxWidth: '100%'
+              }}
+              title="DHR2 Everestcast Player"
             />
           </section>
 
