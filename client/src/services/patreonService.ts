@@ -422,12 +422,12 @@ export class PatreonService {
   getDHRTierFromMember(memberData: any): SubscriptionTier {
     const amount = memberData.currently_entitled_amount_cents || 0;
     
-    if (amount >= DHR_PATREON_TIERS.dhr_vip.minAmount) {
+    if (amount >= DHR_PATREON_TIERS.vip.minAmount) {
       return 'vip';
-    } else if (amount >= DHR_PATREON_TIERS.dhr_premium.minAmount) {
-      return 'premium';
-    } else if (amount >= DHR_PATREON_TIERS.dhr_supporter.minAmount) {
-      return 'premium';
+    } else if (amount >= DHR_PATREON_TIERS.dhr2.minAmount) {
+      return 'dhr2';
+    } else if (amount >= DHR_PATREON_TIERS.dhr1.minAmount) {
+      return 'dhr1';
     }
     
     return 'free';

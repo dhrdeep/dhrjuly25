@@ -28,7 +28,7 @@ export interface UserPreferences {
   preferredGenres: string[];
 }
 
-export type SubscriptionTier = 'free' | 'premium' | 'vip';
+export type SubscriptionTier = 'free' | 'dhr1' | 'dhr2' | 'vip';
 
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending';
 

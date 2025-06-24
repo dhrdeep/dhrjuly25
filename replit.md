@@ -87,7 +87,12 @@ The application is now fully operational on Replit. The Patreon OAuth server end
 
 ## Enhanced Features
 - Full Patreon subscriber sync with pagination (processes all 1123+ patrons)
-- Detailed subscription management with tier breakdown (VIP €25+, Premium €5+)
+- Detailed subscription management with 4-tier system:
+  - Free (€0)
+  - DHR1 (€3+) - Access to DHR1 channel only
+  - DHR2 (€5+) - Access to DHR1 + DHR2 channels
+  - VIP (€10+) - Full access to all content including VIP section
 - Comprehensive subscriber table with lifetime value, next charge dates, and status tracking
 - Advanced filtering and search capabilities for subscriber management
 - Export functionality for subscriber data
+- API endpoints for main website premium access control integration

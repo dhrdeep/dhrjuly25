@@ -35,7 +35,8 @@ interface AdminStats {
   monthlyRevenue: number;
   patreonSubscribers: number;
   vipUsers: number;
-  premiumUsers: number;
+  dhr2Users: number;
+  dhr1Users: number;
   freeUsers: number;
   recentSignups: number;
 }
@@ -210,7 +211,8 @@ const AdminPage: React.FC = () => {
       // Update stats with accurate counts
       const activeUsers = result.users.filter(u => u.subscriptionStatus === 'active');
       const vipUsers = result.users.filter(u => u.subscriptionTier === 'vip');
-      const premiumUsers = result.users.filter(u => u.subscriptionTier === 'premium');
+      const dhr2Users = result.users.filter(u => u.subscriptionTier === 'dhr2');
+      const dhr1Users = result.users.filter(u => u.subscriptionTier === 'dhr1');
       const totalRevenue = result.users.reduce((sum, user) => sum + (user.amount || 0), 0) / 100;
       
       setStats(prev => ({
@@ -219,7 +221,8 @@ const AdminPage: React.FC = () => {
         activeSubscribers: activeUsers.length,
         patreonSubscribers: result.users.length,
         vipUsers: vipUsers.length,
-        premiumUsers: premiumUsers.length,
+        dhr2Users: dhr2Users.length,
+        dhr1Users: dhr1Users.length,
         freeUsers: result.users.filter(u => u.subscriptionTier === 'free').length,
         monthlyRevenue: totalRevenue
       }));
@@ -400,10 +403,17 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-amber-400" />
-                      <span className="text-white">Premium Users</span>
+                      <Users className="h-4 w-4 text-orange-400" />
+                      <span className="text-white">DHR2 Users</span>
                     </div>
-                    <span className="text-amber-400 font-semibold">{stats.premiumUsers}</span>
+                    <span className="text-orange-400 font-semibold">{stats.dhr2Users}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-4 w-4 text-blue-400" />
+                      <span className="text-white">DHR1 Users</span>
+                    </div>
+                    <span className="text-blue-400 font-semibold">{stats.dhr1Users}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
