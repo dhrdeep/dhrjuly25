@@ -61,6 +61,7 @@ const AdminPage: React.FC = () => {
     freeUsers: 0,
     recentSignups: 0
   });
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
