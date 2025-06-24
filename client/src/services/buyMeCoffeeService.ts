@@ -126,16 +126,32 @@ export class BuyMeCoffeeService {
       const supporters = data.data || [];
       
       console.log(`Found ${supporters.length} Buy Me a Coffee supporters`);
+      console.log('Sample supporter data:', supporters[0]);
       
       const users: User[] = [];
       let errors = 0;
 
       for (const supporter of supporters) {
         try {
-          const user = this.convertSupporterToUser(supporter);
+          console.log('Processing supporter:', supporter);
+          
+          // Handle different possible API response formats
+          const supporterData = {
+            id: supporter.id || supporter.support_id || `bmc_${Date.now()}_${Math.random()}`,
+            name: supporter.payer_name || supporter.supporter_name || supporter.name || 'Anonymous',
+            email: supporter.payer_email || supporter.supporter_email || supporter.email || `supporter_${supporter.id}@buymeacoffee.com`,
+            total_donated: supporter.total_amount || (supporter.support_coffee_price * supporter.support_coffees) || supporter.amount || 5,
+            first_donation_date: supporter.created_on || supporter.support_created_on || supporter.first_support_date || new Date().toISOString(),
+            last_donation_date: supporter.updated_on || supporter.support_updated_on || supporter.last_support_date || new Date().toISOString(),
+            message: supporter.support_note || supporter.message || '',
+            is_private: supporter.is_private || false,
+            currency: supporter.currency || 'USD'
+          };
+          
+          const user = this.convertSupporterToUser(supporterData);
           users.push(user);
         } catch (error) {
-          console.error('Error converting supporter:', error);
+          console.error('Error converting supporter:', supporter, error);
           errors++;
         }
       }
