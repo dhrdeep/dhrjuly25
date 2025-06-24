@@ -124,39 +124,23 @@
 /* Background Image Animation */
 .floating-bg-image {
   position: absolute;
-  width: 200px;
-  height: 200px;
+  width: 400px;
+  height: 400px;
   background-size: cover;
   background-position: center;
-  border-radius: 50%;
-  opacity: 0.06;
-  animation: floatImage 18s ease-in-out infinite;
-  filter: blur(1px);
+  opacity: 0.08;
+  animation: floatImage 25s ease-in-out infinite;
+  filter: blur(2px);
+  mask: radial-gradient(circle, rgba(0,0,0,1) 20%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0) 100%);
+  -webkit-mask: radial-gradient(circle, rgba(0,0,0,1) 20%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0) 100%);
 }
 
 .floating-bg-image:nth-child(6) {
-  top: 30%;
-  left: 30%;
-  animation-delay: -5s;
-  animation-duration: 20s;
-}
-
-.floating-bg-image:nth-child(7) {
-  top: 70%;
-  right: 25%;
-  animation-delay: -12s;
-  animation-duration: 24s;
-  width: 150px;
-  height: 150px;
-}
-
-.floating-bg-image:nth-child(8) {
-  top: 15%;
-  right: 10%;
-  animation-delay: -18s;
-  animation-duration: 28s;
-  width: 180px;
-  height: 180px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -10s;
+  animation-duration: 30s;
 }
 
 @keyframes floatImage {

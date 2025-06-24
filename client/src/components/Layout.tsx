@@ -127,14 +127,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           className="floating-bg-image pulse-60bpm" 
           style={{ backgroundImage: `url(${backgroundImage})` }}
         />
-        <div 
-          className="floating-bg-image pulse-60bpm" 
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        />
-        <div 
-          className="floating-bg-image pulse-60bpm" 
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        />
       </div>
 
       {/* Single Subtle Background Logo */}
