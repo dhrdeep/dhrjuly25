@@ -177,19 +177,21 @@ export class BuyMeCoffeeService {
             id: supporter.id || supporter.support_id || supporter.subscription_id || `bmc_${Date.now()}_${Math.random()}`,
             name: supporter.payer_name || supporter.supporter_name || supporter.name || supporter.full_name || supporter.member_name || 'Anonymous',
             email: supporter.payer_email || supporter.supporter_email || supporter.email || supporter.member_email || `supporter_${supporter.id || 'unknown'}@buymeacoffee.com`,
-            total_donated: supporter.total_amount || 
+            total_donated: parseFloat(supporter.total_amount || 
                           supporter.subscription_price ||
                           supporter.membership_amount ||
                           (supporter.support_coffee_price && supporter.support_coffees ? supporter.support_coffee_price * supporter.support_coffees : null) ||
                           supporter.amount || 
                           supporter.coffee_price || 
-                          5, // Default minimum
+                          5), // Ensure it's a number for tier calculation
             first_donation_date: supporter.created_on || supporter.support_created_on || supporter.first_support_date || supporter.created_at || supporter.subscription_start_date || new Date().toISOString(),
             last_donation_date: supporter.updated_on || supporter.support_updated_on || supporter.last_support_date || supporter.updated_at || supporter.subscription_renews_on || new Date().toISOString(),
             message: supporter.support_note || supporter.message || supporter.note || '',
             is_private: supporter.is_private || false,
             currency: supporter.currency || supporter.subscription_currency || 'USD'
           };
+          
+          console.log(`Processing supporter with amount: €${supporterData.total_donated}`);
           
           console.log('Converted supporter data:', JSON.stringify(supporterData, null, 2));
           

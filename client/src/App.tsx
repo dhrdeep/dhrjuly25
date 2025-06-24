@@ -9,7 +9,7 @@ import VIPPage from './pages/VIPPage';
 import ForumPage from './pages/ForumPage';
 import UploadPage from './pages/UploadPage';
 import ShopPage from './pages/ShopPage';
-import AdminPage from './pages/AdminPage';
+import SimpleAdminPage from './pages/SimpleAdminPage';
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
           <Route path="/forum" element={<ForumPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin" element={<SimpleAdminPage />} />
           <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
         </Routes>
       </Layout>
