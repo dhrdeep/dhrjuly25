@@ -108,22 +108,43 @@ export class BuyMeCoffeeService {
     }
 
     try {
-      console.log('Fetching Buy Me a Coffee supporters...');
+      // Fetch all supporters with pagination
+      let allSupporters: any[] = [];
+      let page = 1;
+      let hasMore = true;
       
-      const response = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json'
+      while (hasMore) {
+        console.log(`Fetching Buy Me a Coffee supporters page ${page}...`);
+        
+        const response = await fetch(`https://developers.buymeacoffee.com/api/v1/supporters?page=${page}&per_page=50`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
         }
-      });
 
-      if (!response.ok) {
-        throw new Error(`Buy Me a Coffee API error: ${response.status} ${response.statusText}`);
+        const data = await response.json();
+        const supporters = data.data || [];
+        
+        if (supporters.length === 0) {
+          hasMore = false;
+        } else {
+          allSupporters = [...allSupporters, ...supporters];
+          page++;
+          
+          // Safety check to prevent infinite loops
+          if (page > 100) {
+            console.warn('Reached maximum page limit (100), stopping pagination');
+            hasMore = false;
+          }
+        }
       }
-
-      const data = await response.json();
-      const supporters = data.data || [];
+      
+      console.log(`Found ${allSupporters.length} total Buy Me a Coffee supporters across ${page - 1} pages`);
       
       if (allSupporters.length > 0) {
         console.log('Sample supporter data:', JSON.stringify(allSupporters[0], null, 2));
