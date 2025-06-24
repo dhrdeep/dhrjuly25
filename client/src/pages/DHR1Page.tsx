@@ -1,6 +1,6 @@
 import React from 'react';
 import { Crown, Play, Download, Star, Clock, Users } from 'lucide-react';
-import MediaPlayer from '../components/MediaPlayer';
+import DHR1Player from '../components/DHR1Player';
 import SubscriptionGate from '../components/SubscriptionGate';
 import { subscriptionService } from '../services/subscriptionService';
 
@@ -109,10 +109,20 @@ const DHR1Page: React.FC = () => {
           </header>
 
           {/* Premium Player */}
-          <section className="mb-12">
-            <MediaPlayer 
-              streamUrl="https://ec1.everestcast.host:2776/stream" 
-              title="DHR1 Premium Stream"
+          <section className="mb-12 flex justify-center">
+            <DHR1Player 
+              width="100%"
+              showHistory={true}
+              showVote={true}
+              showShare={false}
+              showProgress={true}
+              className="max-w-5xl"
+              channels={[
+                { id: 1, name: "DHR1 Deep", url: "https://ec1.everestcast.host:2750/stream/1", isActive: true, listeners: 234 },
+                { id: 2, name: "DHR1 Tech", url: "https://ec1.everestcast.host:2750/stream/2", isActive: false, listeners: 187 },
+                { id: 3, name: "DHR1 Minimal", url: "https://ec1.everestcast.host:2750/stream/3", isActive: false, listeners: 156 },
+                { id: 4, name: "DHR1 Progressive", url: "https://ec1.everestcast.host:2750/stream/4", isActive: false, listeners: 98 }
+              ]}
             />
           </section>
 
@@ -122,7 +132,7 @@ const DHR1Page: React.FC = () => {
               Premium Features
             </h2>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 const isDownloadFeature = feature.icon === Download;
@@ -147,6 +157,33 @@ const DHR1Page: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+            
+            {/* Additional Premium Features */}
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-2xl p-8 border border-orange-400/20 backdrop-blur-sm">
+                <h3 className="text-xl font-bold text-white mb-4">Enhanced Experience</h3>
+                <div className="grid md:grid-cols-3 gap-6 text-sm">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mb-2">
+                      <span className="text-white font-bold">4</span>
+                    </div>
+                    <span className="text-gray-300">Multi-Channel Access</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mb-2">
+                      <span className="text-white font-bold">♫</span>
+                    </div>
+                    <span className="text-gray-300">Interactive Voting</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mb-2">
+                      <span className="text-white font-bold">📊</span>
+                    </div>
+                    <span className="text-gray-300">Live Visualizer</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
