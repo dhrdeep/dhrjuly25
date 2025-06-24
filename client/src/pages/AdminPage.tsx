@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Info
 } from 'lucide-react';
+import { Coffee } from 'lucide-react';
 import { patreonService, DHR_PATREON_TIERS } from '../services/patreonService';
 import { subscriptionService } from '../services/subscriptionService';
 import { buyMeCoffeeService } from '../services/buyMeCoffeeService';
@@ -585,17 +586,96 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
         {/* Patreon Tab */}
         {activeTab === 'patreon' && (
           <div className="space-y-6">
-            {/* Patreon Connection Status */}
+            {/* Subscription Sources Integration */}
             <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 border border-orange-400/20">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">Patreon Integration</h3>
-                <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-                  patreonService.isAuthenticated() 
-                    ? 'bg-green-500/20 text-green-300' 
-                    : 'bg-red-500/20 text-red-300'
-                }`}>
-                  {patreonService.isAuthenticated() ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                  <span>{patreonService.isAuthenticated() ? 'Connected' : 'Not Connected'}</span>
+                <h3 className="text-xl font-bold text-white">Subscription Sources</h3>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Patreon Section */}
+                <div className="bg-gray-700/30 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-orange-300 font-medium">Patreon Integration</h4>
+                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+                      patreonService.isAuthenticated() 
+                        ? 'bg-green-500/20 text-green-300' 
+                        : 'bg-red-500/20 text-red-300'
+                    }`}>
+                      {patreonService.isAuthenticated() ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                      <span>{patreonService.isAuthenticated() ? 'Connected' : 'Not Connected'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={handlePatreonAuth}
+                      disabled={!configStatus.isConfigured}
+                      className="w-full px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors text-white text-sm"
+                    >
+                      Authenticate with Patreon
+                    </button>
+                    
+                    <button
+                      onClick={handleSyncPatreon}
+                      disabled={isLoading || !patreonService.isAuthenticated()}
+                      className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors text-white text-sm flex items-center justify-center space-x-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Syncing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4" />
+                          <span>Sync Patreon</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Buy Me a Coffee Section */}
+                <div className="bg-gray-700/30 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-yellow-300 font-medium">Buy Me a Coffee</h4>
+                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+                      bmcConfigStatus.isConfigured 
+                        ? 'bg-green-500/20 text-green-300' 
+                        : 'bg-yellow-500/20 text-yellow-300'
+                    }`}>
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Ready</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleSyncBuyMeCoffee}
+                      disabled={isLoading}
+                      className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors text-white text-sm flex items-center justify-center space-x-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Syncing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Coffee className="h-4 w-4" />
+                          <span>Sync Supporters</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors text-white text-sm"
+                    >
+                      Manual Import
+                    </button>
+                  </div>
                 </div>
               </div>
 
