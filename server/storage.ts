@@ -1,12 +1,6 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { db } from "./db";
 import { users, patreonTokens, type User, type InsertUser, type PatreonToken, type InsertPatreonToken } from "@shared/schema";
 import { eq } from "drizzle-orm";
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required");
-}
-
-const db = drizzle(process.env.DATABASE_URL);
 
 export interface IStorage {
   // User methods
