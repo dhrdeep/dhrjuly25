@@ -57,3 +57,16 @@ The project uses environment variables for configuration:
 - Use environment variables for all sensitive configuration
 - Maintain clean, readable TypeScript code
 - Keep database operations server-side for security
+
+## Current Issues
+- **Patreon OAuth Redirect URI Mismatch**: The Patreon application settings need to be updated with the current Replit URL: `https://ee500d4e-55fe-4cf0-9a54-af444e28ae2e-00-3ti68k53ghp5q.janeway.replit.dev/auth/patreon/callback`
+
+## Patreon Configuration Fix Required
+To resolve the OAuth error, update your Patreon application settings:
+
+1. Go to https://www.patreon.com/portal/registration/register-clients
+2. Find your DHR application (Client ID: -tv-cVi3LfJC_gV3S1zJ7fjBPAubr2Nj1GXiVZODqBy-XC97Mf9FJIdayBn55iWS)
+3. Update the redirect URI to: `https://ee500d4e-55fe-4cf0-9a54-af444e28ae2e-00-3ti68k53ghp5q.janeway.replit.dev/auth/patreon/callback`
+4. Save the changes
+
+This will resolve the "Redirect URI is not supported by client" error and enable proper Patreon integration.
