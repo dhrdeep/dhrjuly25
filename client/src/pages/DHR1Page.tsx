@@ -95,7 +95,7 @@ const DHR1Page: React.FC = () => {
             <iframe
               src="/evercast-player.html"
               width="600"
-              height="400"
+              height="600"
               frameBorder="0"
               style={{
                 border: 'none',
