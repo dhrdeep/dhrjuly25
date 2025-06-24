@@ -241,6 +241,14 @@ export default function SimpleAdminPage() {
             <Download className="w-5 h-5 mr-2" />
             Export CSV
           </button>
+          
+          <button
+            onClick={() => window.open('/api/backup/database', '_blank')}
+            className="bg-gray-600 hover:bg-gray-700 rounded-lg px-6 py-3 text-white font-medium flex items-center justify-center transition-colors"
+          >
+            <Download className="w-5 h-5 mr-2" />
+            Backup Database
+          </button>
         </div>
 
         {/* Search & Filter */}
