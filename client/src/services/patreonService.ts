@@ -340,11 +340,19 @@ export class PatreonService {
     }
   }
 
-  // Get user's campaigns
+  // Get user's campaigns (via server-side API to avoid CORS)
   async getCampaigns(): Promise<PatreonCampaign[]> {
     try {
-      console.log('Fetching campaigns from Patreon API...');
-      const data = await this.makeApiRequest('/campaigns?fields%5Bcampaign%5D=created_at,creation_name,discord_server_id,image_small_url,image_url,is_charged_immediately,is_monthly,is_nsfw,main_video_embed,main_video_url,one_liner,patron_count,pay_per_name,pledge_sum,pledge_url,published_at,summary,thanks_embed,thanks_msg,thanks_video_url,url');
+      console.log('Fetching campaigns via server API...');
+      const response = await fetch('/api/patreon-campaigns');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server campaigns API error:', errorText);
+        return [];
+      }
+      
+      const data = await response.json();
       console.log('Campaigns API response:', data);
       return data.data || [];
     } catch (error) {
@@ -353,10 +361,20 @@ export class PatreonService {
     }
   }
 
-  // Get campaign pledges
+  // Get campaign pledges/patrons (via server-side API to avoid CORS)
   async getCampaignPledges(campaignId: string): Promise<PatreonPledge[]> {
     try {
-      const data = await this.makeApiRequest(`/campaigns/${campaignId}/pledges?include=patron,reward&fields%5Bpledge%5D=amount_cents,created_at,declined_since,patron_pays_fees,pledge_cap_cents&fields%5Buser%5D=email,first_name,full_name,is_email_verified,last_name,thumb_url,url,vanity&fields%5Breward%5D=amount_cents,created_at,description,discord_role_ids,edited_at,image_url,post_count,published,published_at,requires_shipping,title,url`);
+      console.log(`Fetching pledges for campaign ${campaignId} via server API...`);
+      const response = await fetch(`/api/patreon-campaigns/${campaignId}/pledges`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server pledges API error:', errorText);
+        return [];
+      }
+      
+      const data = await response.json();
+      console.log('Pledges API response:', data);
       return data.data || [];
     } catch (error) {
       console.error('Error getting campaign pledges:', error);

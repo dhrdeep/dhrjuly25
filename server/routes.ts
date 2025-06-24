@@ -160,6 +160,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get Patreon campaigns (server-side to avoid CORS)
+  app.get('/api/patreon-campaigns', async (req, res) => {
+    try {
+      const tokens = await storage.getPatreonTokens();
+      if (!tokens) {
+        return res.status(401).json({ error: 'No Patreon tokens found' });
+      }
+
+      console.log('Fetching campaigns from server-side...');
+      const campaignsResponse = await fetch('https://www.patreon.com/api/oauth2/v2/campaigns?fields%5Bcampaign%5D=created_at,creation_name,discord_server_id,image_small_url,image_url,is_charged_immediately,is_monthly,is_nsfw,main_video_embed,main_video_url,one_liner,patron_count,pay_per_name,pledge_sum,pledge_url,published_at,summary,thanks_embed,thanks_msg,thanks_video_url,url', {
+        headers: {
+          'Authorization': `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Campaigns API response status:', campaignsResponse.status);
+
+      if (!campaignsResponse.ok) {
+        const errorText = await campaignsResponse.text();
+        console.error('Campaigns API error:', errorText);
+        return res.status(campaignsResponse.status).json({ error: errorText });
+      }
+
+      const campaignsData = await campaignsResponse.json();
+      console.log('Campaigns data:', campaignsData);
+      
+      res.json(campaignsData);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get campaign pledges/members (server-side to avoid CORS)
+  app.get('/api/patreon-campaigns/:campaignId/pledges', async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      const tokens = await storage.getPatreonTokens();
+      if (!tokens) {
+        return res.status(401).json({ error: 'No Patreon tokens found' });
+      }
+
+      console.log(`Fetching pledges for campaign ${campaignId}...`);
+      const pledgesResponse = await fetch(`https://www.patreon.com/api/oauth2/v2/campaigns/${campaignId}/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=campaign_lifetime_support_cents,currently_entitled_amount_cents,email,full_name,is_follower,last_charge_date,last_charge_status,lifetime_support_cents,next_charge_date,note,patron_status,pledge_cadence,pledge_relationship_start,will_pay_amount_cents&fields%5Buser%5D=email,first_name,full_name,image_url,last_name,social_connections,thumb_url,url,vanity&fields%5Btier%5D=amount_cents,created_at,description,discord_role_ids,edited_at,image_url,patron_count,published,published_at,requires_shipping,title,url`, {
+        headers: {
+          'Authorization': `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Pledges API response status:', pledgesResponse.status);
+
+      if (!pledgesResponse.ok) {
+        const errorText = await pledgesResponse.text();
+        console.error('Pledges API error:', errorText);
+        return res.status(pledgesResponse.status).json({ error: errorText });
+      }
+
+      const pledgesData = await pledgesResponse.json();
+      console.log('Pledges data sample:', {
+        dataCount: pledgesData.data?.length || 0,
+        meta: pledgesData.meta
+      });
+      
+      res.json(pledgesData);
+    } catch (error) {
+      console.error('Error fetching pledges:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // User management endpoints
   app.get("/api/users/:id", async (req, res) => {
     try {
