@@ -2,9 +2,9 @@ import { User, SubscriptionTier } from '../types/subscription';
 
 // Patreon API Configuration
 const PATREON_CONFIG = {
-  clientId: import.meta.env.VITE_PATREON_CLIENT_ID || 'your_patreon_client_id',
-  clientSecret: import.meta.env.VITE_PATREON_CLIENT_SECRET || 'your_patreon_client_secret',
-  redirectUri: import.meta.env.VITE_PATREON_REDIRECT_URI || `${window.location.origin}/auth/patreon/callback`,
+  clientId: '-tv-cVi3LfJC_gV3S1zJ7fjBPAubr2Nj1GXiVZODqBy-XC97Mf9FJIdayBn55iWS',
+  clientSecret: 'IbolNmgTLsoAZXH6dRQUb5JMrH2-AxaU8ou1RwYxyx2M7dVRb-ZG6lvSHeHZxjgY',
+  redirectUri: `${window.location.origin}/auth/patreon/callback`,
   apiBaseUrl: 'https://www.patreon.com/api/oauth2/v2',
   scope: 'identity identity[email] campaigns campaigns.members'
 };
@@ -130,14 +130,7 @@ export class PatreonService {
     console.log('Current URL Origin:', window.location.origin);
     console.log('Scope:', PATREON_CONFIG.scope);
     console.log('=== End Configuration Validation ===');
-    
-    if (!PATREON_CONFIG.clientId || PATREON_CONFIG.clientId === 'your_patreon_client_id') {
-      console.warn('⚠️ Patreon Client ID not configured properly');
-    }
-    
-    if (!PATREON_CONFIG.clientSecret || PATREON_CONFIG.clientSecret === 'your_patreon_client_secret') {
-      console.warn('⚠️ Patreon Client Secret not configured properly');
-    }
+    console.log('✅ Patreon configuration loaded successfully');
   }
 
   private loadTokensFromStorage() {
