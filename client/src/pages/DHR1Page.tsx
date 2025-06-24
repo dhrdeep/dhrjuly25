@@ -38,26 +38,7 @@ const DHR1Page: React.FC = () => {
     }
   ];
 
-  const recentTracks = [
-    {
-      title: 'Midnight City',
-      artist: 'Deep House Collective',
-      time: '2 mins ago',
-      artwork: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=300'
-    },
-    {
-      title: 'Ocean Waves',
-      artist: 'Sunset Vibes',
-      time: '8 mins ago',
-      artwork: 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg?auto=compress&cs=tinysrgb&w=300'
-    },
-    {
-      title: 'Urban Nights',
-      artist: 'City Sounds',
-      time: '15 mins ago',
-      artwork: 'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=300'
-    }
-  ];
+
 
   const handleDownload = (trackTitle: string) => {
     if (!canDownload) {
@@ -176,54 +157,7 @@ const DHR1Page: React.FC = () => {
             </div>
           </section>
 
-          {/* Recently Played */}
-          <section className="mb-12">
-            <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
-              Recently Played on DHR1
-            </h2>
-            
-            <div className="bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/20">
-              <div className="space-y-4">
-                {recentTracks.map((track, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-4 p-4 bg-gray-700/30 rounded-xl border border-orange-400/10 hover:border-orange-400/30 transition-all duration-200 group"
-                  >
-                    <img 
-                      src={track.artwork} 
-                      alt={`${track.title} artwork`}
-                      className="w-16 h-16 rounded-lg object-cover group-hover:scale-105 transition-transform"
-                      onError={handleArtworkError}
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white group-hover:text-orange-300 transition-colors">
-                        {track.title}
-                      </h3>
-                      <p className="text-orange-200">{track.artist}</p>
-                      <p className="text-sm text-gray-400">{track.time}</p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="p-2 rounded-full bg-orange-500/20 hover:bg-orange-500/30 transition-all duration-200 opacity-0 group-hover:opacity-100">
-                        <Play className="h-4 w-4 text-orange-300" />
-                      </button>
-                      <button 
-                        onClick={() => handleDownload(track.title)}
-                        className={`p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 ${
-                          canDownload 
-                            ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' 
-                            : 'bg-gray-600/50 text-gray-500 cursor-not-allowed'
-                        }`}
-                        disabled={!canDownload}
-                        title={canDownload ? 'Download track' : 'Premium subscription required'}
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+
 
           {/* Google Ads Placeholder */}
           <section className="mb-12">
