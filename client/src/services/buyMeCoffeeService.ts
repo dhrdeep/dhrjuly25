@@ -114,14 +114,26 @@ export class BuyMeCoffeeService {
       let hasMore = true;
       
       while (hasMore) {
-        console.log(`Fetching Buy Me a Coffee supporters page ${page}...`);
+        console.log(`Fetching Buy Me a Coffee subscribers/supporters page ${page}...`);
         
-        const response = await fetch(`https://developers.buymeacoffee.com/api/v1/supporters?page=${page}&per_page=50`, {
+        // Try both supporters and subscriptions endpoints
+        let response = await fetch(`https://developers.buymeacoffee.com/api/v1/subscriptions?page=${page}&per_page=50`, {
           headers: {
             'Authorization': `Bearer ${this.accessToken}`,
             'Content-Type': 'application/json'
           }
         });
+
+        // If subscriptions endpoint fails, fallback to supporters
+        if (!response.ok) {
+          console.log(`Subscriptions endpoint failed (${response.status}), trying supporters...`);
+          response = await fetch(`https://developers.buymeacoffee.com/api/v1/supporters?page=${page}&per_page=50`, {
+            headers: {
+              'Authorization': `Bearer ${this.accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+        }
 
         if (!response.ok) {
           throw new Error(`API request failed: ${response.status} ${response.statusText}`);
@@ -129,6 +141,8 @@ export class BuyMeCoffeeService {
 
         const data = await response.json();
         const supporters = data.data || [];
+        
+        console.log(`API Response for page ${page}:`, JSON.stringify(data, null, 2));
         
         if (supporters.length === 0) {
           hasMore = false;
@@ -144,7 +158,7 @@ export class BuyMeCoffeeService {
         }
       }
       
-      console.log(`Found ${allSupporters.length} total Buy Me a Coffee supporters across ${page - 1} pages`);
+      console.log(`Found ${allSupporters.length} total Buy Me a Coffee members/supporters across ${page - 1} pages`);
       
       if (allSupporters.length > 0) {
         console.log('Sample supporter data:', JSON.stringify(allSupporters[0], null, 2));
@@ -158,21 +172,23 @@ export class BuyMeCoffeeService {
         try {
           console.log('Processing supporter:', JSON.stringify(supporter, null, 2));
           
-          // Handle the actual Buy Me a Coffee API response format
+          // Handle both subscription and supporter response formats
           const supporterData = {
-            id: supporter.id || supporter.support_id || `bmc_${Date.now()}_${Math.random()}`,
-            name: supporter.payer_name || supporter.supporter_name || supporter.name || supporter.full_name || 'Anonymous',
-            email: supporter.payer_email || supporter.supporter_email || supporter.email || `supporter_${supporter.id || 'unknown'}@buymeacoffee.com`,
+            id: supporter.id || supporter.support_id || supporter.subscription_id || `bmc_${Date.now()}_${Math.random()}`,
+            name: supporter.payer_name || supporter.supporter_name || supporter.name || supporter.full_name || supporter.member_name || 'Anonymous',
+            email: supporter.payer_email || supporter.supporter_email || supporter.email || supporter.member_email || `supporter_${supporter.id || 'unknown'}@buymeacoffee.com`,
             total_donated: supporter.total_amount || 
+                          supporter.subscription_price ||
+                          supporter.membership_amount ||
                           (supporter.support_coffee_price && supporter.support_coffees ? supporter.support_coffee_price * supporter.support_coffees : null) ||
                           supporter.amount || 
                           supporter.coffee_price || 
                           5, // Default minimum
-            first_donation_date: supporter.created_on || supporter.support_created_on || supporter.first_support_date || supporter.created_at || new Date().toISOString(),
-            last_donation_date: supporter.updated_on || supporter.support_updated_on || supporter.last_support_date || supporter.updated_at || new Date().toISOString(),
+            first_donation_date: supporter.created_on || supporter.support_created_on || supporter.first_support_date || supporter.created_at || supporter.subscription_start_date || new Date().toISOString(),
+            last_donation_date: supporter.updated_on || supporter.support_updated_on || supporter.last_support_date || supporter.updated_at || supporter.subscription_renews_on || new Date().toISOString(),
             message: supporter.support_note || supporter.message || supporter.note || '',
             is_private: supporter.is_private || false,
-            currency: supporter.currency || 'USD'
+            currency: supporter.currency || supporter.subscription_currency || 'USD'
           };
           
           console.log('Converted supporter data:', JSON.stringify(supporterData, null, 2));
