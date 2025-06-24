@@ -383,12 +383,12 @@ export class PatreonService {
   getDHRTierFromPledge(pledge: PatreonPledge): SubscriptionTier {
     const amount = pledge.amount_cents;
     
-    if (amount >= DHR_PATREON_TIERS.dhr_vip.minAmount) {
+    if (amount >= 1000) { // €10 in cents - VIP
       return 'vip';
-    } else if (amount >= DHR_PATREON_TIERS.dhr_premium.minAmount) {
-      return 'premium';
-    } else if (amount >= DHR_PATREON_TIERS.dhr_supporter.minAmount) {
-      return 'premium';
+    } else if (amount >= 500) { // €5 in cents - DHR2
+      return 'dhr2';
+    } else if (amount >= 300) { // €3 in cents - DHR1
+      return 'dhr1';
     }
     
     return 'free';
@@ -478,14 +478,14 @@ export class PatreonService {
   }
 
   private getPatreonTierFromAmount(amountCents: number): string {
-    if (amountCents >= DHR_PATREON_TIERS.dhr_vip.minAmount) {
-      return 'dhr_vip';
-    } else if (amountCents >= DHR_PATREON_TIERS.dhr_premium.minAmount) {
-      return 'dhr_premium';
-    } else if (amountCents >= DHR_PATREON_TIERS.dhr_supporter.minAmount) {
-      return 'dhr_supporter';
+    if (amountCents >= 1000) { // €10 in cents - VIP
+      return 'VIP';
+    } else if (amountCents >= 500) { // €5 in cents - DHR2
+      return 'DHR2';
+    } else if (amountCents >= 300) { // €3 in cents - DHR1
+      return 'DHR1';
     }
-    return 'unknown';
+    return 'Free';
   }
 
   // Check if user is authenticated with Patreon
