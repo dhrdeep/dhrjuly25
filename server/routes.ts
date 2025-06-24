@@ -198,13 +198,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/patreon-campaigns/:campaignId/pledges', async (req, res) => {
     try {
       const { campaignId } = req.params;
+      const { cursor, count = '100' } = req.query;
       const tokens = await storage.getPatreonTokens();
       if (!tokens) {
         return res.status(401).json({ error: 'No Patreon tokens found' });
       }
 
-      console.log(`Fetching pledges for campaign ${campaignId}...`);
-      const pledgesResponse = await fetch(`https://www.patreon.com/api/oauth2/v2/campaigns/${campaignId}/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=campaign_lifetime_support_cents,currently_entitled_amount_cents,email,full_name,is_follower,last_charge_date,last_charge_status,lifetime_support_cents,next_charge_date,note,patron_status,pledge_cadence,pledge_relationship_start,will_pay_amount_cents&fields%5Buser%5D=email,first_name,full_name,image_url,last_name,social_connections,thumb_url,url,vanity&fields%5Btier%5D=amount_cents,created_at,description,discord_role_ids,edited_at,image_url,patron_count,published,published_at,requires_shipping,title,url`, {
+      let url = `https://www.patreon.com/api/oauth2/v2/campaigns/${campaignId}/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=campaign_lifetime_support_cents,currently_entitled_amount_cents,email,full_name,is_follower,last_charge_date,last_charge_status,lifetime_support_cents,next_charge_date,note,patron_status,pledge_cadence,pledge_relationship_start,will_pay_amount_cents&fields%5Buser%5D=email,first_name,full_name,image_url,last_name,social_connections,thumb_url,url,vanity&fields%5Btier%5D=amount_cents,created_at,description,discord_role_ids,edited_at,image_url,patron_count,published,published_at,requires_shipping,title,url&page%5Bcount%5D=${count}`;
+      
+      if (cursor) {
+        url += `&page%5Bcursor%5D=${cursor}`;
+      }
+
+      console.log(`Fetching pledges for campaign ${campaignId} (cursor: ${cursor || 'first page'})...`);
+      const pledgesResponse = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${tokens.accessToken}`,
           'Content-Type': 'application/json',
@@ -228,6 +235,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(pledgesData);
     } catch (error) {
       console.error('Error fetching pledges:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Fetch ALL Patreon members with pagination
+  app.get('/api/patreon-campaigns/:campaignId/all-members', async (req, res) => {
+    try {
+      const { campaignId } = req.params;
+      const tokens = await storage.getPatreonTokens();
+      if (!tokens) {
+        return res.status(401).json({ error: 'No Patreon tokens found' });
+      }
+
+      const allMembers: any[] = [];
+      let cursor: string | null = null;
+      let totalFetched = 0;
+      const maxPages = 50; // Safety limit
+      let pageCount = 0;
+
+      console.log(`Fetching ALL members for campaign ${campaignId}...`);
+
+      do {
+        let url = `https://www.patreon.com/api/oauth2/v2/campaigns/${campaignId}/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=campaign_lifetime_support_cents,currently_entitled_amount_cents,email,full_name,is_follower,last_charge_date,last_charge_status,lifetime_support_cents,next_charge_date,note,patron_status,pledge_cadence,pledge_relationship_start,will_pay_amount_cents&fields%5Buser%5D=email,first_name,full_name,image_url,last_name,social_connections,thumb_url,url,vanity&fields%5Btier%5D=amount_cents,created_at,description,discord_role_ids,edited_at,image_url,patron_count,published,published_at,requires_shipping,title,url&page%5Bcount%5D=100`;
+        
+        if (cursor) {
+          url += `&page%5Bcursor%5D=${cursor}`;
+        }
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${tokens.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Members API error:', errorText);
+          break;
+        }
+
+        const data = await response.json();
+        const members = data.data || [];
+        allMembers.push(...members);
+        totalFetched += members.length;
+
+        console.log(`Fetched page ${pageCount + 1}: ${members.length} members (total: ${totalFetched})`);
+
+        // Check for next page
+        cursor = data.meta?.pagination?.cursors?.next || null;
+        pageCount++;
+
+      } while (cursor && pageCount < maxPages);
+
+      console.log(`Completed fetching ${totalFetched} total members`);
+      
+      res.json({
+        data: allMembers,
+        meta: {
+          pagination: {
+            total: totalFetched,
+            pages_fetched: pageCount
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching all members:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

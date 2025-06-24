@@ -382,6 +382,27 @@ export class PatreonService {
     }
   }
 
+  // Get ALL campaign members with full pagination
+  async getAllCampaignMembers(campaignId: string): Promise<PatreonPledge[]> {
+    try {
+      console.log(`Fetching ALL members for campaign ${campaignId}...`);
+      const response = await fetch(`/api/patreon-campaigns/${campaignId}/all-members`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server all-members API error:', errorText);
+        return [];
+      }
+      
+      const data = await response.json();
+      console.log(`Fetched ${data.data?.length || 0} total members`);
+      return data.data || [];
+    } catch (error) {
+      console.error('Error getting all campaign members:', error);
+      return [];
+    }
+  }
+
   // Convert Patreon pledge to DHR subscription tier
   getDHRTierFromPledge(pledge: PatreonPledge): SubscriptionTier {
     const amount = pledge.amount_cents;
@@ -457,7 +478,12 @@ export class PatreonService {
             preferredGenres: ['deep-house']
           },
           createdAt: memberData.pledge_relationship_start || new Date().toISOString(),
-          lastLoginAt: new Date().toISOString()
+          lastLoginAt: new Date().toISOString(),
+          // Additional fields for admin dashboard
+          amount: memberData.currently_entitled_amount_cents || 0,
+          lastChargeDate: memberData.last_charge_date,
+          nextChargeDate: memberData.next_charge_date,
+          lifetimeSupport: memberData.lifetime_support_cents || 0
         };
 
         syncedUsers.push(user);

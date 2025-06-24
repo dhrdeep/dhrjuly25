@@ -13,6 +13,11 @@ export interface User {
   preferences: UserPreferences;
   createdAt: string;
   lastLoginAt: string;
+  // Additional Patreon-specific fields
+  amount?: number;
+  lastChargeDate?: string;
+  nextChargeDate?: string;
+  lifetimeSupport?: number;
 }
 
 export interface UserPreferences {
