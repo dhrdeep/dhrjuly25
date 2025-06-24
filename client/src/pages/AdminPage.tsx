@@ -64,6 +64,8 @@ const AdminPage: React.FC = () => {
     recentSignups: 0
   });
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [showCsvModal, setShowCsvModal] = useState(false);
+  const [csvContent, setCsvContent] = useState('');
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -938,6 +940,60 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
                 Configuration options for DHR admin panel, API keys, webhook settings, 
                 and system preferences will be available here.
               </p>
+            </div>
+          </div>
+        )}
+        
+        {/* CSV Import Modal */}
+        {showCsvModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl mx-4 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Import Buy Me a Coffee CSV</h3>
+                <button
+                  onClick={() => setShowCsvModal(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Paste your Buy Me a Coffee CSV export content:
+                  </label>
+                  <textarea
+                    value={csvContent}
+                    onChange={(e) => setCsvContent(e.target.value)}
+                    placeholder="Paste CSV content here..."
+                    className="w-full h-48 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                  />
+                </div>
+                
+                <div className="bg-yellow-500/20 rounded-lg p-3 border border-yellow-400/30">
+                  <p className="text-yellow-300 text-sm">
+                    <strong>Format:</strong> Paste the complete CSV content from your Buy Me a Coffee members export. 
+                    Only active subscriptions will be imported and assigned appropriate DHR tiers based on their membership amounts.
+                  </p>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleCsvImport}
+                    disabled={!csvContent.trim()}
+                    className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors text-white font-medium"
+                  >
+                    Import Supporters
+                  </button>
+                  <button
+                    onClick={() => setShowCsvModal(false)}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -126,27 +126,36 @@ export class BuyMeCoffeeService {
       const supporters = data.data || [];
       
       console.log(`Found ${supporters.length} Buy Me a Coffee supporters`);
-      console.log('Sample supporter data:', supporters[0]);
+      if (supporters.length > 0) {
+        console.log('Sample supporter data:', JSON.stringify(supporters[0], null, 2));
+        console.log('All supporter keys:', Object.keys(supporters[0]));
+      }
       
       const users: User[] = [];
       let errors = 0;
 
       for (const supporter of supporters) {
         try {
-          console.log('Processing supporter:', supporter);
+          console.log('Processing supporter:', JSON.stringify(supporter, null, 2));
           
-          // Handle different possible API response formats
+          // Handle the actual Buy Me a Coffee API response format
           const supporterData = {
             id: supporter.id || supporter.support_id || `bmc_${Date.now()}_${Math.random()}`,
-            name: supporter.payer_name || supporter.supporter_name || supporter.name || 'Anonymous',
-            email: supporter.payer_email || supporter.supporter_email || supporter.email || `supporter_${supporter.id}@buymeacoffee.com`,
-            total_donated: supporter.total_amount || (supporter.support_coffee_price * supporter.support_coffees) || supporter.amount || 5,
-            first_donation_date: supporter.created_on || supporter.support_created_on || supporter.first_support_date || new Date().toISOString(),
-            last_donation_date: supporter.updated_on || supporter.support_updated_on || supporter.last_support_date || new Date().toISOString(),
-            message: supporter.support_note || supporter.message || '',
+            name: supporter.payer_name || supporter.supporter_name || supporter.name || supporter.full_name || 'Anonymous',
+            email: supporter.payer_email || supporter.supporter_email || supporter.email || `supporter_${supporter.id || 'unknown'}@buymeacoffee.com`,
+            total_donated: supporter.total_amount || 
+                          (supporter.support_coffee_price && supporter.support_coffees ? supporter.support_coffee_price * supporter.support_coffees : null) ||
+                          supporter.amount || 
+                          supporter.coffee_price || 
+                          5, // Default minimum
+            first_donation_date: supporter.created_on || supporter.support_created_on || supporter.first_support_date || supporter.created_at || new Date().toISOString(),
+            last_donation_date: supporter.updated_on || supporter.support_updated_on || supporter.last_support_date || supporter.updated_at || new Date().toISOString(),
+            message: supporter.support_note || supporter.message || supporter.note || '',
             is_private: supporter.is_private || false,
             currency: supporter.currency || 'USD'
           };
+          
+          console.log('Converted supporter data:', JSON.stringify(supporterData, null, 2));
           
           const user = this.convertSupporterToUser(supporterData);
           users.push(user);
