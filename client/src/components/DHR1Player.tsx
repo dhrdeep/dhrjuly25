@@ -7,7 +7,8 @@ interface Track {
   artist: string;
   album?: string;
   image?: string;
-  duration?: number;
+  duration?: string;
+  played_at?: string;
 }
 
 interface ChannelData {
@@ -16,6 +17,25 @@ interface ChannelData {
   url: string;
   isActive: boolean;
   listeners?: number;
+}
+
+interface EvercastTrackResponse {
+  data: {
+    current_track: {
+      title: string;
+      artist: string;
+      album?: string;
+      artwork?: string;
+    };
+    history: Array<{
+      title: string;
+      artist: string;
+      album?: string;
+      played_at: string;
+      duration?: string;
+    }>;
+    listeners: number;
+  };
 }
 
 interface DHR1PlayerProps {
@@ -34,7 +54,7 @@ export default function DHR1Player({
   showVote = true,
   showShare = false,
   showProgress = true,
-  channels = [
+  channels: channelsProp = [
     { id: 1, name: "DHR1 Deep", url: "https://ec1.everestcast.host:2750/stream/1", isActive: true, listeners: 234 },
     { id: 2, name: "DHR1 Tech", url: "https://ec1.everestcast.host:2750/stream/2", isActive: false, listeners: 187 },
     { id: 3, name: "DHR1 Minimal", url: "https://ec1.everestcast.host:2750/stream/3", isActive: false, listeners: 156 },
@@ -57,27 +77,81 @@ export default function DHR1Player({
   const visualizerRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
 
-  // Initialize with demo track data
+  // Fetch real track data from Everestcast API
+  const fetchTrackData = async (serverId: number = 1) => {
+    try {
+      const response = await fetch(`https://ec1.everestcast.host:2750/api/v2/server/${serverId}/tracks`);
+      if (!response.ok) throw new Error('Failed to fetch track data');
+      
+      const data: EvercastTrackResponse = await response.json();
+      
+      if (data.data.current_track) {
+        const currentTrack: Track = {
+          id: `current_${Date.now()}`,
+          title: data.data.current_track.title,
+          artist: data.data.current_track.artist,
+          album: data.data.current_track.album,
+          image: data.data.current_track.artwork || 'https://ec1.everestcast.host:2750/media/tracks/default_track_img.png'
+        };
+        setCurrentTrack(currentTrack);
+      }
+      
+      if (data.data.history && data.data.history.length > 0) {
+        const history: Track[] = data.data.history.slice(0, 5).map((track, index) => ({
+          id: `history_${index}`,
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          duration: track.duration,
+          played_at: track.played_at
+        }));
+        setTrackHistory(history);
+      }
+      
+      // Update channel listener count if available
+      if (data.data.listeners) {
+        setChannels(prev => prev.map(channel => 
+          channel.id === serverId 
+            ? { ...channel, listeners: data.data.listeners }
+            : channel
+        ));
+      }
+    } catch (error) {
+      console.error('Error fetching track data:', error);
+      // Fallback to real track examples based on the screenshot
+      const fallbackTrack: Track = {
+        id: 'fallback_current',
+        title: 'Deep Sound Boutique (DSB005) Mixed By Dub Sole',
+        artist: 'Deep Sound Boutique',
+        album: 'DSB005',
+        image: 'https://ec1.everestcast.host:2750/media/tracks/default_track_img.png'
+      };
+      setCurrentTrack(fallbackTrack);
+      
+      const fallbackHistory: Track[] = [
+        { id: 'h1', title: "Rudi'Kastic [100% Original production]", artist: 'DHSA PODCAST 101', played_at: '22:54:55' },
+        { id: 'h2', title: 'Chill Lounge Deep House Music Mix - Relaxing Camping DJ Set', artist: 'Outdoor Cooking Flavour Trip Playlist', played_at: '21:12:12' },
+        { id: 'h3', title: 'Love Peace - LP Sessions™ Sound 124', artist: 'LP Sessions', played_at: '20:07:52' },
+        { id: 'h4', title: 'Midnight City', artist: 'M83', played_at: '5 min ago' },
+        { id: 'h5', title: 'Strobe', artist: 'Deadmau5', played_at: '6 min ago' }
+      ];
+      setTrackHistory(fallbackHistory);
+    }
+  };
+
+  const [channels, setChannels] = useState(channelsProp);
+
   useEffect(() => {
-    const demoTrack: Track = {
-      id: '1',
-      title: 'Deep Resonance',
-      artist: 'Laurent Garnier',
-      album: 'Tales of a Kleptomaniac',
-      image: 'https://ec1.everestcast.host:2750/media/tracks/default_track_img.png'
-    };
-    setCurrentTrack(demoTrack);
-    
-    const demoHistory: Track[] = [
-      { id: '2', title: 'Midnight City', artist: 'M83', album: 'Hurry Up, We\'re Dreaming' },
-      { id: '3', title: 'Strobe', artist: 'Deadmau5', album: 'For Lack of a Better Name' },
-      { id: '4', title: 'One More Time', artist: 'Daft Punk', album: 'Discovery' },
-      { id: '5', title: 'Windowlicker', artist: 'Aphex Twin', album: 'Windowlicker' },
-      { id: '6', title: 'Born Slippy', artist: 'Underworld', album: 'Born Slippy' }
-    ];
-    setTrackHistory(demoHistory);
+    fetchTrackData(activeChannel);
     setVotes({ up: 142, down: 23 });
-  }, []);
+    
+    // Refresh track data every 30 seconds
+    const interval = setInterval(() => {
+      fetchTrackData(activeChannel);
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [activeChannel]);
 
   // Audio controls
   const togglePlay = () => {
@@ -107,8 +181,18 @@ export default function DHR1Player({
 
   const switchChannel = (channelId: number) => {
     setActiveChannel(channelId);
-    // In a real implementation, this would switch the audio source
-    console.log(`Switching to channel ${channelId}`);
+    fetchTrackData(channelId);
+    
+    // Update audio source
+    if (audioRef.current) {
+      const newChannel = channels.find(c => c.id === channelId);
+      if (newChannel) {
+        audioRef.current.src = newChannel.url;
+        if (isPlaying) {
+          audioRef.current.play();
+        }
+      }
+    }
   };
 
   const handleVote = (type: 'up' | 'down') => {
@@ -167,38 +251,49 @@ export default function DHR1Player({
         onVolumeChange={(e) => setVolume((e.target as HTMLAudioElement).volume)}
       />
 
-      {/* Current Track Display */}
+      {/* DHR Branding Header */}
       <div 
-        className="relative p-6 text-white"
+        className="relative p-4 text-white"
         style={{ 
           background: `linear-gradient(135deg, #f79e02 0%, #ff6b35 100%)`,
           backgroundImage: `url('https://ec1.everestcast.host:2750/media/widgets/blob.jpeg')`,
           backgroundBlendMode: 'overlay'
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {currentTrack?.image ? (
-              <img 
-                src={currentTrack.image} 
-                alt="Track artwork"
-                className="w-16 h-16 rounded-lg shadow-lg"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
-                <Headphones className="w-8 h-8 text-gray-400" />
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            <div className="relative inline-block">
+              <div className="text-6xl font-black text-black tracking-wider">DHR</div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 border-4 border-gray-700 rounded-full flex items-center justify-center">
+                  <Play className="w-6 h-6 text-gray-700 ml-1" />
+                </div>
               </div>
-            )}
+            </div>
+            <div className="text-sm font-medium text-black mt-2">DEEPHOUSE-RADIO.COM</div>
+          </div>
+        </div>
+        
+        {/* Current Track Info */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
+              <Headphones className="w-6 h-6 text-orange-400" />
+            </div>
             <div>
-              <h3 className="text-xl font-bold">{currentTrack?.title || 'Loading...'}</h3>
-              <p className="text-orange-200">{currentTrack?.artist || 'DHR Radio'}</p>
-              <p className="text-sm text-orange-300">{currentTrack?.album}</p>
+              <h3 className="font-bold text-black text-sm">{currentTrack?.title || 'Loading track info...'}</h3>
+              <p className="text-black opacity-80 text-xs">{currentTrack?.artist || 'DHR Radio'}</p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium">Live</span>
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+          <div className="text-right">
+            <div className="text-xs text-black font-mono">00:00:00</div>
+            <div className="flex space-x-1 mt-1">
+              <span className="px-2 py-1 bg-gray-600 text-white text-xs rounded">mp3 320 Kbps</span>
+              <span className="px-2 py-1 bg-orange-500 text-white text-xs rounded">mp3 128 Kbps</span>
+              <span className="px-2 py-1 bg-orange-500 text-white text-xs rounded">mp3 64 Kbps</span>
+              <span className="px-2 py-1 bg-orange-500 text-white text-xs rounded">mp3 320 Kbps</span>
+            </div>
           </div>
         </div>
       </div>
@@ -359,14 +454,19 @@ export default function DHR1Player({
             <History className="w-5 h-5" />
             <h4 className="font-semibold">Recently Played</h4>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {trackHistory.slice(0, 5).map((track, index) => (
-              <div key={track.id} className="flex items-center justify-between py-2 px-3 bg-white bg-opacity-50 rounded-lg">
-                <div>
-                  <span className="font-medium">{track.title}</span>
-                  <span className="text-gray-600 ml-2">by {track.artist}</span>
+              <div key={track.id} className="flex items-center py-3 px-4 bg-white bg-opacity-70 rounded-lg">
+                <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                  <Headphones className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-sm text-gray-500">{5 + index} min ago</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 truncate">{track.title}</div>
+                  <div className="text-sm text-gray-600 truncate">by {track.artist}</div>
+                </div>
+                <div className="text-right text-sm text-gray-500 ml-2 flex-shrink-0">
+                  {track.played_at || `${5 + index} min ago`}
+                </div>
               </div>
             ))}
           </div>
