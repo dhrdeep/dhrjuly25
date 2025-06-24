@@ -90,12 +90,14 @@ The application is now fully operational on Replit. The Patreon OAuth server end
 
 ## Enhanced Features
 - Full Patreon subscriber sync with pagination (processes all 1123+ patrons)
+- Buy Me a Coffee supporter integration with same tier system
 - Detailed subscription management with 4-tier system:
   - Free (€0) - Landing page and free stream access only
   - DHR1 (€3+) - Access to DHR1 channel + track identification
   - DHR2 (€5+) - Access to DHR1 + DHR2 channels + track identification
   - VIP (€10+) - Full access to all content including VIP section + track identification
 - Automatic subscription expiration handling - access revoked when subscription expires
+- Multi-platform subscriber support (Patreon + Buy Me a Coffee)
 - Comprehensive subscriber table with lifetime value, next charge dates, and status tracking
 - Real-time notifications for subscriber changes and sync results
 - Advanced filtering and search capabilities for subscriber management

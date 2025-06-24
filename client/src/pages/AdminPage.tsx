@@ -50,6 +50,7 @@ const AdminPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string>('');
   const [configStatus, setConfigStatus] = useState<{ isConfigured: boolean; issues: string[] }>({ isConfigured: false, issues: [] });
+  const [bmcConfigStatus, setBmcConfigStatus] = useState<{ isConfigured: boolean; issues: string[] }>({ isConfigured: false, issues: [] });
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     activeSubscribers: 0,
@@ -94,6 +95,9 @@ const AdminPage: React.FC = () => {
   const checkPatreonConfig = () => {
     const status = patreonService.getConfigStatus();
     setConfigStatus(status);
+    
+    const bmcStatus = buyMeCoffeeService.getConfigStatus();
+    setBmcConfigStatus(bmcStatus);
   };
 
   const loadUsers = () => {
