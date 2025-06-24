@@ -137,33 +137,33 @@ const DHR1Page: React.FC = () => {
                 historycontainer="bottom"
                 historycontainer-bg="#cdd8e5"
                 historycontainer-bg-opacity="1"
-                show-history="true"
+                {...({ ":show-history": "true" } as any)}
                 history-limit="5"
                 sharecontainer="both"
                 sharecontainer-bg="#ffffff"
                 sharecontainer-bg-opacity="1"
-                show-share="false"
+                {...({ ":show-share": "false" } as any)}
                 share-url=""
-                share='["facebook","telegram","twitter"]'
-                show-dj="false"
+                {...({ ":share": "['facebook','telegram','twitter']" } as any)}
+                {...({ ":show-dj": "false" } as any)}
                 default-dj-img="https://ec1.everestcast.host:2750/media/djs/dj.png"
-                show-image="false"
+                {...({ ":show-image": "false" } as any)}
                 default-cover-image="https://ec1.everestcast.host:2750/media/tracks/default_track_img.png"
                 play-button-color="#35495e"
                 play-button-bg="null"
                 visualizer-outline-color="#37679a"
                 visualizer-bar-width="1"
-                channels-displayed="[1,2,3,4]"
+                {...({ ":channels-displayed": "[1,2,3,4]" } as any)}
                 channels-switch-bg="#ffbf0f"
                 channels-switch-color="#ffffff"
                 channels-switch-bg-active="#dddddd"
                 channels-switch-color-active="#000000"
-                show-vote="true"
+                {...({ ":show-vote": "true" } as any)}
                 vote-buttons-color="#35495e"
                 vote-buttons-opacity="1"
                 vote-results-font-color="#FFFFFF"
                 vote-results-font-size="16"
-                progress-show="true"
+                {...({ ":progress-show": "true" } as any)}
                 progress-bar-color="#35495e"
                 progress-bar-bg-color="#41b883"
                 progress-bar-bg-opacity="0.1"
