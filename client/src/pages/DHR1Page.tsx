@@ -94,13 +94,14 @@ const DHR1Page: React.FC = () => {
           <section className="mb-12 flex justify-center">
             <iframe
               src="/evercast-player.html"
-              width="750"
-              height="450"
+              width="600"
+              height="400"
               frameBorder="0"
               style={{
                 border: 'none',
                 borderRadius: '8px',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                maxWidth: '100%'
               }}
               title="DHR1 Everestcast Player"
             />
