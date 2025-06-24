@@ -56,7 +56,8 @@ const AdminPage: React.FC = () => {
     monthlyRevenue: 0,
     patreonSubscribers: 0,
     vipUsers: 0,
-    premiumUsers: 0,
+    dhr2Users: 0,
+    dhr1Users: 0,
     freeUsers: 0,
     recentSignups: 0
   });
@@ -173,7 +174,8 @@ const AdminPage: React.FC = () => {
       }, 0),
       patreonSubscribers: userList.filter(u => u.subscriptionSource === 'patreon').length,
       vipUsers: userList.filter(u => u.subscriptionTier === 'vip').length,
-      premiumUsers: userList.filter(u => u.subscriptionTier === 'premium').length,
+      dhr2Users: userList.filter(u => u.subscriptionTier === 'dhr2').length,
+      dhr1Users: userList.filter(u => u.subscriptionTier === 'dhr1').length,
       freeUsers: userList.filter(u => u.subscriptionTier === 'free').length,
       recentSignups: userList.filter(u => new Date(u.createdAt) > thirtyDaysAgo).length
     };
@@ -261,9 +263,26 @@ const AdminPage: React.FC = () => {
 
   const getTierColor = (tier: SubscriptionTier) => {
     switch (tier) {
-      case 'vip': return 'text-orange-400 bg-orange-500/20';
-      case 'premium': return 'text-amber-400 bg-amber-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
+      case 'vip': return 'bg-purple-100 text-purple-800';
+      case 'dhr2': return 'bg-orange-100 text-orange-800';
+      case 'dhr1': return 'bg-blue-100 text-blue-800';
+      case 'free': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTierIcon = (tier: SubscriptionTier) => {
+    switch (tier) {
+      case 'vip':
+        return <Crown className="h-3 w-3 mr-1" />;
+      case 'dhr2':
+        return <Users className="h-3 w-3 mr-1" />;
+      case 'dhr1':
+        return <Users className="h-3 w-3 mr-1" />;
+      case 'free':
+        return <Users className="h-3 w-3 mr-1" />;
+      default:
+        return <Users className="h-3 w-3 mr-1" />;
     }
   };
 

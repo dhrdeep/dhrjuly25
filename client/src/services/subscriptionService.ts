@@ -3,43 +3,43 @@ import { User, SubscriptionTier, SubscriptionFeatures, PatreonTier, BuyMeCoffeeS
 // Patreon tier mapping
 export const PATREON_TIERS: PatreonTier[] = [
   {
-    id: 'dhr_supporter',
-    name: 'DHR Supporter',
-    amount: 5,
-    dhrTier: 'premium',
+    id: 'dhr1',
+    name: 'DHR1',
+    amount: 3,
+    dhrTier: 'dhr1',
     features: {
       canAccessDHR1: true,
       canAccessDHR2: false,
       canAccessVIP: false,
       canDownload: true,
-      adFree: true,
+      adFree: false,
       maxDownloadsPerMonth: 10,
-      canUploadMixes: true,
+      canUploadMixes: false,
       prioritySupport: false,
       exclusiveContent: false
     }
   },
   {
-    id: 'dhr_premium',
-    name: 'DHR Premium',
-    amount: 10,
-    dhrTier: 'premium',
+    id: 'dhr2',
+    name: 'DHR2',
+    amount: 5,
+    dhrTier: 'dhr2',
     features: {
       canAccessDHR1: true,
       canAccessDHR2: true,
       canAccessVIP: false,
       canDownload: true,
       adFree: true,
-      maxDownloadsPerMonth: 25,
+      maxDownloadsPerMonth: 50,
       canUploadMixes: true,
-      prioritySupport: true,
-      exclusiveContent: true
+      prioritySupport: false,
+      exclusiveContent: false
     }
   },
   {
-    id: 'dhr_vip',
-    name: 'DHR VIP',
-    amount: 20,
+    id: 'vip',
+    name: 'VIP',
+    amount: 10,
     dhrTier: 'vip',
     features: {
       canAccessDHR1: true,

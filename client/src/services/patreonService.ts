@@ -11,44 +11,20 @@ const PATREON_CONFIG = {
 
 // DHR Patreon Campaign Tiers
 export const DHR_PATREON_TIERS = {
-  'dhr_supporter': {
-    id: 'dhr_supporter',
-    name: 'DHR Supporter',
-    minAmount: 500, // $5.00 in cents
-    dhrTier: 'premium' as SubscriptionTier,
-    benefits: [
-      'Access to DHR1 Premium',
-      'Ad-free listening',
-      '10 downloads per month',
-      'Supporter badge in chat'
-    ]
+  dhr1: {
+    name: 'DHR1',
+    minAmount: 300, // €3 in cents
+    dhrTier: 'dhr1' as SubscriptionTier
   },
-  'dhr_premium': {
-    id: 'dhr_premium',
-    name: 'DHR Premium',
-    minAmount: 1000, // $10.00 in cents
-    dhrTier: 'premium' as SubscriptionTier,
-    benefits: [
-      'Access to DHR1 & DHR2 Premium',
-      'Ad-free listening',
-      '25 downloads per month',
-      'Priority support',
-      'Exclusive content access'
-    ]
+  dhr2: {
+    name: 'DHR2',
+    minAmount: 500, // €5 in cents  
+    dhrTier: 'dhr2' as SubscriptionTier
   },
-  'dhr_vip': {
-    id: 'dhr_vip',
-    name: 'DHR VIP',
-    minAmount: 2000, // $20.00 in cents
-    dhrTier: 'vip' as SubscriptionTier,
-    benefits: [
-      'Full VIP access',
-      'Unlimited downloads',
-      'Exclusive VIP content',
-      'Priority support',
-      'Early access to new features',
-      'VIP badge and perks'
-    ]
+  vip: {
+    name: 'VIP',
+    minAmount: 1000, // €10 in cents
+    dhrTier: 'vip' as SubscriptionTier
   }
 };
 
