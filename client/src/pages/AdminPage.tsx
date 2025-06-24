@@ -21,9 +21,8 @@ import {
   Clock,
   BarChart3,
   AlertTriangle,
-  Info
-} from 'lucide-react';
-import { Coffee } from 'lucide-react';
+  Info,
+  Coffee } from 'lucide-react';
 import { patreonService, DHR_PATREON_TIERS } from '../services/patreonService';
 import { subscriptionService } from '../services/subscriptionService';
 import { buyMeCoffeeService } from '../services/buyMeCoffeeService';
@@ -239,6 +238,47 @@ const AdminPage: React.FC = () => {
       
     } catch (error) {
       setSyncStatus(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSyncBuyMeCoffee = async () => {
+    setIsLoading(true);
+    setSyncStatus('Syncing Buy Me a Coffee supporters...');
+
+    try {
+      const result = await buyMeCoffeeService.syncSupporters();
+      setSyncStatus(`Buy Me a Coffee sync completed: ${result.success} supporters synced, ${result.errors} errors`);
+      
+      // Merge with existing users
+      const updatedUsers = [...users, ...result.users];
+      setUsers(updatedUsers);
+      calculateStats(updatedUsers);
+      
+      const newNotifications = [];
+      if (result.success > 0) {
+        newNotifications.push(`Successfully synced ${result.success} Buy Me a Coffee supporters`);
+        
+        // Count tier distribution from actual data
+        const tierCounts = result.users?.reduce((acc, user) => {
+          acc[user.subscriptionTier] = (acc[user.subscriptionTier] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>) || {};
+        
+        if (tierCounts.vip) newNotifications.push(`${tierCounts.vip} VIP supporters detected`);
+        if (tierCounts.dhr2) newNotifications.push(`${tierCounts.dhr2} DHR2 supporters detected`);
+        if (tierCounts.dhr1) newNotifications.push(`${tierCounts.dhr1} DHR1 supporters detected`);
+      } else {
+        newNotifications.push(`Buy Me a Coffee API integration ready - click Sync Supporters to fetch data`);
+      }
+      
+      setNotifications(prev => [...prev, ...newNotifications]);
+      
+    } catch (error) {
+      console.error('Buy Me a Coffee sync failed:', error);
+      setSyncStatus('Buy Me a Coffee sync failed');
+      setNotifications(prev => [...prev, 'Buy Me a Coffee sync failed']);
     } finally {
       setIsLoading(false);
     }
