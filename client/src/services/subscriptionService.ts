@@ -69,14 +69,14 @@ export const getBuyMeCoffeeFeatures = (totalSupport: number): BuyMeCoffeeSupport
       isSupporter: true,
       totalSupport,
       lastSupportDate: new Date().toISOString(),
-      dhrTier: 'premium'
+      dhrTier: 'dhr2'
     };
   } else if (totalSupport >= 5) {
     return {
       isSupporter: true,
       totalSupport,
       lastSupportDate: new Date().toISOString(),
-      dhrTier: 'premium'
+      dhrTier: 'dhr1'
     };
   }
   
@@ -103,17 +103,29 @@ export const getSubscriptionFeatures = (tier: SubscriptionTier): SubscriptionFea
         prioritySupport: true,
         exclusiveContent: true
       };
-    case 'premium':
+    case 'dhr2':
       return {
         canAccessDHR1: true,
         canAccessDHR2: true,
         canAccessVIP: false,
         canDownload: true,
         adFree: true,
-        maxDownloadsPerMonth: 25,
+        maxDownloadsPerMonth: 50,
         canUploadMixes: true,
-        prioritySupport: true,
-        exclusiveContent: true
+        prioritySupport: false,
+        exclusiveContent: false
+      };
+    case 'dhr1':
+      return {
+        canAccessDHR1: true,
+        canAccessDHR2: false,
+        canAccessVIP: false,
+        canDownload: true,
+        adFree: false,
+        maxDownloadsPerMonth: 10,
+        canUploadMixes: false,
+        prioritySupport: false,
+        exclusiveContent: false
       };
     case 'free':
     default:

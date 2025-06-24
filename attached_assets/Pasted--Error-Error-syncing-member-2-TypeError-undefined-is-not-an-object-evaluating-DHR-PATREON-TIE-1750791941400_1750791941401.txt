@@ -1,0 +1,366 @@
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+[Error] Error syncing member: (2)
+TypeError: undefined is not an object (evaluating 'DHR_PATREON_TIERS.dhr_vip.minAmount')
+Object
+	(anonymous function) (patreonService.ts:349)
+> Selected Element
+< <span data-replit-metadata="client/src/pages/AdminPage.tsx:650:24" data-component-name="span" class="text-gray-300 text-sm">Full sync completed: 0 users synced, 310 errors (0 total members processed)</span>

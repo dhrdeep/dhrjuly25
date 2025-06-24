@@ -398,11 +398,11 @@ export class PatreonService {
   getDHRTierFromMember(memberData: any): SubscriptionTier {
     const amount = memberData.currently_entitled_amount_cents || 0;
     
-    if (amount >= DHR_PATREON_TIERS.vip.minAmount) {
+    if (amount >= 1000) { // €10 in cents - VIP
       return 'vip';
-    } else if (amount >= DHR_PATREON_TIERS.dhr2.minAmount) {
+    } else if (amount >= 500) { // €5 in cents - DHR2
       return 'dhr2';
-    } else if (amount >= DHR_PATREON_TIERS.dhr1.minAmount) {
+    } else if (amount >= 300) { // €3 in cents - DHR1
       return 'dhr1';
     }
     
