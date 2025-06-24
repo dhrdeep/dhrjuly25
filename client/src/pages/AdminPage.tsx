@@ -315,9 +315,10 @@ const AdminPage: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
       
-      if (tierCounts.vip) notifications.push(`${tierCounts.vip} VIP supporters added from CSV`);
-      if (tierCounts.dhr2) notifications.push(`${tierCounts.dhr2} DHR2 supporters added from CSV`);
-      if (tierCounts.dhr1) notifications.push(`${tierCounts.dhr1} DHR1 supporters added from CSV`);
+      if (tierCounts.vip) notifications.push(`${tierCounts.vip} VIP members imported (€10+) - Full access`);
+      if (tierCounts.dhr2) notifications.push(`${tierCounts.dhr2} DHR2 members imported (€5+) - DHR1 + DHR2 access`);
+      if (tierCounts.dhr1) notifications.push(`${tierCounts.dhr1} DHR1 members imported (€3+) - DHR1 access`);
+      if (tierCounts.free) notifications.push(`${tierCounts.free} Free members imported - Limited access`);
       
       setNotifications(prev => [...prev, ...notifications]);
       setShowCsvModal(false);
