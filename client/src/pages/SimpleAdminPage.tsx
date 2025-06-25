@@ -5,20 +5,29 @@ import { buyMeCoffeeService } from '@/services/buyMeCoffeeService';
 import { User, SubscriptionTier } from '@/types/subscription';
 
 export default function SimpleAdminPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterTier, setFilterTier] = useState<string>('all');
-  const [notifications, setNotifications] = useState<string[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newSubscriber, setNewSubscriber] = useState({
-    name: '',
-    email: '',
-    tier: 'dhr1' as SubscriptionTier,
-    amount: 3,
-    source: 'manual' as const,
-    notes: ''
-  });
+  // Redirect to comprehensive admin dashboard
+  React.useEffect(() => {
+    window.location.replace('/admin-dashboard');
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-white text-2xl font-bold mb-4">Redirecting to New Admin Dashboard...</div>
+        <div className="text-gray-400 mb-8">Enhanced admin interface with comprehensive management tools</div>
+        <div className="bg-gray-800/50 rounded-lg p-6 max-w-md mx-auto">
+          <h3 className="text-orange-400 font-bold mb-4">Available Features:</h3>
+          <ul className="text-left text-gray-300 space-y-2">
+            <li>• Complete sync system (Patreon, BMAC, Spaces)</li>
+            <li>• VIP content management</li>
+            <li>• User management with filtering</li>
+            <li>• Bulk import functionality</li>
+            <li>• Storage configuration</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
 
   // Filter users based on search and tier
   const filteredUsers = users.filter(user => {

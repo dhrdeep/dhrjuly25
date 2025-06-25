@@ -54,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Forum', href: '/forum', icon: Users },
     { name: 'Upload', href: '/upload', icon: Upload },
     { name: 'Shop', href: '/shop', icon: ShoppingBag },
-    { name: 'Admin', href: '/admin-dashboard', icon: Settings },
+    { name: 'Admin Dashboard', href: '/admin-dashboard', icon: Settings },
   ];
 
   const socialLinks = [

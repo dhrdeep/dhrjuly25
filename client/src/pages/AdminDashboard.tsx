@@ -61,11 +61,11 @@ export default function AdminDashboard() {
 
   const quickActions = [
     {
-      title: 'Sync DigitalOcean Space',
-      description: 'Update database with new files from Space',
+      title: 'Sync System',
+      description: 'Patreon, BMAC & Spaces Sync',
       icon: Sync,
       href: '/sync',
-      color: 'text-blue-500',
+      color: 'text-orange-500',
       priority: 'high'
     },
     {
