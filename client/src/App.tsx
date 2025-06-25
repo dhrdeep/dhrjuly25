@@ -35,7 +35,7 @@ function App() {
             <Route path="/forum" element={<ForumPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/shop" element={<ShopPage />} />
-            <Route path="/admin" element={<SimpleAdminPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/vip-admin" element={<VIPAdminPage />} />
             <Route path="/bulk-import" element={<BulkImportPage />} />

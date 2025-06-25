@@ -843,26 +843,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errors: [] as string[]
       };
 
-      // Fetch campaign data
-      const campaignResponse = await fetch('https://www.patreon.com/api/oauth2/v2/campaigns?include=members&fields%5Bmember%5D=full_name,email,patron_status,currently_entitled_amount_cents,last_charge_status,last_charge_date,next_charge_date&fields%5Bcampaign%5D=patron_count', {
+      // First get the campaign ID
+      const campaignResponse = await fetch('https://www.patreon.com/api/oauth2/v2/campaigns', {
         headers: {
           'Authorization': `Bearer ${tokens.accessToken}`,
           'Content-Type': 'application/json'
         }
       });
-
+      
       if (!campaignResponse.ok) {
         const errorText = await campaignResponse.text();
-        console.error('Patreon API error:', errorText);
+        console.error('Patreon campaigns API error:', errorText);
         return res.status(500).json({ 
           success: false, 
           error: `Patreon API error: ${campaignResponse.status}` 
         });
       }
 
-      const campaignData = await campaignResponse.json();
-      const campaign = campaignData.data[0];
-      const members = campaignData.included || [];
+      const campaignsData = await campaignResponse.json();
+      const campaignId = campaignsData.data[0]?.id;
+      
+      if (!campaignId) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'No campaign found' 
+        });
+      }
+
+      // Then fetch members separately
+      const membersResponse = await fetch(`https://www.patreon.com/api/oauth2/v2/campaigns/${campaignId}/members?include=currently_entitled_tiers,user&fields%5Bmember%5D=full_name,email,patron_status,currently_entitled_amount_cents,last_charge_status,last_charge_date&fields%5Buser%5D=email,full_name&page%5Bcount%5D=1000`, {
+        headers: {
+          'Authorization': `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!membersResponse.ok) {
+        const errorText = await membersResponse.text();
+        console.error('Patreon members API error:', errorText);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Patreon API error: ${membersResponse.status}` 
+        });
+      }
+
+      const campaignData = await membersResponse.json();
+      const members = campaignData.data || [];
 
       syncResults.totalPatrons = members.length;
 

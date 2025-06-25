@@ -67,14 +67,14 @@ export async function syncSpaceWithDatabase() {
     // Get list of files from DigitalOcean Space
     const AWS = await import('aws-sdk');
     const s3 = new AWS.default.S3({
-      endpoint: 'https://lon1.digitaloceanspaces.com',
-      accessKeyId: process.env.S3_ACCESS_KEY,
-      secretAccessKey: process.env.S3_SECRET_KEY,
+      endpoint: process.env.S3_ENDPOINT || 'https://lon1.digitaloceanspaces.com',
+      accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
+      secretAccessKey: process.env.S3_SECRET_KEY || '43k5T+g++ESLIKOdVhX3u7Zavw3/JNfNrxxxqrltJmc',
       region: 'lon1'
     });
 
     const params = {
-      Bucket: 'dhrmixes',
+      Bucket: process.env.S3_BUCKET || 'dhrmixes',
       MaxKeys: 1000
     };
 
