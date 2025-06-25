@@ -25,7 +25,6 @@ import {
   Download,
   Eye
 } from 'lucide-react';
-import MediaPlayer from '../components/MediaPlayer';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -333,7 +332,21 @@ const HomePage: React.FC = () => {
               </h3>
               <p className="text-gray-400">Free 24/7 Deep House Stream - No Registration Required</p>
             </div>
-            <MediaPlayer />
+            <div className="flex justify-center">
+              <iframe
+                src="/evercast-player.html"
+                width="600"
+                height="1000"
+                frameBorder="0"
+                style={{
+                  border: 'none',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  maxWidth: '100%'
+                }}
+                title="DHR Live Player"
+              />
+            </div>
           </div>
         </div>
       </section>
