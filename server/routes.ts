@@ -590,17 +590,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Use CDN endpoint for public access (you've enabled CDN in your Space settings)
-        const cdnUrl = `https://dhrmixes.lon1.cdn.digitaloceanspaces.com/${mix.s3Url}`;
-        console.log(`Streaming from CDN: ${cdnUrl}`);
+        // Generate proper signed URL with AWS SDK v2 (working approach)
+        const AWS = await import('aws-sdk');
+        
+        // Configure S3 client for DigitalOcean Spaces
+        const s3 = new AWS.default.S3({
+          endpoint: 'https://lon1.digitaloceanspaces.com',
+          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
+          secretAccessKey: process.env.S3_SECRET_KEY,
+          region: 'lon1',
+          signatureVersion: 'v4'
+        });
+        
+        // Generate signed URL for direct access to private file
+        const signedUrl = s3.getSignedUrl('getObject', {
+          Bucket: 'dhrmixes',
+          Key: mix.s3Url,
+          Expires: 3600 // 1 hour expiry
+        });
+        
+        console.log(`Streaming with signed URL: ${mix.title}`);
         
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(cdnUrl, {
+        const response = await fetch(signedUrl, {
           timeout: 30000,
           headers: {
             'User-Agent': 'DHR-VIP-Player/1.0',
-            'Accept': 'audio/mpeg, audio/*, */*',
-            'Cache-Control': 'no-cache'
+            'Accept': 'audio/mpeg, audio/*, */*'
           }
         });
 
@@ -988,17 +1004,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Use CDN endpoint for public access (you've enabled CDN in your Space settings)
-        const cdnUrl = `https://dhrmixes.lon1.cdn.digitaloceanspaces.com/${mix.s3Url}`;
-        console.log(`Downloading from CDN: ${cdnUrl}`);
+        // Generate proper signed URL with AWS SDK v2 (working approach)
+        const AWS = await import('aws-sdk');
+        
+        // Configure S3 client for DigitalOcean Spaces
+        const s3 = new AWS.default.S3({
+          endpoint: 'https://lon1.digitaloceanspaces.com',
+          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
+          secretAccessKey: process.env.S3_SECRET_KEY,
+          region: 'lon1',
+          signatureVersion: 'v4'
+        });
+        
+        // Generate signed URL for direct access to private file
+        const signedUrl = s3.getSignedUrl('getObject', {
+          Bucket: 'dhrmixes',
+          Key: mix.s3Url,
+          Expires: 3600 // 1 hour expiry
+        });
+        
+        console.log(`Downloading with signed URL: ${mix.title}`);
         
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(cdnUrl, {
+        const response = await fetch(signedUrl, {
           timeout: 60000,
           headers: {
             'User-Agent': 'DHR-VIP-Download/1.0',
-            'Accept': 'audio/mpeg, audio/*, */*',
-            'Cache-Control': 'no-cache'
+            'Accept': 'audio/mpeg, audio/*, */*'
           }
         });
 
