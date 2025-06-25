@@ -18,7 +18,12 @@ import {
   Twitter,
   Facebook,
   Instagram,
-  ShoppingBag
+  ShoppingBag,
+  ArrowRight,
+  Waves,
+  Volume2,
+  Download,
+  Eye
 } from 'lucide-react';
 import MediaPlayer from '../components/MediaPlayer';
 
@@ -129,201 +134,295 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="text-white">
-      {/* Hero Section */}
-      <section className="relative py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex items-center justify-center mb-8">
-            <div className="relative">
-              <img 
-                src={DHR_LOGO_URL} 
-                alt="DHR Logo"
-                className="h-24 w-24 rounded-2xl shadow-2xl border-2 border-orange-400/30 bg-gray-800/50 backdrop-blur-sm"
-                onError={handleArtworkError}
-              />
-              <div className="absolute inset-0 rounded-2xl bg-orange-400/10 blur-lg -z-10"></div>
+      {/* Hero Section - Redesigned */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-8">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          {/* Left Column - Content */}
+          <div className="space-y-8">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <img 
+                  src={DHR_LOGO_URL} 
+                  alt="DHR Logo"
+                  className="h-16 w-16 rounded-2xl shadow-2xl border border-orange-400/30"
+                  onError={handleArtworkError}
+                />
+                <div className="absolute inset-0 rounded-2xl bg-orange-400/20 blur-lg -z-10"></div>
+              </div>
+              <div>
+                <h1 className="text-5xl md:text-7xl font-black tracking-tight">
+                  <span className="bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
+                    DHR
+                  </span>
+                </h1>
+                <p className="text-orange-300/70 text-sm tracking-widest uppercase">Deep House Radio</p>
+              </div>
             </div>
-          </div>
-          
-          <h1 className="text-6xl md:text-8xl font-bold mb-6">
-            <span className="elegant-text bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
-              DHR
-            </span>
-          </h1>
-          
-          <h2 className="text-2xl md:text-4xl font-light text-gray-300 mb-4">
-            Deep House Radio
-          </h2>
 
-          {/* Single Rotating Slogan */}
-          <div className="mb-8 h-16 flex items-center justify-center">
-            <p 
-              key={currentSloganIndex}
-              className="text-lg md:text-xl text-orange-300 font-medium elegant-slogan"
-              style={{
-                animation: 'fadeInUp 1s ease-out'
-              }}
-            >
-              {slogans[currentSloganIndex]}
+            {/* Dynamic Slogan */}
+            <div className="h-12 flex items-center">
+              <h2 
+                key={currentSloganIndex}
+                className="text-2xl md:text-3xl font-bold text-white"
+                style={{ animation: 'fadeInUp 1s ease-out' }}
+              >
+                {slogans[currentSloganIndex]}
+              </h2>
+            </div>
+            
+            {/* Description */}
+            <p className="text-xl text-gray-300 leading-relaxed max-w-lg">
+              Immerse yourself in the deepest electronic sounds. From underground gems to exclusive premieres, 
+              we curate the perfect sonic journey for true deep house enthusiasts.
             </p>
-          </div>
-          
-          <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Experience The Finest Deep House Music 24/7. From Underground Gems To Mainstream Hits, 
-            DHR Delivers The Perfect Soundtrack For Your Life With Intelligent Track Identification 
-            And Premium Streaming Quality.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-8">
-            <Link
-              to="/track-ident"
-              className="group flex items-center space-x-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-8 py-4 rounded-full text-lg font-semibold shadow-2xl transform hover:scale-105 transition-all duration-200 border border-orange-400/20"
-            >
-              <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
-              <span>Start Listening</span>
-            </Link>
             
-            <Link
-              to="/vip"
-              className="group flex items-center space-x-3 bg-gray-900/60 hover:bg-gray-800/60 px-8 py-4 rounded-full text-lg font-semibold shadow-2xl transform hover:scale-105 transition-all duration-200 border border-orange-400/20 backdrop-blur-sm"
-            >
-              <Crown className="h-6 w-6 text-orange-400 group-hover:scale-110 transition-transform" />
-              <span>Go VIP</span>
-            </Link>
-          </div>
-
-          {/* Social Share Buttons */}
-          <div className="flex items-center justify-center space-x-4">
-            <span className="text-sm text-gray-400">Share DHR:</span>
-            <button
-              onClick={() => shareContent('twitter')}
-              className="p-2 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 transition-all duration-200 hover:scale-110"
-              title="Share On Twitter"
-            >
-              <Twitter className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => shareContent('facebook')}
-              className="p-2 rounded-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 hover:text-blue-200 transition-all duration-200 hover:scale-110"
-              title="Share On Facebook"
-            >
-              <Facebook className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => shareContent('instagram')}
-              className="p-2 rounded-full bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 hover:text-pink-200 transition-all duration-200 hover:scale-110"
-              title="Copy For Instagram"
-            >
-              <Instagram className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Live Stream Player */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-4 elegant-text bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
-              Listen Live Now
-            </h2>
-            <p className="text-gray-400">Free 24/7 Deep House Stream - No Registration Required</p>
-          </div>
-          <MediaPlayer />
-        </div>
-      </section>
-
-      {/* Support Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl p-8 border border-orange-400/20 backdrop-blur-sm">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4 text-white">Support DHR</h2>
-              <p className="text-gray-300 max-w-2xl mx-auto">
-                Help Us Keep The Music Flowing! Your Support Enables Us To Maintain Our Servers, 
-                Discover New Artists, And Provide The Best Deep House Experience.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <a
-                href="https://www.patreon.com/c/deephouseradio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center space-x-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-6 py-3 rounded-full font-semibold shadow-lg transform hover:scale-105 transition-all duration-200"
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                to="/track-ident"
+                className="group flex items-center justify-center space-x-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
-                <Heart className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                <span>Support On Patreon</span>
-              </a>
+                <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                <span>Enter The Deep</span>
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
               
-              <a
-                href="https://www.buymeacoffee.com/deephouseradio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center space-x-3 bg-gray-900/60 hover:bg-gray-800/60 px-6 py-3 rounded-full font-semibold shadow-lg transform hover:scale-105 transition-all duration-200 border border-orange-400/20"
+              <Link
+                to="/vip"
+                className="group flex items-center justify-center space-x-3 bg-gray-900/80 hover:bg-gray-800/80 px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl transform hover:scale-105 transition-all duration-300 border border-orange-400/30 backdrop-blur-sm"
               >
-                <Coffee className="h-5 w-5 text-orange-400 group-hover:scale-110 transition-transform" />
-                <span>Buy Me A Coffee</span>
-              </a>
+                <Crown className="h-6 w-6 text-orange-400 group-hover:scale-110 transition-transform" />
+                <span>VIP Access</span>
+              </Link>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="flex items-center space-x-8 pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-400">50K+</div>
+                <div className="text-sm text-gray-400">Listeners</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-400">24/7</div>
+                <div className="text-sm text-gray-400">Live Stream</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-400">1M+</div>
+                <div className="text-sm text-gray-400">Tracks ID'd</div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="text-center">
-                  <div className="bg-gray-900/40 backdrop-blur-xl rounded-2xl p-6 border border-orange-400/10 hover:border-orange-400/20 transition-all duration-200 group">
-                    <Icon className="h-8 w-8 text-orange-400 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                    <div className="text-2xl font-bold text-white mb-2">{stat.value}</div>
-                    <div className="text-sm text-gray-400">{stat.label}</div>
+          {/* Right Column - Visual Elements */}
+          <div className="relative">
+            {/* Main Visual Container */}
+            <div className="relative bg-gradient-to-br from-gray-900/60 to-gray-800/60 rounded-3xl p-8 backdrop-blur-xl border border-orange-400/20">
+              {/* Live Stream Indicator */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-gray-300 font-medium">LIVE NOW</span>
+                </div>
+                <div className="flex items-center space-x-2 text-orange-400">
+                  <Volume2 className="h-4 w-4" />
+                  <span className="text-sm font-medium">HD Quality</span>
+                </div>
+              </div>
+
+              {/* Current Track Display */}
+              <div className="bg-gray-900/80 rounded-2xl p-6 mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <Waves className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-white">Deep Horizon</h3>
+                    <p className="text-gray-400">Solomun</p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <div className="h-1 bg-gray-700 rounded-full flex-1">
+                        <div className="h-1 bg-orange-400 rounded-full w-2/3"></div>
+                      </div>
+                      <span className="text-xs text-gray-400">3:42</span>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Feature Highlights */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                  <Eye className="h-6 w-6 text-orange-400 mx-auto mb-2" />
+                  <div className="text-sm font-medium text-white">Track ID</div>
+                  <div className="text-xs text-gray-400">AI Powered</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4 text-center">
+                  <Download className="h-6 w-6 text-orange-400 mx-auto mb-2" />
+                  <div className="text-sm font-medium text-white">Downloads</div>
+                  <div className="text-xs text-gray-400">VIP Members</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Elements */}
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-orange-500/20 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-orange-600/20 rounded-full blur-xl"></div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Immersive Features Section */}
       <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 elegant-text bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
-              Everything You Need
+            <h2 className="text-5xl font-black mb-6">
+              <span className="bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                Dive Deeper
+              </span>
             </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Discover, Listen, And Connect With The Global Deep House Community Through Our Comprehensive Platform.
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Explore our universe of deep house through multiple dimensions of experience
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          {/* Feature Cards Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <Link
                   key={index}
                   to={feature.link}
-                  className="group bg-gray-900/40 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/10 hover:border-orange-400/20 transform hover:scale-105 transition-all duration-200 shadow-2xl"
+                  className="group relative overflow-hidden bg-gradient-to-br from-gray-900/80 to-gray-800/80 rounded-3xl p-8 backdrop-blur-xl border border-orange-400/20 hover:border-orange-400/40 transform hover:scale-105 transition-all duration-500 shadow-2xl"
                 >
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-5">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-transparent"></div>
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                     <Icon className="h-8 w-8 text-white" />
                   </div>
                   
+                  {/* Content */}
                   <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-orange-300 transition-colors">
                     {feature.title}
                   </h3>
                   
-                  <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+                  <p className="text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors mb-4">
                     {feature.description}
                   </p>
+
+                  {/* Hover Arrow */}
+                  <div className="flex items-center text-orange-400 group-hover:translate-x-2 transition-transform duration-300">
+                    <span className="text-sm font-medium">Explore</span>
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </div>
                 </Link>
               );
             })}
+          </div>
+
+          {/* Live Player Section */}
+          <div className="bg-gradient-to-r from-gray-900/60 to-gray-800/60 rounded-3xl p-8 backdrop-blur-xl border border-orange-400/20">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold mb-4 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                Listen Live Now
+              </h3>
+              <p className="text-gray-400">Free 24/7 Deep House Stream - No Registration Required</p>
+            </div>
+            <MediaPlayer />
+          </div>
+        </div>
+      </section>
+
+      {/* Community & Support Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Support Column */}
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-4xl font-black mb-6">
+                  <span className="bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                    Fuel The Deep
+                  </span>
+                </h2>
+                <p className="text-xl text-gray-300 leading-relaxed">
+                  Join our community of passionate supporters. Your contribution keeps the deepest beats flowing 
+                  and helps us discover the next generation of underground talent.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <a
+                  href="https://www.patreon.com/c/deephouseradio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center space-x-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-8 py-6 rounded-2xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <Heart className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                  <div className="flex-1">
+                    <div className="text-lg">Support on Patreon</div>
+                    <div className="text-sm opacity-80">Monthly support starting at €3</div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+                
+                <a
+                  href="https://www.buymeacoffee.com/deephouseradio"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center space-x-4 bg-gray-900/80 hover:bg-gray-800/80 px-8 py-6 rounded-2xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-300 border border-orange-400/30"
+                >
+                  <Coffee className="h-6 w-6 text-orange-400 group-hover:scale-110 transition-transform" />
+                  <div className="flex-1">
+                    <div className="text-lg">Buy Me a Coffee</div>
+                    <div className="text-sm opacity-80 text-gray-400">One-time support</div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform text-orange-400" />
+                </a>
+              </div>
+
+              {/* Quick Social Share */}
+              <div className="flex items-center space-x-4 pt-4">
+                <span className="text-sm text-gray-400">Share the vibes:</span>
+                <button
+                  onClick={() => shareContent('twitter')}
+                  className="p-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:scale-110 transition-all duration-200"
+                >
+                  <Twitter className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => shareContent('facebook')}
+                  className="p-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 hover:scale-110 transition-all duration-200"
+                >
+                  <Facebook className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => shareContent('instagram')}
+                  className="p-3 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 hover:scale-110 transition-all duration-200"
+                >
+                  <Instagram className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Stats Column */}
+            <div className="grid grid-cols-2 gap-6">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={index} className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/20 hover:border-orange-400/40 transition-all duration-300 group">
+                    <Icon className="h-10 w-10 text-orange-400 mb-4 group-hover:scale-110 transition-transform" />
+                    <div className="text-3xl font-black text-white mb-2">{stat.value}</div>
+                    <div className="text-sm text-gray-400 uppercase tracking-wide">{stat.label}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -340,31 +439,54 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-3xl p-12 border border-orange-400/20 backdrop-blur-sm">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Ready To Dive Deep?
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join Thousands Of Deep House Enthusiasts Worldwide. Start Your Journey With DHR Today.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <Link
-                to="/track-ident"
-                className="flex items-center space-x-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-8 py-4 rounded-full text-lg font-semibold shadow-2xl transform hover:scale-105 transition-all duration-200"
-              >
-                <Headphones className="h-6 w-6" />
-                <span>Start Listening Now</span>
-              </Link>
-              <Link
-                to="/forum"
-                className="flex items-center space-x-3 bg-gray-900/60 hover:bg-gray-800/60 px-8 py-4 rounded-full text-lg font-semibold shadow-2xl transform hover:scale-105 transition-all duration-200 border border-orange-400/20"
-              >
-                <Users className="h-6 w-6 text-orange-400" />
-                <span>Join Community</span>
-              </Link>
+      {/* Final Call to Action */}
+      <section className="py-32 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Main CTA Container */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-3xl p-16 backdrop-blur-xl border border-orange-400/30">
+            {/* Background Elements */}
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/5"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl"></div>
+            
+            {/* Content */}
+            <div className="relative text-center space-y-8">
+              <h2 className="text-5xl md:text-7xl font-black">
+                <span className="bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                  Ready To Go Deep?
+                </span>
+              </h2>
+              
+              <p className="text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Join thousands of deep house enthusiasts worldwide. 
+                <br className="hidden md:block" />
+                Your sonic journey begins now.
+              </p>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
+                <Link
+                  to="/track-ident"
+                  className="group flex items-center space-x-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <Headphones className="h-7 w-7 group-hover:scale-110 transition-transform" />
+                  <span>Start Your Journey</span>
+                  <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                
+                <Link
+                  to="/forum"
+                  className="group flex items-center space-x-4 bg-gray-900/80 hover:bg-gray-800/80 px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-300 border border-orange-400/30"
+                >
+                  <Users className="h-7 w-7 text-orange-400 group-hover:scale-110 transition-transform" />
+                  <span>Join The Community</span>
+                </Link>
+              </div>
+
+              {/* Subtle footer info */}
+              <div className="pt-8 text-sm text-gray-400">
+                <p>Free forever • No registration required • Available worldwide</p>
+              </div>
             </div>
           </div>
         </div>
