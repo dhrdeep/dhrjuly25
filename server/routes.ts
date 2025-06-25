@@ -629,10 +629,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Access-Control-Allow-Origin': '*'
           });
 
-          console.log(`✅ Successfully streaming: ${mix.title} from ${spacesUrl}`);
+          console.log(`✅ Successfully streaming: ${mix.title} from CDN`);
           return response.body?.pipe(res);
         } else {
-          console.log(`❌ Signed URL responded with ${response.status}`);
+          console.log(`❌ CDN responded with ${response.status}`);
           return res.status(502).json({ error: "Audio streaming failed" });
         }
       } catch (error) {
@@ -1045,10 +1045,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Length': response.headers.get('content-length') || ''
           });
 
-          console.log(`✅ Successfully downloading: ${mix.title} from ${spacesUrl}`);
+          console.log(`✅ Successfully downloading: ${mix.title} from CDN`);
           return response.body?.pipe(res);
         } else {
-          console.log(`❌ Signed URL responded with ${response.status}`);
+          console.log(`❌ CDN responded with ${response.status}`);
           return res.status(502).json({ error: "Download failed" });
         }
       } catch (error) {
