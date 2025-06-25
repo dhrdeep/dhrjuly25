@@ -11,6 +11,13 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 25, 2025**: Critical Bug Fixes and Title Case Enforcement
+  - Fixed Everestcast API metadata errors by removing broken JSON parsing
+  - Applied strict title case capitalization to homepage description: "Immerse Yourself In The Deepest Electronic Sounds..."
+  - Fixed Track Identifier React hooks null reference error
+  - Cleaned up download header encoding for special characters in filenames
+  - Added WeDownload link to upload page for quick file uploads
+  - Resolved server syntax errors in live metadata endpoint
 - **June 25, 2025**: Complete User Experience Enhancement Package
   - Fixed "Enter The Deep" button to properly scroll to free media player section on homepage
   - Enhanced free media player with Pop Out and Sleep Timer buttons (removed playback speed per user request)

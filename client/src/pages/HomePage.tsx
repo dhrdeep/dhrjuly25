@@ -200,8 +200,8 @@ const HomePage: React.FC = () => {
             
             {/* Description */}
             <p className="text-xl text-gray-300 leading-relaxed max-w-lg">
-              Immerse yourself in the deepest electronic sounds. From underground gems to exclusive premieres, 
-              we curate the perfect sonic journey for true deep house enthusiasts.
+              Immerse Yourself In The Deepest Electronic Sounds. From Underground Gems To Exclusive Premieres, 
+              We Curate The Perfect Sonic Journey For True Deep House Enthusiasts.
             </p>
             
             {/* Action Buttons */}
