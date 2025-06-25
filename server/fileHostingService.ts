@@ -35,7 +35,7 @@ export class S3Provider implements FileHostingProvider {
     }
     
     // For DigitalOcean Spaces, construct the public URL
-    const publicUrl = `${this.endpoint}/${this.bucket}/${mix.s3Url}`;
+    const publicUrl = `${this.endpoint}/${mix.s3Url}`;
     console.log(`Generated Spaces URL: ${publicUrl}`);
     return publicUrl;
   }
@@ -88,12 +88,12 @@ export class FileHostingService {
       ));
     }
     
-    // Temporary configuration for dhrmixes Space
+    // DigitalOcean Spaces configuration
     this.providers.push(new S3Provider(
       'https://dhrmixes.lon1.digitaloceanspaces.com',
       'dhrmixes',
-      '', // Will be configured once you create Spaces Access Keys
-      ''
+      'DO00XZCG3UHJKGHWGHK3',
+      '43k5T+g++ESLIKOdVhX3u7Zavw3/JNfNrxxxqrltJmc'
     ));
 
     // Add local and direct providers
