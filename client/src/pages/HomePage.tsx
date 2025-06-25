@@ -41,7 +41,7 @@ const HomePage: React.FC = () => {
 
   const slogans = [
     "The Deepest Beats On The Net!",
-    "The Deeper Sound Of The Underground!", 
+    "The Deeper Sound Of The Underground!",
     "We Go Deep!"
   ];
 
