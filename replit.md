@@ -11,6 +11,13 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 25, 2025**: Homepage Branding and Layout Updates
+  - Added "DEEP HOUSE RADIO" subtitle under main DHR title in hero section
+  - Removed "DEEP HOUSE RADIO" from navigation header for cleaner layout
+  - Added exclamation marks to all rotating slogans for more energy
+  - Slowed slogan rotation from 4 seconds to 12 seconds for better readability
+  - Updated social sharing text to use "DHR" instead of "Deep House Radio"
+  - Layout now shows clean header with just DHR logo and title, subtitle positioned in main content area
 - **June 25, 2025**: REAL Live Metadata Implementation WORKING
   - Successfully extracting authentic track metadata: "AndileAndy - Seroba Deep Sessions #061 Guest Mix By Andile Andy"
   - Command line extraction confirmed working via curl with Icy-MetaData header
