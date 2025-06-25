@@ -958,11 +958,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Starting Buy Me a Coffee sync...");
       
-      const { apiKey } = req.body;
-      if (!apiKey) {
+      const apiKey = process.env.BUYMEACOFFEE_API_KEY;
+      if (!apiKey || apiKey === 'YOUR_BMAC_KEY_HERE') {
         return res.status(400).json({ 
           success: false, 
-          error: "Buy Me a Coffee API key required" 
+          error: "Buy Me a Coffee API key not configured in environment" 
         });
       }
 

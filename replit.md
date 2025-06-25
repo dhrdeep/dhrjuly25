@@ -11,6 +11,11 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 25, 2025**: Mobile App Store Links Restored
+  - Added App Store and Google Play download buttons to homepage community section
+  - Integrated app download links into navigation social share dropdown
+  - Professional styling with Apple and Google Play Store branding
+  - Links positioned prominently for user discovery across the site
 - **June 25, 2025**: Admin Dashboard Restoration and Testing Completed
   - Systematically tested and verified all admin dashboard buttons are functional
   - Fixed routing issues between old /admin and new /admin-dashboard pages  
