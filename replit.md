@@ -14,7 +14,7 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **June 25, 2025**: VIP Content System with Jumpshare Integration Completed
   - Implemented complete tiered access system: view (all users), play (DHR1/DHR2), download (VIP with daily limits)
   - Added VIP mix database tables with Jumpshare URL integration for 1TB+ deep house content
-  - Created comprehensive download tracking and daily limit enforcement (10 downloads/day for VIP)
+  - Created comprehensive download tracking and daily limit enforcement (2 downloads/day for VIP)
   - Real-time notifications for access restrictions and subscription status
   - Sample VIP mixes integrated with authentic Jumpshare hosting links
   - Enhanced navigation logo matching bottom logo design with proper DHR branding

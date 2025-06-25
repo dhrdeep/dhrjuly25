@@ -93,8 +93,8 @@ export class VipService {
         return 'Upgrade to VIP (€10+) to download mixes';
       case 'vip':
         return remainingDownloads > 0 
-          ? `${remainingDownloads} downloads remaining today`
-          : 'Daily download limit reached (resets tomorrow)';
+          ? `${remainingDownloads} of 2 downloads remaining today`
+          : 'Daily download limit reached (2/day, resets tomorrow)';
       default:
         return 'Unknown subscription status';
     }

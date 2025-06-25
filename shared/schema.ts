@@ -62,7 +62,7 @@ export const dailyDownloadLimits = pgTable("daily_download_limits", {
   userId: text("user_id").notNull().unique(),
   downloadDate: text("download_date").notNull(), // Format: YYYY-MM-DD
   downloadsUsed: integer("downloads_used").default(0),
-  maxDownloads: integer("max_downloads").default(10), // VIP daily limit
+  maxDownloads: integer("max_downloads").default(2), // VIP daily limit
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 

@@ -165,7 +165,7 @@ export class DrizzleStorage implements IStorage {
   
   async getRemainingDownloads(userId: string): Promise<number> {
     const limit = await this.getDailyDownloadLimit(userId);
-    if (!limit) return 10; // Default VIP limit
+    if (!limit) return 2; // Default VIP limit
     return Math.max(0, limit.maxDownloads - limit.downloadsUsed);
   }
 }

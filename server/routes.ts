@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.updateDailyDownloadLimit(userId, {
         downloadsUsed: newUsedCount,
-        maxDownloads: 10 // VIP daily limit
+        maxDownloads: 2 // VIP daily limit
       });
 
       // Update total downloads for the mix
@@ -449,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         subscriptionTier: user.subscriptionTier,
         remainingDownloads,
-        maxDownloads: limit?.maxDownloads || 10,
+        maxDownloads: limit?.maxDownloads || 2,
         used: limit?.downloadsUsed || 0,
         canDownload: user.subscriptionTier === 'vip' && remainingDownloads > 0,
         canPlay: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier || '')
