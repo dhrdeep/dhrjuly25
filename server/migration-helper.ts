@@ -1,7 +1,7 @@
 // Helper script to migrate existing mixes to new hosting
 import { db } from './db';
 import { vipMixes } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or, isNull } from 'drizzle-orm';
 
 export async function testSpacesConnection() {
   const testEndpoint = process.env.S3_ENDPOINT;
@@ -49,7 +49,7 @@ export async function listMixesWithoutSpaces() {
   const mixes = await db
     .select()
     .from(vipMixes)
-    .where(eq(vipMixes.s3Url, null))
+    .where(isNull(vipMixes.s3Url))
     .limit(10);
   
   console.log(`Found ${mixes.length} mixes without Spaces URLs:`);
@@ -58,4 +58,75 @@ export async function listMixesWithoutSpaces() {
   });
   
   return mixes;
+}
+
+export async function syncSpaceWithDatabase() {
+  try {
+    console.log('🔄 Scanning DigitalOcean Space for new files...');
+    
+    // Get list of files from DigitalOcean Space
+    const AWS = await import('aws-sdk');
+    const s3 = new AWS.default.S3({
+      endpoint: 'https://lon1.digitaloceanspaces.com',
+      accessKeyId: process.env.S3_ACCESS_KEY,
+      secretAccessKey: process.env.S3_SECRET_KEY,
+      region: 'lon1'
+    });
+
+    const params = {
+      Bucket: 'dhrmixes',
+      MaxKeys: 1000
+    };
+
+    const data = await s3.listObjectsV2(params).promise();
+    const spaceFiles = data.Contents?.map((obj: any) => obj.Key) || [];
+    
+    console.log(`Found ${spaceFiles.length} files in DigitalOcean Space`);
+
+    // Get existing database entries
+    const existingMixes = await db.select().from(vipMixes);
+    const existingFiles = existingMixes.map(mix => mix.s3Url).filter(Boolean);
+
+    // Find new files not in database
+    const newFiles = spaceFiles.filter((file: string) => !existingFiles.includes(file));
+    
+    if (newFiles.length === 0) {
+      console.log('✅ No new files found - database is up to date');
+      return { newFiles: [], addedMixes: [] };
+    }
+
+    console.log(`📁 Found ${newFiles.length} new files to add:`);
+    newFiles.forEach((file: string) => console.log(`  - ${file}`));
+
+    // Add new files to database
+    const addedMixes = [];
+    for (const filename of newFiles) {
+      // Extract title from filename (remove extension and clean up)
+      const title = filename
+        .replace(/\.[^/.]+$/, '') // Remove extension
+        .replace(/^\d+\s*[-_]?\s*/, '') // Remove leading numbers
+        .replace(/[-_]/g, ' ') // Replace dashes/underscores with spaces
+        .trim();
+
+      const newMix = await db.insert(vipMixes).values({
+        title,
+        artist: 'Deep House Radio',
+        s3Url: filename,
+        isActive: true,
+        genre: 'deep house',
+        tags: JSON.stringify(['deep house', 'electronic', 'dj mix']),
+        fileSize: '~150MB' // Placeholder - could be enhanced to get actual size
+      }).returning();
+
+      addedMixes.push(newMix[0]);
+      console.log(`✅ Added: ${title}`);
+    }
+
+    console.log(`🎉 Successfully added ${addedMixes.length} new mixes to database`);
+    return { newFiles, addedMixes };
+
+  } catch (error) {
+    console.error('❌ Error syncing Space with database:', error);
+    throw error;
+  }
 }

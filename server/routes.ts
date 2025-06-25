@@ -1117,6 +1117,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync DigitalOcean Space with database
+  app.post("/api/sync-space", async (req, res) => {
+    try {
+      const { syncSpaceWithDatabase } = await import('./migration-helper');
+      const result = await syncSpaceWithDatabase();
+      res.json({
+        success: true,
+        message: `Found and added ${result.addedMixes.length} new mixes`,
+        newFiles: result.newFiles.length,
+        addedMixes: result.addedMixes.map(mix => ({
+          id: mix.id,
+          title: mix.title,
+          filename: mix.s3Url
+        }))
+      });
+    } catch (error) {
+      console.error('Sync error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: (error as Error).message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
