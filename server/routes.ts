@@ -678,14 +678,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const directUrl of urlsToTry) {
           try {
             console.log(`Attempting: ${directUrl}`);
+            
+            // Build authentication headers if credentials are available
+            const authHeaders = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+              'Referer': 'https://jumpshare.com/'
+            };
+            
+            // Add API key authentication if available
+            if (process.env.JUMPSHARE_API_KEY) {
+              authHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
+            }
+            
+            // Add basic auth if username/password available
+            if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
+              const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
+              authHeaders['Authorization'] = `Basic ${auth}`;
+            }
+            
             const testResponse = await fetch(directUrl, {
-              method: 'HEAD', // Just check headers first
+              method: 'HEAD',
               timeout: 15000,
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-                'Referer': 'https://jumpshare.com/'
-              }
+              headers: authHeaders
             });
             
             const contentType = testResponse.headers.get('content-type') || '';
@@ -710,13 +725,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Now fetch the actual audio data
         console.log(`Fetching audio from: ${successfulResponse.url}`);
         
+        // Build the same authentication headers for the actual request
+        const streamHeaders = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+          'Referer': 'https://jumpshare.com/'
+        };
+        
+        if (process.env.JUMPSHARE_API_KEY) {
+          streamHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
+        }
+        
+        if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
+          const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
+          streamHeaders['Authorization'] = `Basic ${auth}`;
+        }
+        
         const response = await fetch(successfulResponse.url, {
           timeout: 30000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-            'Referer': 'https://jumpshare.com/'
-          }
+          headers: streamHeaders
         });
         
         if (!response.ok) {
@@ -988,14 +1015,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const testUrl of urlsToTry) {
           try {
             console.log(`Testing download URL: ${testUrl}`);
+            // Build authentication headers for download testing
+            const downloadAuthHeaders = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+              'Referer': 'https://jumpshare.com/'
+            };
+            
+            if (process.env.JUMPSHARE_API_KEY) {
+              downloadAuthHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
+            }
+            
+            if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
+              const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
+              downloadAuthHeaders['Authorization'] = `Basic ${auth}`;
+            }
+            
             const testResponse = await fetch(testUrl, {
               method: 'HEAD',
               timeout: 15000,
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-                'Referer': 'https://jumpshare.com/'
-              }
+              headers: downloadAuthHeaders
             });
             
             const contentType = testResponse.headers.get('content-type') || '';
@@ -1019,13 +1058,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Fetch the actual file
         console.log(`Downloading from: ${successfulResponse.url}`);
+        // Use the same authentication headers for the actual download
+        const downloadHeaders = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+          'Referer': 'https://jumpshare.com/'
+        };
+        
+        if (process.env.JUMPSHARE_API_KEY) {
+          downloadHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
+        }
+        
+        if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
+          const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
+          downloadHeaders['Authorization'] = `Basic ${auth}`;
+        }
+        
         const response = await fetch(successfulResponse.url, {
           timeout: 60000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-            'Referer': 'https://jumpshare.com/'
-          }
+          headers: downloadHeaders
         });
         
         if (!response.ok) {
@@ -1056,10 +1107,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Streaming real audio file: ${mix.title}${extension}`);
         response.body?.pipe(res);
       } catch (error) {
-        console.error('Download error, falling back to demo file:', error);
+        console.error('Download error - unable to access real file:', error);
         
-        // Fallback to demo file if real download fails
-        console.log('Generating demo file for download as fallback');
+        // Check if we have authentication configured
+        const hasAuth = process.env.JUMPSHARE_API_KEY || (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD);
+        
+        if (!hasAuth) {
+          console.error('No Jumpshare authentication configured - cannot access protected files');
+          return res.status(401).json({ 
+            error: "Authentication required", 
+            detail: "Jumpshare credentials needed to access real audio files" 
+          });
+        }
+        
+        console.error('Authentication failed - unable to download real file');
         
         const sampleRate = 22050;
         const duration = 30;
