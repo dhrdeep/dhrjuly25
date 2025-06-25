@@ -183,7 +183,6 @@ const HomePage: React.FC = () => {
                     DHR
                   </span>
                 </h1>
-                <p className="text-orange-300/70 text-sm tracking-widest uppercase">Deep House Radio</p>
               </div>
             </div>
 
