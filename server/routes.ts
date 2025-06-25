@@ -581,8 +581,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For demo purposes with placeholder URLs, return a sample audio file
       // In production, you would fetch from mix.jumpshareUrl
       if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
-        // Return a high-quality sample audio URL for testing
-        return res.redirect('https://www.kozco.com/tech/LRMonoPhase4.wav');
+        // Return a working sample audio URL for testing
+        return res.redirect('https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav');
       }
 
       // In production, proxy the real Jumpshare URL

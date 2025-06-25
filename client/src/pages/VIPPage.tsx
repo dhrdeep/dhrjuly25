@@ -69,14 +69,24 @@ const VIPPage: React.FC = () => {
         audioRef.current.load();
         
         try {
-          await audioRef.current.play();
-          setCurrentlyPlaying(mixId);
-          setIsPlaying(true);
-          setNotification(`Now Playing: ${mixTitle}`);
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              setCurrentlyPlaying(mixId);
+              setIsPlaying(true);
+              setNotification(`Now Playing: ${mixTitle}`);
+            }).catch((playError) => {
+              console.error('Play error:', playError);
+              setNotification(`Playback Error: ${mixTitle}`);
+              setCurrentlyPlaying(null);
+              setIsPlaying(false);
+            });
+          }
         } catch (playError) {
-          setNotification(`Demo: Playing ${mixTitle} (Real Audio File Needed)`);
-          setCurrentlyPlaying(mixId);
-          setIsPlaying(true);
+          console.error('Play error:', playError);
+          setNotification(`Playback Error: ${mixTitle}`);
+          setCurrentlyPlaying(null);
+          setIsPlaying(false);
         }
       }
     } catch (error) {
@@ -576,9 +586,17 @@ const VIPPage: React.FC = () => {
             setCurrentlyPlaying(null);
             setNotification('Track Ended');
           }}
-          onError={() => {
+          onError={(e) => {
+            console.error('Audio error:', e);
             setNotification('Audio Error - File Not Available');
             setIsPlaying(false);
+            setCurrentlyPlaying(null);
+          }}
+          onCanPlay={() => {
+            console.log('Audio can play');
+          }}
+          onLoadStart={() => {
+            console.log('Audio load started');
           }}
           preload="none"
         />
