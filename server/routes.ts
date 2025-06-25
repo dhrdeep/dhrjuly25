@@ -421,17 +421,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User authentication required" });
       }
 
-      // Demo user gets VIP access for testing
+      // Demo user gets VIP access but still has download limits
       if (userId === 'demo_user') {
+        const remainingDownloads = await storage.getRemainingDownloads(userId);
+        if (remainingDownloads <= 0) {
+          return res.status(429).json({ error: "Daily download limit reached (2 downloads per day)" });
+        }
+
         const mix = await storage.getVipMix(mixId);
         if (!mix) {
           return res.status(404).json({ error: "Mix not found" });
         }
+
+        // Record the download for demo user too
+        await storage.recordDownload({
+          userId,
+          mixId,
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+
+        // Update daily download count for demo user
+        const today = new Date().toISOString().split('T')[0];
+        const currentLimit = await storage.getDailyDownloadLimit(userId);
+        const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
+        
+        await storage.updateDailyDownloadLimit(userId, {
+          downloadsUsed: newUsedCount,
+          maxDownloads: 2
+        });
         
         return res.json({
           success: true,
           downloadUrl: mix.jumpshareUrl,
-          remainingDownloads: 1, // Demo shows remaining after download
+          remainingDownloads: remainingDownloads - 1,
           mix: {
             title: mix.title,
             artist: mix.artist,
@@ -552,9 +575,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // For demo purposes with placeholder URLs, return a sample audio file
       // In production, you would fetch from mix.jumpshareUrl
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder')) {
-        // Return a sample audio URL for testing
-        return res.redirect('https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav');
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
+        // Return a high-quality sample audio URL for testing
+        return res.redirect('https://www.kozco.com/tech/LRMonoPhase4.wav');
       }
 
       // In production, proxy the real Jumpshare URL
