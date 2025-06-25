@@ -17,6 +17,7 @@ import VIPAdminPage from './pages/VIPAdminPage';
 import BulkImportPage from './pages/BulkImportPage';
 import StorageSetupPage from './pages/StorageSetupPage';
 import UserManagementPage from './pages/UserManagementPage';
+import PlayerPopoutPage from './pages/PlayerPopoutPage';
 
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
@@ -41,6 +42,7 @@ function App() {
             <Route path="/bulk-import" element={<BulkImportPage />} />
             <Route path="/storage-setup" element={<StorageSetupPage />} />
             <Route path="/user-management" element={<UserManagementPage />} />
+            <Route path="/player" element={<PlayerPopoutPage />} />
 
             <Route path="/sync" element={<SyncPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />

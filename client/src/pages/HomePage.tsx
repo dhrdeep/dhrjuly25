@@ -425,7 +425,7 @@ const HomePage: React.FC = () => {
                 {/* Player Controls */}
                 <div className="flex justify-center space-x-4 mb-6">
                   <button 
-                    onClick={() => window.open('/', '_blank')}
+                    onClick={() => window.open('/player', '_blank', 'width=400,height=600,scrollbars=no,resizable=yes')}
                     className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 px-4 py-2 rounded-lg text-orange-400 hover:text-orange-300 transition-colors"
                     title="Pop Out Player"
                   >

@@ -17,7 +17,9 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - Replaced all fake/placeholder metadata with authentic stream data extraction
   - Shell command approach successfully retrieves StreamTitle from live DHR stream
   - User frustration resolved - authentic track information now displaying
-  - Screenshot confirms current track should be "Deep Horizon - Solomun" but system shows correct data
+  - Fixed homepage to display real metadata instead of hardcoded "Deep Horizon - Solomun"
+  - Created dedicated player popout page (/player) with compact 400x600px window
+  - Pop out button now opens only the audio player, not entire homepage
 - **June 25, 2025**: Critical Bug Fixes and Title Case Enforcement
   - Fixed Everestcast API metadata errors by removing broken JSON parsing
   - Applied strict title case capitalization to homepage description: "Immerse Yourself In The Deepest Electronic Sounds..."
