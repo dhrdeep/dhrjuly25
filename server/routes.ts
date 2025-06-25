@@ -483,6 +483,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/download-limits/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
+      
+      // Demo user gets VIP access for testing all features
+      if (userId === 'demo_user') {
+        res.json({
+          subscriptionTier: 'vip',
+          remainingDownloads: 2,
+          maxDownloads: 2,
+          used: 0,
+          canDownload: true,
+          canPlay: true
+        });
+        return;
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {
