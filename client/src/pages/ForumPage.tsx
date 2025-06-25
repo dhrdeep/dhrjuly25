@@ -147,17 +147,17 @@ const ForumPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                 DHR Community Forum
               </h1>
-              <p className="text-gray-300 mt-1">Electronic music news, events & discussions</p>
+              <p className="text-gray-300 mt-1">Electronic Music News, Events & Discussions</p>
             </div>
           </div>
           
           <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl p-6 border border-orange-400/30 backdrop-blur-sm max-w-2xl mx-auto">
             <p className="text-lg text-gray-200 leading-relaxed">
-              Stay connected with the latest in electronic music. Our AI moderator curates the best news, 
-              events, and discussions from the deep house community worldwide.
+              Stay Connected With The Latest In Electronic Music. Our AI Moderator Curates The Best News, 
+              Events, And Discussions From The Deep House Community Worldwide.
             </p>
           </div>
         </header>

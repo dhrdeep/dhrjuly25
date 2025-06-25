@@ -79,10 +79,10 @@ const DHR1Page: React.FC = () => {
                 </div>
               </div>
               <div>
-                <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                <h1 className="text-5xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                   DHR1 Premium
                 </h1>
-                <p className="text-xl text-gray-300 mt-2">The finest deep house selection</p>
+                <p className="text-xl text-gray-300 mt-2">The Finest Deep House Selection</p>
                 {currentUser && (
                   <p className="text-sm text-orange-300 mt-1">
                     Welcome back, {currentUser.username}!
@@ -93,8 +93,8 @@ const DHR1Page: React.FC = () => {
             
             <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl p-6 border border-orange-400/30 backdrop-blur-sm max-w-2xl mx-auto">
               <p className="text-lg text-gray-200 leading-relaxed">
-                Experience premium deep house music with our carefully curated DHR1 channel. 
-                Featuring underground gems, exclusive tracks, and the smoothest vibes 24/7.
+                Experience Premium Deep House Music With Our Carefully Curated DHR1 Channel. 
+                Featuring Underground Gems, Exclusive Tracks, And The Smoothest Vibes 24/7.
               </p>
             </div>
           </header>
@@ -119,7 +119,7 @@ const DHR1Page: React.FC = () => {
 
           {/* Features Grid */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-black text-center mb-8 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
               Premium Features
             </h2>
             

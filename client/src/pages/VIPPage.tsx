@@ -152,10 +152,10 @@ const VIPPage: React.FC = () => {
                 </div>
               </div>
               <div>
-                <h1 className="text-6xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                <h1 className="text-6xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                   VIP Access
                 </h1>
-                <p className="text-2xl text-gray-300 mt-2">Exclusive deep house collection</p>
+                <p className="text-2xl text-gray-300 mt-2">Exclusive Deep House Collection</p>
                 {currentUser && (
                   <p className="text-sm text-orange-300 mt-1">
                     Welcome back, {currentUser.username}! 
@@ -167,8 +167,8 @@ const VIPPage: React.FC = () => {
             
             <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl p-8 border border-orange-400/30 backdrop-blur-sm max-w-3xl mx-auto">
               <p className="text-xl text-gray-200 leading-relaxed mb-4">
-                Welcome to the VIP section! Access over 1TB of exclusive deep house mixes, 
-                high-quality downloads, and premium content curated just for our VIP members.
+                Welcome To The VIP Section! Access Over 1TB Of Exclusive Deep House Mixes, 
+                High-Quality Downloads, And Premium Content Curated Just For Our VIP Members.
               </p>
               {!canAccess && (
                 <div className="bg-orange-500/20 border border-orange-400/30 rounded-lg p-4 mt-4">

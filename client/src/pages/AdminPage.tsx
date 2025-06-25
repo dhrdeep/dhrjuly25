@@ -425,7 +425,7 @@ const AdminPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                 DHR Admin Dashboard
               </h1>
               <p className="text-gray-300 mt-1">Manage Subscribers, Patreon Integration & Analytics</p>

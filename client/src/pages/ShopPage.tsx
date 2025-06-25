@@ -362,17 +362,17 @@ const ShopPage: React.FC = () => {
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                 DHR Merchandise
               </h1>
-              <p className="text-gray-300 mt-1">Official deep house radio gear & collectibles</p>
+              <p className="text-gray-300 mt-1">Official Deep House Radio Gear & Collectibles</p>
             </div>
           </div>
           
           <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl p-6 border border-orange-400/30 backdrop-blur-sm max-w-2xl mx-auto">
             <p className="text-lg text-gray-200 leading-relaxed">
-              Show your love for deep house with official DHR merchandise. From premium apparel to 
-              limited edition vinyl, find the perfect gear to represent the deepest beats on the net.
+              Show Your Love For Deep House With Official DHR Merchandise. From Premium Apparel To 
+              Limited Edition Vinyl, Find The Perfect Gear To Represent The Deepest Beats On The Net.
             </p>
           </div>
         </header>

@@ -133,17 +133,17 @@ Submitted via DHR Website
               </div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                 DJ Submissions
               </h1>
-              <p className="text-gray-300 mt-1">Share your deep house mixes with our global audience</p>
+              <p className="text-gray-300 mt-1">Share Your Deep House Mixes With Our Global Audience</p>
             </div>
           </div>
           
           <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl p-6 border border-orange-400/30 backdrop-blur-sm max-w-2xl mx-auto">
             <p className="text-lg text-gray-200 leading-relaxed">
-              Are you a DJ or producer with amazing deep house content? We're always looking for fresh talent 
-              to feature on DHR. Submit your mixes for consideration and reach thousands of deep house enthusiasts worldwide.
+              Are You A DJ Or Producer With Amazing Deep House Content? We're Always Looking For Fresh Talent 
+              To Feature On DHR. Submit Your Mixes For Consideration And Reach Thousands Of Deep House Enthusiasts Worldwide.
             </p>
           </div>
         </header>

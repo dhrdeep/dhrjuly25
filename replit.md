@@ -21,6 +21,9 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - Implemented ambient background mood generator with dynamic particle effects based on current track
   - Added intelligent track analysis for mood detection (energetic, chill, deep, dark, uplifting, ambient)
   - Integrated real-time track data fetching from Everestcast APIs with BPM and energy estimation
+  - **Landing Page Player Update**: Replaced Everestcast iframe with direct Shoutcast HTML5 audio player
+  - **Typography Overhaul**: Implemented title case (Capital Letter At Start Of Every Word) across all pages
+  - **Font Consistency**: Applied modern font-black weight for all main headings throughout the site
 - **December 2024**: Successfully migrated from Bolt to Replit
   - Installed missing dependencies (react-router-dom, crypto-js)
   - Migrated from Supabase to Neon PostgreSQL database
@@ -70,6 +73,9 @@ The project uses environment variables for configuration:
 - Never use fake/mock/placeholder data - only real authenticated data from Patreon API
 - Implement proper subscription expiration checking - deny access when subscriptions expire
 - Track identification feature requires active subscription (DHR1 or higher)
+- **Design Consistency**: Apply title case (Capital Letter At Start Of Every Word) for all text content
+- **Typography**: Use font-black weight for main headings to maintain modern, bold appearance
+- **Simplicity Preference**: Keep implementations simple, use copy-paste approaches when they work effectively
 
 ## Migration Status
 ✅ **Completed Successfully**: 

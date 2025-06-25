@@ -570,7 +570,7 @@ const TrackIdentPage: React.FC = () => {
               <div className="absolute inset-0 rounded-xl bg-orange-400/10 blur-md -z-10"></div>
             </div>
             <div>
-              <h1 className="text-4xl font-bold elegant-text bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black elegant-text bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
                 DHR Track Identifier
               </h1>
               <p className="text-gray-300 mt-1">Live Radio With Intelligent Track Identification</p>

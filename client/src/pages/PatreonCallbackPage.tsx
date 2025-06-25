@@ -95,7 +95,7 @@ const PatreonCallbackPage: React.FC = () => {
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent mb-2">
             Patreon Integration
           </h1>
           

@@ -99,10 +99,10 @@ const DHR2Page: React.FC = () => {
                 </div>
               </div>
               <div>
-                <h1 className="text-5xl font-bold bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">
+                <h1 className="text-5xl font-black bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">
                   DHR2 Premium
                 </h1>
-                <p className="text-xl text-gray-300 mt-2">Exclusive DJ sets & extended mixes</p>
+                <p className="text-xl text-gray-300 mt-2">Exclusive DJ Sets & Extended Mixes</p>
                 {currentUser && (
                   <p className="text-sm text-orange-300 mt-1">
                     Welcome back, {currentUser.username}!
