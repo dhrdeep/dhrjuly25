@@ -263,20 +263,29 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Current Track Display */}
+              {/* Current Track Display - Real Live Metadata */}
               <div className="bg-gray-900/80 rounded-2xl p-6 mb-6">
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                     <Waves className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white">Deep Horizon</h3>
-                    <p className="text-gray-400">Solomun</p>
+                    {liveTrackInfo ? (
+                      <>
+                        <h3 className="font-bold text-white">{liveTrackInfo.artist}</h3>
+                        <p className="text-gray-400">{liveTrackInfo.title}</p>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="font-bold text-white">DHR Live</h3>
+                        <p className="text-gray-400">Deep House Stream</p>
+                      </>
+                    )}
                     <div className="flex items-center space-x-2 mt-2">
                       <div className="h-1 bg-gray-700 rounded-full flex-1">
-                        <div className="h-1 bg-orange-400 rounded-full w-2/3"></div>
+                        <div className="h-1 bg-orange-400 rounded-full w-2/3 animate-pulse"></div>
                       </div>
-                      <span className="text-xs text-gray-400">3:42</span>
+                      <span className="text-xs text-orange-400">LIVE</span>
                     </div>
                   </div>
                 </div>
