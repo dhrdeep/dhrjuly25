@@ -121,21 +121,31 @@ const DHR2Page: React.FC = () => {
 
           {/* Premium Player */}
           <section className="mb-12 flex justify-center">
-            <iframe
-              src="/evercast-player-dhr2.html"
-              width="300"
-              height="600"
-              frameBorder="0"
-              style={{
-                border: '2px solid #f79e02',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                maxWidth: '100%',
-                backgroundColor: '#111827'
-              }}
-              title="DHR2 Everestcast Player"
-              onLoad={() => setIsPlaying(true)}
-            />
+            <div className="w-[300px] h-[600px] bg-gray-900 rounded-lg border-2 border-orange-500 flex flex-col items-center justify-center text-white p-8">
+              <div className="text-center">
+                <div className="text-6xl mb-6">🎧</div>
+                <div className="text-2xl font-bold mb-4">DHR2</div>
+                <div className="text-lg mb-2">Exclusive DJ Sets</div>
+                <div className="text-sm opacity-75 mb-6">Premium Content</div>
+                
+                <div className="space-y-4">
+                  <div className="bg-orange-500/20 rounded-lg p-4">
+                    <div className="text-sm font-medium">Now Playing</div>
+                    <div className="text-xs opacity-75">Deep Horizon Mix</div>
+                  </div>
+                  
+                  <div className="flex items-center justify-center space-x-4">
+                    <button className="p-3 bg-orange-500 rounded-full hover:bg-orange-600 transition-colors">
+                      <Play className="h-6 w-6" />
+                    </button>
+                  </div>
+                  
+                  <div className="text-xs opacity-50">
+                    DHR2 Subscribers Only
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
 
           {/* Features Grid */}

@@ -1,0 +1,1575 @@
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] Failed to load resource: the server responded with a status of 404 () (current, line 0)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24429)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn (sc_player.js:7:24547)
+	prepatch (sc_player.js:7:40001)
+	F (sc_player.js:7:56772)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	B (sc_player.js:7:55854)
+	F (sc_player.js:7:56934)
+	(anonymous function) (sc_player.js:7:58074)
+	(anonymous function) (sc_player.js:7:23016)
+	r (sc_player.js:7:23777)
+	(anonymous function) (sc_player.js:7:33158)
+	(anonymous function) (sc_player.js:7:33894)
+	Vn (sc_player.js:7:25970)
+	(anonymous function) (sc_player.js:7:30712)
+	Sr (sc_player.js:7:30103)
+[Error] SyntaxError: Unexpected token '<'
+	(anonymous function)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] Failed to load resource: the server responded with a status of 404 () (current, line 0)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] Failed to load resource: the server responded with a status of 404 () (current, line 0)
+[Error] [Vue warn]: $attrs is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] [Vue warn]: $listeners is readonly.
+
+found in
+
+---> <VueMaterialSlider>
+       <Player>
+         <Root>
+	(anonymous function)
+	warn$2
+	(anonymous function)
+	reactiveSetter
+	jn
+	prepatch
+	F
+	B
+	F
+	B
+	F
+	B
+	F
+	(anonymous function)
+	(anonymous function)
+	r
+	(anonymous function)
+	(anonymous function)
+	Vn
+	(anonymous function)
+	Sr
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (10, line 0)
+[Error] Play error: – NotSupportedError: The operation is not supported.
+NotSupportedError: The operation is not supported.
+	(anonymous function) (VIPPage.tsx:80)
+[Error] Audio error: – SyntheticBaseEvent
+SyntheticBaseEvent
+	onError (VIPPage.tsx:1174)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+[Error] Play error: – AbortError: The operation was aborted.
+AbortError: The operation was aborted.
+	(anonymous function) (VIPPage.tsx:80)
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (11, line 0)
+[Error] Play error: – NotSupportedError: The operation is not supported.
+NotSupportedError: The operation is not supported.
+	(anonymous function) (VIPPage.tsx:80)
+[Error] Audio error: – SyntheticBaseEvent
+SyntheticBaseEvent
+	onError (VIPPage.tsx:1174)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (11, line 0)
+[Error] Play error: – NotSupportedError: The operation is not supported.
+NotSupportedError: The operation is not supported.
+	(anonymous function) (VIPPage.tsx:80)
+[Error] Audio error: – SyntheticBaseEvent
+SyntheticBaseEvent
+	onError (VIPPage.tsx:1174)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (11, line 0)
+[Error] Play error: – NotSupportedError: The operation is not supported.
+NotSupportedError: The operation is not supported.
+	(anonymous function) (VIPPage.tsx:80)
+[Error] Audio error:
+SyntheticBaseEvent
+
+_reactName: "onError"
+
+_targetInst: null
+
+bubbles: false
+
+cancelable: true
+
+currentTarget: null
+
+defaultPrevented: false
+
+eventPhase: 2
+
+isDefaultPrevented: function()
+
+isPropagationStopped: function()
+
+isTrusted: true
+
+nativeEvent: Event {isTrusted: true, type: "error", target: <audio>, currentTarget: null, eventPhase: 0, …}
+
+target: <audio>
+
+timeStamp: 224263
+
+type: "error"
+
+SyntheticBaseEvent Prototype
+	onError (VIPPage.tsx:1174)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (11, line 0)
+[Error] Play error:
+NotSupportedError: The operation is not supported.
+	(anonymous function) (VIPPage.tsx:80)
+[Error] Audio error:
+SyntheticBaseEvent
+
+_reactName: "onError"
+
+_targetInst: null
+
+bubbles: false
+
+cancelable: true
+
+currentTarget: null
+
+defaultPrevented: false
+
+eventPhase: 2
+
+isDefaultPrevented: function()
+
+isPropagationStopped: function()
+
+isTrusted: true
+
+nativeEvent: Event {isTrusted: true, type: "error", target: <audio>, currentTarget: null, eventPhase: 0, …}
+
+target: <audio>
+
+timeStamp: 226446
+
+type: "error"
+
+SyntheticBaseEvent Prototype
+	onError (VIPPage.tsx:1174)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+> Selected Element
+< <div data-replit-metadata="client/src/pages/VIPPage.tsx:343:18" data-component-name="div" class="p-6">…</div>
