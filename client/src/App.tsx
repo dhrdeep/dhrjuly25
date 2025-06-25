@@ -12,6 +12,7 @@ import ForumPage from './pages/ForumPage';
 import UploadPage from './pages/UploadPage';
 import ShopPage from './pages/ShopPage';
 import SimpleAdminPage from './pages/SimpleAdminPage';
+import AdminDashboard from './pages/AdminDashboard';
 import VIPAdminPage from './pages/VIPAdminPage';
 import BulkImportPage from './pages/BulkImportPage';
 import JumpshareSetupPage from './pages/JumpshareSetupPage';
@@ -34,6 +35,7 @@ function App() {
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/admin" element={<SimpleAdminPage />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/vip-admin" element={<VIPAdminPage />} />
             <Route path="/bulk-import" element={<BulkImportPage />} />
             <Route path="/storage-setup" element={<JumpshareSetupPage />} />

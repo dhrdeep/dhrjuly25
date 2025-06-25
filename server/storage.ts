@@ -46,6 +46,9 @@ export interface IStorage {
   getDailyDownloadLimit(userId: string): Promise<DailyDownloadLimit | undefined>;
   updateDailyDownloadLimit(userId: string, limit: InsertDailyDownloadLimit): Promise<DailyDownloadLimit>;
   getRemainingDownloads(userId: string): Promise<number>;
+  
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -187,7 +190,11 @@ export class DrizzleStorage implements IStorage {
       }
       return 2; // Default VIP limit
     }
-    return Math.max(0, limit.maxDownloads - limit.downloadsUsed);
+    return Math.max(0, (limit.maxDownloads || 0) - (limit.downloadsUsed || 0));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 }
 
