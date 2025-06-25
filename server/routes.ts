@@ -583,8 +583,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Mix ${mixId} found: ${mix.title}, URL: ${mix.jumpshareUrl}`);
 
-      // For demo purposes with placeholder URLs, proxy a working audio file
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
+      // For demo purposes with placeholder URLs or null URLs, generate audio
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder')) {
         console.log(`Serving demo audio for mix ${mixId}`);
         
         try {
@@ -641,10 +641,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        console.log(`Proxying real Jumpshare URL: ${mix.jumpshareUrl}`);
-        // In production, proxy the real Jumpshare URL
+        console.log(`Converting Jumpshare URL to direct download: ${mix.jumpshareUrl}`);
+        
+        // Convert Jumpshare view URL to direct download URL
+        let directUrl = mix.jumpshareUrl;
+        if (directUrl.includes('jumpshare.com/v/')) {
+          // Extract the file ID and convert to direct download
+          const fileId = directUrl.split('/v/')[1];
+          directUrl = `https://jumpshare.com/s/${fileId}`;
+          console.log(`Converted to direct download URL: ${directUrl}`);
+        }
+        
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(mix.jumpshareUrl, {
+        const response = await fetch(directUrl, {
           timeout: 30000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; DHR-Player/1.0)',
@@ -653,18 +662,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         if (!response.ok) {
-          console.error(`Real audio fetch failed: ${response.status} ${response.statusText}`);
+          console.error(`Audio fetch failed: ${response.status} ${response.statusText}`);
           return res.status(404).json({ error: "Audio file not accessible" });
         }
 
-        console.log(`Real audio response headers:`, {
+        console.log(`Audio response headers:`, {
           contentType: response.headers.get('content-type'),
           contentLength: response.headers.get('content-length'),
           status: response.status
         });
 
+        // Check if we got HTML instead of audio
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('text/html')) {
+          console.error('Received HTML instead of audio, URL conversion failed');
+          return res.status(404).json({ error: "Audio file not found" });
+        }
+
         res.set({
-          'Content-Type': response.headers.get('content-type') || 'audio/mpeg',
+          'Content-Type': contentType || 'audio/mpeg',
           'Content-Length': response.headers.get('content-length') || '',
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'public, max-age=3600',
@@ -674,11 +690,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (response.body) {
           response.body.pipe(res);
         } else {
-          console.error('Real audio response has no body');
+          console.error('Audio response has no body');
           return res.status(502).json({ error: "No audio data available" });
         }
       } catch (error) {
-        console.error('Real audio proxy error:', error);
+        console.error('Audio proxy error:', error);
         return res.status(502).json({ error: "Audio streaming failed" });
       }
 
