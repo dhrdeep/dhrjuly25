@@ -578,35 +578,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // For demo purposes with placeholder URLs, serve a sample audio file directly
+      // For demo purposes with placeholder URLs, generate a simple tone
       if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
-        console.log(`Serving sample audio for mix ${mixId}`);
+        console.log(`Serving demo audio for mix ${mixId}`);
         
-        // Fetch and proxy the sample audio
-        const fetch = (await import('node-fetch')).default;
-        const sampleUrl = 'https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav';
+        // Generate a simple audio stream for demonstration
+        res.set({
+          'Content-Type': 'audio/wav',
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Range'
+        });
+
+        // Create a minimal WAV header for a 2-second 440Hz tone
+        const sampleRate = 44100;
+        const duration = 2; // seconds
+        const frequency = 440; // Hz (A note)
+        const amplitude = 0.3;
         
-        try {
-          const response = await fetch(sampleUrl);
-          
-          if (!response.ok) {
-            return res.status(404).json({ error: "Sample audio not accessible" });
-          }
-
-          res.set({
-            'Content-Type': 'audio/wav',
-            'Content-Length': response.headers.get('content-length'),
-            'Accept-Ranges': 'bytes',
-            'Cache-Control': 'public, max-age=3600',
-            'Access-Control-Allow-Origin': '*'
-          });
-
-          response.body?.pipe(res);
-          return;
-        } catch (error) {
-          console.error('Error fetching sample audio:', error);
-          return res.status(500).json({ error: "Failed to load sample audio" });
+        const numSamples = sampleRate * duration;
+        const dataSize = numSamples * 2; // 16-bit samples
+        const fileSize = 44 + dataSize; // WAV header is 44 bytes
+        
+        const buffer = Buffer.alloc(44 + dataSize);
+        let offset = 0;
+        
+        // WAV header
+        buffer.write('RIFF', offset); offset += 4;
+        buffer.writeUInt32LE(fileSize - 8, offset); offset += 4;
+        buffer.write('WAVE', offset); offset += 4;
+        buffer.write('fmt ', offset); offset += 4;
+        buffer.writeUInt32LE(16, offset); offset += 4; // fmt chunk size
+        buffer.writeUInt16LE(1, offset); offset += 2; // PCM format
+        buffer.writeUInt16LE(1, offset); offset += 2; // mono
+        buffer.writeUInt32LE(sampleRate, offset); offset += 4;
+        buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4; // byte rate
+        buffer.writeUInt16LE(2, offset); offset += 2; // block align
+        buffer.writeUInt16LE(16, offset); offset += 2; // bits per sample
+        buffer.write('data', offset); offset += 4;
+        buffer.writeUInt32LE(dataSize, offset); offset += 4;
+        
+        // Generate audio data
+        for (let i = 0; i < numSamples; i++) {
+          const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * amplitude * 32767;
+          buffer.writeInt16LE(Math.round(sample), offset);
+          offset += 2;
         }
+        
+        res.set('Content-Length', buffer.length.toString());
+        res.send(buffer);
+        return;
       }
 
       // In production, proxy the real Jumpshare URL

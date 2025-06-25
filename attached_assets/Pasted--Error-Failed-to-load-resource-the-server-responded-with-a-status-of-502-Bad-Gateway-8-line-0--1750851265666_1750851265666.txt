@@ -1,0 +1,53 @@
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (8, line 0)
+[Error] Audio error:
+SyntheticBaseEvent
+
+_reactName: "onError"
+
+_targetInst: null
+
+bubbles: false
+
+cancelable: true
+
+currentTarget: null
+
+defaultPrevented: false
+
+eventPhase: 2
+
+isDefaultPrevented: function()
+
+isPropagationStopped: function()
+
+isTrusted: true
+
+nativeEvent: Event {isTrusted: true, type: "error", target: <audio>, currentTarget: null, eventPhase: 0, …}
+
+target: <audio>
+
+timeStamp: 6552.000000000001
+
+type: "error"
+
+SyntheticBaseEvent Prototype
+	onError (VIPPage.tsx:1173)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+> Selected Element
+< <button data-replit-metadata="client/src/pages/VIPPage.tsx:372:22" data-component-name="button" class="flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-all duration-200 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 hover:text-orange-200 border border-orange-400/30" title="Play mix">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play h-4 w-4" data-replit-metadata="client/src/pages/VIPPage.tsx:388:20" data-component-name="Play">…</svg>
+<span data-replit-metadata="client/src/pages/VIPPage.tsx:393:24" data-component-name="span">Play</span>
+</button>
