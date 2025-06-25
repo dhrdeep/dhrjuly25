@@ -10,10 +10,20 @@ const mockSubscriptionService = {
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
 const TrackIdentPage: React.FC = () => {
-  // Check subscription access - only paid subscribers can use Track Identifier
+  // ALL HOOKS MUST BE DECLARED FIRST - React Rules of Hooks
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
   const [hasAccess, setHasAccess] = useState<boolean>(false);
-  
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.7);
+  const [isMuted, setIsMuted] = useState(false);
+  const [autoIdentify, setAutoIdentify] = useState(true);
+  const [identifiedTracks, setIdentifiedTracks] = useState<Track[]>([]);
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
+  const [isIdentifying, setIsIdentifying] = useState(false);
+  const [streamUrl] = useState('https://streaming.shoutcast.com/dhr');
+  const [identificationStatus, setIdentificationStatus] = useState<string>('');
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
+
   useEffect(() => {
     // Get current user subscription status
     const user = mockSubscriptionService.getCurrentUser();
@@ -78,16 +88,6 @@ const TrackIdentPage: React.FC = () => {
       </div>
     );
   }
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.7);
-  const [isMuted, setIsMuted] = useState(false);
-  const [autoIdentify, setAutoIdentify] = useState(true);
-  const [identifiedTracks, setIdentifiedTracks] = useState<Track[]>([]);
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
-  const [isIdentifying, setIsIdentifying] = useState(false);
-  const [streamUrl] = useState('https://streaming.shoutcast.com/dhr');
-  const [identificationStatus, setIdentificationStatus] = useState<string>('');
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -283,7 +283,7 @@ const TrackIdentPage: React.FC = () => {
         console.log('Connected Audio Nodes With Gain Control');
       }
 
-      return destinationRef.current.stream;
+      return destinationRef.current?.stream;
     } catch (error) {
       console.error('Error Setting Up Audio Capture:', error);
       setIdentificationStatus('Error Setting Up Audio Capture. Please Try Again.');

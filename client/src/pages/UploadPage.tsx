@@ -185,6 +185,27 @@ Submitted via DHR Website
           </div>
         </section>
 
+        {/* WeDownload Quick Upload */}
+        <section className="mb-8">
+          <div className="bg-blue-500/10 rounded-xl p-6 border border-blue-400/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-blue-400 mb-2">Quick Upload Via WeDownload</h3>
+                <p className="text-gray-300">Upload your mix files directly through our partner service for fast processing</p>
+              </div>
+              <a 
+                href="https://wedownload.net" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-blue-500 hover:bg-blue-600 px-6 py-3 rounded-lg text-white font-semibold transition-colors flex items-center space-x-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Upload Now</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* Submission Form */}
         <section className="mb-12">
           <div className="bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/20">

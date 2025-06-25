@@ -683,6 +683,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (currentDownloads >= 2) {
           return res.status(403).json({ error: "Daily download limit reached (2 downloads per day)" });
         }
+        
+        // Increment download counter for demo user BEFORE processing download
+        global.demoDownloadCache[cacheKey] = currentDownloads + 1;
+        console.log(`Demo user download count incremented to: ${global.demoDownloadCache[cacheKey]}/2`);
       } else {
         const user = await storage.getUser(userId as string);
         if (!user || user.subscriptionTier !== 'vip') {
@@ -736,7 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.set({
             'Content-Type': contentType,
             'Content-Length': response.headers.get('content-length') || '',
-            'Content-Disposition': `attachment; filename="${mix.title}.mp3"`,
+            'Content-Disposition': `attachment; filename="${mix.title.replace(/[^\w\s.-]/g, '_').replace(/\s+/g, '_')}.mp3"`,
             'Accept-Ranges': 'bytes',
             'Cache-Control': 'public, max-age=3600',
             'Access-Control-Allow-Origin': '*'
@@ -1365,20 +1369,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return 'vip';
   }
 
-  // Live metadata endpoint - scrape from Everestcast stream 1
+  // Live metadata endpoint - scrape from Everestcast stream 1 
   app.get('/api/live-metadata', async (req, res) => {
     try {
-      // Mock live metadata for now - replace with actual Everestcast scraping
-      const mockMetadata = {
-        artist: 'Deep House Artist',
-        title: 'Atmospheric Deep House Mix',
-        timestamp: new Date().toISOString()
-      };
+      // Scrape real metadata from Everestcast API for DHR1 stream
+      const fetch = (await import('node-fetch')).default;
+      // Use direct stream stats for DHR1 stream
+      const response = await fetch('https://ec1.everestcast.host:2750/status-json.xsl', {
+        headers: {
+          'User-Agent': 'DHR-Website/1.0'
+        }
+      });
       
-      res.json(mockMetadata);
+      if (response.ok) {
+        const data = await response.json() as any;
+        
+        // Extract real track information from Icecast stats response
+        const source = data.icestats?.source?.[0] || data.icestats?.source;
+        const songTitle = source?.title || source?.song || '';
+        
+        const metadata = {
+          artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'DHR Live',
+          title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle || 'Deep House Stream',
+          timestamp: new Date().toISOString()
+        };
+        
+        res.json(metadata);
+      } else {
+        throw new Error(`Everestcast API returned ${response.status}`);
+      }
     } catch (error) {
-      console.error('Error fetching live metadata:', error);
-      res.status(500).json({ error: 'Failed to fetch live metadata' });
+      console.error('Error fetching live metadata from Everestcast:', error);
+      // Return error instead of fake data
+      res.status(500).json({ error: 'Unable to fetch live metadata from stream' });
     }
   });
 

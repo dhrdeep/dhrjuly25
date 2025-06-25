@@ -448,7 +448,7 @@ const HomePage: React.FC = () => {
                 <div className="text-center text-sm text-gray-400">
                   <p>128kbps • Free Stream • 24/7</p>
                   <p className="mt-1">Deep House Radio - The Deepest Beats On The Net</p>
-                  <p className="mt-1 text-xs text-orange-400">Upgrade for 320kbps uninterrupted premium streams</p>
+                  <p className="mt-1 text-xs text-orange-400">Upgrade For 320kbps Uninterrupted Premium Streams</p>
                 </div>
               </div>
             </div>
