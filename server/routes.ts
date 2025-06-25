@@ -590,35 +590,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Generate proper signed URL with AWS SDK v2 (working approach)
-        const AWS = await import('aws-sdk');
+        // EMERGENCY FIX: Serve local files directly since DigitalOcean authentication is broken
+        const fs = await import('fs');
+        const path = await import('path');
         
-        // Configure S3 client for DigitalOcean Spaces
-        const s3 = new AWS.default.S3({
-          endpoint: 'https://lon1.digitaloceanspaces.com',
-          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
-          secretAccessKey: process.env.S3_SECRET_KEY,
-          region: 'lon1',
-          signatureVersion: 'v4'
+        // Map mix titles to local files
+        const localFiles: Record<string, string> = {
+          'Sinitsa Deep House Mix 22': 'Sinitsa Deep House Mix 22_1750869252323.mp3',
+          'Deep Slow Summer Rave Beats': 'Deep Slow Summer Rave Beats_1750867856607.mp3',
+          'The Chronical Hour with ChroniX': 'The Chronical Hour with ChroniX_1750869128306.mp3'
+        };
+        
+        const filename = localFiles[mix.title];
+        if (!filename) {
+          console.log(`No local file mapping for: ${mix.title}`);
+          return res.status(404).json({ error: "File not available" });
+        }
+        
+        const filePath = path.join(process.cwd(), 'attached_assets', filename);
+        console.log(`Streaming local file: ${filePath}`);
+        
+        if (!fs.existsSync(filePath)) {
+          console.log(`Local file not found: ${filePath}`);
+          return res.status(404).json({ error: "File not found" });
+        }
+        
+        const stat = fs.statSync(filePath);
+        const fileStream = fs.createReadStream(filePath);
+        
+        res.set({
+          'Content-Type': 'audio/mpeg',
+          'Content-Length': stat.size.toString(),
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*'
         });
         
-        // Generate signed URL for direct access to private file
-        const signedUrl = s3.getSignedUrl('getObject', {
-          Bucket: 'dhrmixes',
-          Key: mix.s3Url,
-          Expires: 3600 // 1 hour expiry
-        });
-        
-        console.log(`Streaming with signed URL: ${mix.title}`);
-        
-        const fetch = (await import('node-fetch')).default;
-        const response = await fetch(signedUrl, {
-          timeout: 30000,
-          headers: {
-            'User-Agent': 'DHR-VIP-Player/1.0',
-            'Accept': 'audio/mpeg, audio/*, */*'
-          }
-        });
+        console.log(`✅ Successfully streaming local file: ${mix.title}`);
+        return fileStream.pipe(res);
 
         if (response.ok) {
           const contentType = response.headers.get('content-type') || 'audio/mpeg';
@@ -1004,35 +1013,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Generate proper signed URL with AWS SDK v2 (working approach)
-        const AWS = await import('aws-sdk');
+        // EMERGENCY FIX: Serve local files directly since DigitalOcean authentication is broken
+        const fs = await import('fs');
+        const path = await import('path');
         
-        // Configure S3 client for DigitalOcean Spaces
-        const s3 = new AWS.default.S3({
-          endpoint: 'https://lon1.digitaloceanspaces.com',
-          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
-          secretAccessKey: process.env.S3_SECRET_KEY,
-          region: 'lon1',
-          signatureVersion: 'v4'
+        // Map mix titles to local files
+        const localFiles: Record<string, string> = {
+          'Sinitsa Deep House Mix 22': 'Sinitsa Deep House Mix 22_1750869252323.mp3',
+          'Deep Slow Summer Rave Beats': 'Deep Slow Summer Rave Beats_1750867856607.mp3',
+          'The Chronical Hour with ChroniX': 'The Chronical Hour with ChroniX_1750869128306.mp3'
+        };
+        
+        const filename = localFiles[mix.title];
+        if (!filename) {
+          console.log(`No local file mapping for: ${mix.title}`);
+          return res.status(404).json({ error: "File not available" });
+        }
+        
+        const filePath = path.join(process.cwd(), 'attached_assets', filename);
+        console.log(`Downloading local file: ${filePath}`);
+        
+        if (!fs.existsSync(filePath)) {
+          console.log(`Local file not found: ${filePath}`);
+          return res.status(404).json({ error: "File not found" });
+        }
+        
+        const stat = fs.statSync(filePath);
+        const fileStream = fs.createReadStream(filePath);
+        
+        res.set({
+          'Content-Type': 'audio/mpeg',
+          'Content-Length': stat.size.toString(),
+          'Content-Disposition': `attachment; filename="${mix.title}.mp3"`,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*'
         });
         
-        // Generate signed URL for direct access to private file
-        const signedUrl = s3.getSignedUrl('getObject', {
-          Bucket: 'dhrmixes',
-          Key: mix.s3Url,
-          Expires: 3600 // 1 hour expiry
-        });
-        
-        console.log(`Downloading with signed URL: ${mix.title}`);
-        
-        const fetch = (await import('node-fetch')).default;
-        const response = await fetch(signedUrl, {
-          timeout: 60000,
-          headers: {
-            'User-Agent': 'DHR-VIP-Download/1.0',
-            'Accept': 'audio/mpeg, audio/*, */*'
-          }
-        });
+        console.log(`✅ Successfully downloading local file: ${mix.title}`);
+        return fileStream.pipe(res);
 
         if (response.ok) {
           const contentType = response.headers.get('content-type') || 'audio/mpeg';
