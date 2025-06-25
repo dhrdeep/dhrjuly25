@@ -583,9 +583,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Mix ${mixId} found: ${mix.title}, URL: ${mix.jumpshareUrl}`);
 
-      // For now, always generate demo audio since Jumpshare URLs require authentication
-      // This ensures reliable streaming without external dependencies
-      if (true) { // Temporarily always use demo audio
+      // Check if we have a valid Jumpshare URL to work with
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK')) {
         console.log(`Serving demo audio for mix ${mixId}`);
         
         try {
@@ -647,10 +646,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Convert Jumpshare view URL to direct download URL
         let directUrl = mix.jumpshareUrl;
         if (directUrl.includes('jumpshare.com/v/')) {
-          // Extract the file ID and convert to direct download
+          // Extract the file ID and try different URL patterns
           const fileId = directUrl.split('/v/')[1];
-          directUrl = `https://jumpshare.com/s/${fileId}`;
-          console.log(`Converted to direct download URL: ${directUrl}`);
+          // Try the download endpoint pattern
+          directUrl = `https://jumpshare.com/download/file/${fileId}`;
+          console.log(`Converted to download URL: ${directUrl}`);
         }
         
         const fetch = (await import('node-fetch')).default;
@@ -783,9 +783,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // For demo purposes with placeholder URLs
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
-        return res.status(404).json({ error: "Demo mode - Real file URL needed" });
+      // For demo purposes with placeholder URLs, provide a demo download
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK')) {
+        console.log('Generating demo file for download');
+        
+        // Generate a longer demo audio file (30 seconds) for downloads
+        const sampleRate = 22050;
+        const duration = 30; // 30 seconds for downloads
+        const frequency = 440;
+        const numSamples = sampleRate * duration;
+        const dataSize = numSamples * 2;
+        const buffer = Buffer.alloc(44 + dataSize);
+        
+        let offset = 0;
+        buffer.write('RIFF', offset); offset += 4;
+        buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
+        buffer.write('WAVE', offset); offset += 4;
+        buffer.write('fmt ', offset); offset += 4;
+        buffer.writeUInt32LE(16, offset); offset += 4;
+        buffer.writeUInt16LE(1, offset); offset += 2;
+        buffer.writeUInt16LE(1, offset); offset += 2;
+        buffer.writeUInt32LE(sampleRate, offset); offset += 4;
+        buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
+        buffer.writeUInt16LE(2, offset); offset += 2;
+        buffer.writeUInt16LE(16, offset); offset += 2;
+        buffer.write('data', offset); offset += 4;
+        buffer.writeUInt32LE(dataSize, offset); offset += 4;
+        
+        // Generate varied audio (ascending tones)
+        for (let i = 0; i < numSamples; i++) {
+          const progress = i / numSamples;
+          const currentFreq = frequency + (progress * 200); // Sweep from 440Hz to 640Hz
+          const sample = Math.sin(2 * Math.PI * currentFreq * i / sampleRate) * 0.3 * 32767;
+          buffer.writeInt16LE(Math.round(sample), offset);
+          offset += 2;
+        }
+        
+        // Record the download
+        if (userId === 'demo_user') {
+          const today = new Date().toISOString().split('T')[0];
+          const cacheKey = `demo_downloads_${today}`;
+          global.demoDownloadCache[cacheKey] = (global.demoDownloadCache[cacheKey] || 0) + 1;
+        }
+        
+        res.set({
+          'Content-Disposition': `attachment; filename="${mix.title}.wav"`,
+          'Content-Type': 'audio/wav',
+          'Content-Length': buffer.length.toString()
+        });
+        
+        return res.send(buffer);
       }
 
       // Record the download and update limits before serving file
