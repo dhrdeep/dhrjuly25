@@ -1,6 +1,22 @@
 import { db } from "./db";
-import { users, patreonTokens, type User, type InsertUser, type PatreonToken, type InsertPatreonToken } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { 
+  users, 
+  patreonTokens,
+  vipMixes,
+  userDownloads,
+  dailyDownloadLimits,
+  type User, 
+  type InsertUser,
+  type PatreonToken,
+  type InsertPatreonToken,
+  type VipMix,
+  type InsertVipMix,
+  type UserDownload,
+  type InsertUserDownload,
+  type DailyDownloadLimit,
+  type InsertDailyDownloadLimit
+} from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -16,6 +32,20 @@ export interface IStorage {
   getPatreonTokens(userId?: string): Promise<PatreonToken | undefined>;
   updatePatreonTokens(id: number, updates: Partial<PatreonToken>): Promise<PatreonToken>;
   deletePatreonTokens(id: number): Promise<void>;
+  
+  // VIP mix methods
+  getAllVipMixes(): Promise<VipMix[]>;
+  getVipMix(id: number): Promise<VipMix | undefined>;
+  createVipMix(mix: InsertVipMix): Promise<VipMix>;
+  updateVipMix(id: number, updates: Partial<VipMix>): Promise<VipMix>;
+  deleteVipMix(id: number): Promise<void>;
+  
+  // Download tracking methods
+  recordDownload(download: InsertUserDownload): Promise<UserDownload>;
+  getUserDownloads(userId: string): Promise<UserDownload[]>;
+  getDailyDownloadLimit(userId: string): Promise<DailyDownloadLimit | undefined>;
+  updateDailyDownloadLimit(userId: string, limit: InsertDailyDownloadLimit): Promise<DailyDownloadLimit>;
+  getRemainingDownloads(userId: string): Promise<number>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -72,6 +102,71 @@ export class DrizzleStorage implements IStorage {
 
   async deletePatreonTokens(id: number): Promise<void> {
     await db.delete(patreonTokens).where(eq(patreonTokens.id, id));
+  }
+  
+  // VIP mix methods
+  async getAllVipMixes(): Promise<VipMix[]> {
+    return await db.select().from(vipMixes).where(eq(vipMixes.isActive, true)).orderBy(vipMixes.createdAt);
+  }
+  
+  async getVipMix(id: number): Promise<VipMix | undefined> {
+    const [mix] = await db.select().from(vipMixes).where(eq(vipMixes.id, id));
+    return mix;
+  }
+  
+  async createVipMix(mix: InsertVipMix): Promise<VipMix> {
+    const [created] = await db.insert(vipMixes).values(mix).returning();
+    return created;
+  }
+  
+  async updateVipMix(id: number, updates: Partial<VipMix>): Promise<VipMix> {
+    const [updated] = await db.update(vipMixes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(vipMixes.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteVipMix(id: number): Promise<void> {
+    await db.delete(vipMixes).where(eq(vipMixes.id, id));
+  }
+  
+  // Download tracking methods
+  async recordDownload(download: InsertUserDownload): Promise<UserDownload> {
+    const [created] = await db.insert(userDownloads).values(download).returning();
+    return created;
+  }
+  
+  async getUserDownloads(userId: string): Promise<UserDownload[]> {
+    return await db.select().from(userDownloads).where(eq(userDownloads.userId, userId));
+  }
+  
+  async getDailyDownloadLimit(userId: string): Promise<DailyDownloadLimit | undefined> {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const [limit] = await db.select().from(dailyDownloadLimits)
+      .where(and(eq(dailyDownloadLimits.userId, userId), eq(dailyDownloadLimits.downloadDate, today)));
+    return limit;
+  }
+  
+  async updateDailyDownloadLimit(userId: string, limitData: InsertDailyDownloadLimit): Promise<DailyDownloadLimit> {
+    const today = new Date().toISOString().split('T')[0];
+    const [updated] = await db.insert(dailyDownloadLimits)
+      .values({ ...limitData, userId, downloadDate: today })
+      .onConflictDoUpdate({
+        target: [dailyDownloadLimits.userId, dailyDownloadLimits.downloadDate],
+        set: { 
+          downloadsUsed: limitData.downloadsUsed,
+          updatedAt: new Date() 
+        }
+      })
+      .returning();
+    return updated;
+  }
+  
+  async getRemainingDownloads(userId: string): Promise<number> {
+    const limit = await this.getDailyDownloadLimit(userId);
+    if (!limit) return 10; // Default VIP limit
+    return Math.max(0, limit.maxDownloads - limit.downloadsUsed);
   }
 }
 

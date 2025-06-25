@@ -28,10 +28,57 @@ export const patreonTokens = pgTable("patreon_tokens", {
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
+export const vipMixes = pgTable("vip_mixes", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  artist: text("artist").notNull(),
+  genre: text("genre").notNull(),
+  duration: text("duration").notNull(), // e.g., "2h 45m"
+  fileSize: text("file_size").notNull(), // e.g., "378 MB"
+  filePath: text("file_path").notNull(), // Server file path
+  jumpshareUrl: text("jumpshare_url"), // Jumpshare download/stream URL
+  jumpsharePreviewUrl: text("jumpshare_preview_url"), // Jumpshare preview URL for streaming
+  artworkUrl: text("artwork_url"),
+  description: text("description"),
+  rating: integer("rating").default(0), // 1-5 stars
+  totalDownloads: integer("total_downloads").default(0),
+  isExclusive: boolean("is_exclusive").default(true),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+export const userDownloads = pgTable("user_downloads", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  mixId: integer("mix_id").notNull(),
+  downloadedAt: timestamp("downloaded_at").notNull().defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent")
+});
+
+export const dailyDownloadLimits = pgTable("daily_download_limits", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  downloadDate: text("download_date").notNull(), // Format: YYYY-MM-DD
+  downloadsUsed: integer("downloads_used").default(0),
+  maxDownloads: integer("max_downloads").default(10), // VIP daily limit
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
 export const insertUserSchema = createInsertSchema(users);
 export const insertPatreonTokenSchema = createInsertSchema(patreonTokens);
+export const insertVipMixSchema = createInsertSchema(vipMixes);
+export const insertUserDownloadSchema = createInsertSchema(userDownloads);
+export const insertDailyDownloadLimitSchema = createInsertSchema(dailyDownloadLimits);
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type PatreonToken = typeof patreonTokens.$inferSelect;
 export type InsertPatreonToken = z.infer<typeof insertPatreonTokenSchema>;
+export type VipMix = typeof vipMixes.$inferSelect;
+export type InsertVipMix = z.infer<typeof insertVipMixSchema>;
+export type UserDownload = typeof userDownloads.$inferSelect;
+export type InsertUserDownload = z.infer<typeof insertUserDownloadSchema>;
+export type DailyDownloadLimit = typeof dailyDownloadLimits.$inferSelect;
+export type InsertDailyDownloadLimit = z.infer<typeof insertDailyDownloadLimitSchema>;

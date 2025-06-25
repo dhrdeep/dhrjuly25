@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Patreon OAuth endpoint to replace Supabase edge function
@@ -325,6 +326,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(user);
     } catch (error) {
       res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  // VIP Mixes API
+  app.get("/api/vip-mixes", async (req, res) => {
+    try {
+      const mixes = await storage.getAllVipMixes();
+      res.json(mixes);
+    } catch (error) {
+      console.error("Error fetching VIP mixes:", error);
+      res.status(500).json({ error: "Failed to fetch VIP mixes" });
+    }
+  });
+
+  app.get("/api/vip-mixes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const mix = await storage.getVipMix(id);
+      if (!mix) {
+        return res.status(404).json({ error: "Mix not found" });
+      }
+      res.json(mix);
+    } catch (error) {
+      console.error("Error fetching VIP mix:", error);
+      res.status(500).json({ error: "Failed to fetch VIP mix" });
+    }
+  });
+
+  app.post("/api/vip-mixes", async (req, res) => {
+    try {
+      const validatedData = insertVipMixSchema.parse(req.body);
+      const mix = await storage.createVipMix(validatedData);
+      res.status(201).json(mix);
+    } catch (error) {
+      console.error("Error creating VIP mix:", error);
+      res.status(500).json({ error: "Failed to create VIP mix" });
+    }
+  });
+
+  // Download tracking and access control
+  app.post("/api/download/:mixId", async (req, res) => {
+    try {
+      const mixId = parseInt(req.params.mixId);
+      const { userId } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ error: "User authentication required" });
+      }
+
+      // Check user subscription tier
+      const user = await storage.getUser(userId);
+      if (!user || user.subscriptionTier !== 'vip') {
+        return res.status(403).json({ error: "VIP subscription required for downloads" });
+      }
+
+      // Check daily download limit
+      const remainingDownloads = await storage.getRemainingDownloads(userId);
+      if (remainingDownloads <= 0) {
+        return res.status(429).json({ error: "Daily download limit reached" });
+      }
+
+      // Get mix details
+      const mix = await storage.getVipMix(mixId);
+      if (!mix) {
+        return res.status(404).json({ error: "Mix not found" });
+      }
+
+      // Record the download
+      const downloadRecord = await storage.recordDownload({
+        userId,
+        mixId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      // Update daily download count
+      const today = new Date().toISOString().split('T')[0];
+      const currentLimit = await storage.getDailyDownloadLimit(userId);
+      const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
+      
+      await storage.updateDailyDownloadLimit(userId, {
+        downloadsUsed: newUsedCount,
+        maxDownloads: 10 // VIP daily limit
+      });
+
+      // Update total downloads for the mix
+      await storage.updateVipMix(mixId, {
+        totalDownloads: (mix.totalDownloads || 0) + 1
+      });
+
+      res.json({
+        success: true,
+        downloadUrl: mix.jumpshareUrl,
+        remainingDownloads: remainingDownloads - 1,
+        mix: {
+          title: mix.title,
+          artist: mix.artist,
+          fileSize: mix.fileSize
+        }
+      });
+
+    } catch (error) {
+      console.error("Error processing download:", error);
+      res.status(500).json({ error: "Failed to process download" });
+    }
+  });
+
+  // Check download limits
+  app.get("/api/download-limits/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const remainingDownloads = await storage.getRemainingDownloads(userId);
+      const limit = await storage.getDailyDownloadLimit(userId);
+
+      res.json({
+        subscriptionTier: user.subscriptionTier,
+        remainingDownloads,
+        maxDownloads: limit?.maxDownloads || 10,
+        used: limit?.downloadsUsed || 0,
+        canDownload: user.subscriptionTier === 'vip' && remainingDownloads > 0,
+        canPlay: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier || '')
+      });
+
+    } catch (error) {
+      console.error("Error checking download limits:", error);
+      res.status(500).json({ error: "Failed to check download limits" });
     }
   });
 
