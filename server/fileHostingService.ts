@@ -88,12 +88,12 @@ export class FileHostingService {
       ));
     }
     
-    // Temporary hardcoded configuration for testing
+    // Temporary configuration for dhrmixes Space
     this.providers.push(new S3Provider(
-      'https://lon1.digitaloceanspaces.com',
+      'https://dhrmixes.lon1.digitaloceanspaces.com',
       'dhrmixes',
-      'dop_v1_51cf4d8c436f993972d7317bcec5b15eedaca686e97205d8695a3f830a442bc6',
-      'dop_v1_51cf4d8c436f993972d7317bcec5b15eedaca686e97205d8695a3f830a442bc6'
+      '', // Will be configured once you create Spaces Access Keys
+      ''
     ));
 
     // Add local and direct providers
