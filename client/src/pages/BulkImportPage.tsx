@@ -131,7 +131,7 @@ export default function BulkImportPage() {
                   <ul className="list-disc list-inside space-y-1 text-sm">
                     <li><strong>title</strong> - Mix title</li>
                     <li><strong>artist</strong> - Artist/DJ name</li>
-                    <li><strong>jumpshareUrl</strong> - Download link</li>
+                    <li><strong>jumpshareUrl</strong> - Download link (can be any hosting URL)</li>
                   </ul>
                 </div>
                 
@@ -165,17 +165,33 @@ export default function BulkImportPage() {
               </h2>
               
               <p className="text-gray-300 mb-4">
-                For 1000+ mixes, you'll need a scalable storage solution. We've prepared 
-                detailed setup guides for different options.
+                Ready to import your mix collection? Use the example data or paste your own CSV. 
+                For 1000+ mixes, check our storage setup guides for the best hosting solution.
               </p>
               
-              <a
-                href="/storage-setup"
-                className="inline-flex items-center px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-400/30 rounded-lg transition-all"
-              >
-                <Cloud className="h-4 w-4 mr-2" />
-                View Storage Setup Guide
-              </a>
+              <div className="flex gap-4">
+                <a
+                  href="/storage-setup"
+                  className="inline-flex items-center px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-400/30 rounded-lg transition-all"
+                >
+                  <Cloud className="h-4 w-4 mr-2" />
+                  View Storage Setup Guide
+                </a>
+                
+                <button
+                  onClick={() => {
+                    const exampleCsv = `title,artist,genre,duration,fileSize,jumpshareUrl,jumpsharePreviewUrl,artworkUrl,description,tags
+"Deep House Vibes Vol. 1","DJ Example","deep house","1h 30m","210 MB","https://jumpshare.com/download/mix1","https://jumpshare.com/preview/mix1","https://example.com/artwork1.jpg","Amazing deep house journey","deep,house,electronic,chill"
+"Tech House Sessions","Another DJ","tech house","2h 15m","315 MB","https://jumpshare.com/download/mix2","https://jumpshare.com/preview/mix2","https://example.com/artwork2.jpg","Underground tech house","tech,house,underground,energy"
+"Melodic Progressive","Third Artist","progressive","1h 45m","250 MB","https://jumpshare.com/download/mix3","https://jumpshare.com/preview/mix3","https://example.com/artwork3.jpg","Emotional progressive journey","progressive,melodic,emotional"`;
+                    setCsvData(exampleCsv);
+                  }}
+                  className="inline-flex items-center px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-400/30 rounded-lg transition-all"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Load Example CSV
+                </button>
+              </div>
             </div>
           </div>
 
