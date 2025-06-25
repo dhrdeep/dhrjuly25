@@ -63,6 +63,7 @@ const VIPPage: React.FC = () => {
 
       // Use proxy endpoint to stream audio without exposing source
       const audioUrl = `/api/stream/${mixId}`;
+      console.log('Loading audio URL:', audioUrl);
       
       if (audioRef.current) {
         audioRef.current.src = audioUrl;
@@ -593,10 +594,21 @@ const VIPPage: React.FC = () => {
             setCurrentlyPlaying(null);
           }}
           onCanPlay={() => {
-            console.log('Audio can play');
+            console.log('Audio can play - ready to start');
           }}
           onLoadStart={() => {
             console.log('Audio load started');
+          }}
+          onLoadedData={() => {
+            console.log('Audio data loaded');
+          }}
+          onPlay={() => {
+            console.log('Audio started playing');
+            setIsPlaying(true);
+          }}
+          onPause={() => {
+            console.log('Audio paused');
+            setIsPlaying(false);
           }}
           preload="none"
         />

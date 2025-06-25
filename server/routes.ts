@@ -578,11 +578,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // For demo purposes with placeholder URLs, return a sample audio file
-      // In production, you would fetch from mix.jumpshareUrl
+      // For demo purposes with placeholder URLs, serve a sample audio file directly
       if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
-        // Return a working sample audio URL for testing
-        return res.redirect('https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav');
+        console.log(`Serving sample audio for mix ${mixId}`);
+        
+        // Fetch and proxy the sample audio
+        const fetch = (await import('node-fetch')).default;
+        const sampleUrl = 'https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav';
+        
+        try {
+          const response = await fetch(sampleUrl);
+          
+          if (!response.ok) {
+            return res.status(404).json({ error: "Sample audio not accessible" });
+          }
+
+          res.set({
+            'Content-Type': 'audio/wav',
+            'Content-Length': response.headers.get('content-length'),
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=3600',
+            'Access-Control-Allow-Origin': '*'
+          });
+
+          response.body?.pipe(res);
+          return;
+        } catch (error) {
+          console.error('Error fetching sample audio:', error);
+          return res.status(500).json({ error: "Failed to load sample audio" });
+        }
       }
 
       // In production, proxy the real Jumpshare URL
@@ -597,7 +621,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Content-Type': response.headers.get('content-type') || 'audio/mpeg',
         'Content-Length': response.headers.get('content-length'),
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=3600'
+        'Cache-Control': 'public, max-age=3600',
+        'Access-Control-Allow-Origin': '*'
       });
 
       response.body?.pipe(res);
