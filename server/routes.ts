@@ -572,64 +572,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/stream/:mixId", async (req, res) => {
     try {
       const mixId = parseInt(req.params.mixId);
+      console.log(`Stream request for mix ID: ${mixId}`);
+      
       const mix = await storage.getVipMix(mixId);
       
       if (!mix) {
+        console.log(`Mix ${mixId} not found`);
         return res.status(404).json({ error: "Mix not found" });
       }
+      
+      console.log(`Mix ${mixId} found: ${mix.title}, URL: ${mix.jumpshareUrl}`);
 
       // For demo purposes with placeholder URLs, proxy a working audio file
       if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
         console.log(`Serving demo audio for mix ${mixId}`);
         
         try {
-          // Proxy a working audio file from archive.org
-          const fetch = (await import('node-fetch')).default;
-          const audioUrl = 'https://archive.org/download/testmp3testfile/mpthreetest.mp3';
-          const response = await fetch(audioUrl);
+          // Generate a simple audio response for demo
+          console.log('Generating simple audio tone for demo');
           
-          if (!response.ok) {
-            console.error(`Demo audio fetch failed: ${response.status}`);
-            return res.status(404).json({ error: "Demo audio not available" });
+          // Create a simple audio buffer that browsers can play
+          const sampleRate = 22050;
+          const duration = 3; // 3 seconds
+          const frequency = 440; // A note
+          const numSamples = sampleRate * duration;
+          const dataSize = numSamples * 2;
+          const buffer = Buffer.alloc(44 + dataSize);
+          
+          let offset = 0;
+          // WAV header
+          buffer.write('RIFF', offset); offset += 4;
+          buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
+          buffer.write('WAVE', offset); offset += 4;
+          buffer.write('fmt ', offset); offset += 4;
+          buffer.writeUInt32LE(16, offset); offset += 4;
+          buffer.writeUInt16LE(1, offset); offset += 2; // PCM
+          buffer.writeUInt16LE(1, offset); offset += 2; // mono
+          buffer.writeUInt32LE(sampleRate, offset); offset += 4;
+          buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
+          buffer.writeUInt16LE(2, offset); offset += 2;
+          buffer.writeUInt16LE(16, offset); offset += 2;
+          buffer.write('data', offset); offset += 4;
+          buffer.writeUInt32LE(dataSize, offset); offset += 4;
+          
+          // Generate sine wave
+          for (let i = 0; i < numSamples; i++) {
+            const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3 * 32767;
+            buffer.writeInt16LE(Math.round(sample), offset);
+            offset += 2;
           }
-
-          // Set proper headers for audio streaming
+          
           res.set({
-            'Content-Type': 'audio/mpeg',
-            'Content-Length': response.headers.get('content-length') || '',
+            'Content-Type': 'audio/wav',
+            'Content-Length': buffer.length.toString(),
             'Accept-Ranges': 'bytes',
             'Cache-Control': 'public, max-age=3600',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-            'Access-Control-Allow-Headers': 'Range'
+            'Access-Control-Allow-Origin': '*'
           });
-
-          // Stream the audio directly to client
-          response.body?.pipe(res);
+          
+          res.send(buffer);
           return;
+          
+
         } catch (error) {
           console.error('Demo audio proxy error:', error);
           return res.status(502).json({ error: "Demo audio streaming failed" });
         }
       }
 
-      // In production, proxy the real Jumpshare URL
-      const fetch = (await import('node-fetch')).default;
-      const response = await fetch(mix.jumpshareUrl);
-      
-      if (!response.ok) {
-        return res.status(404).json({ error: "Audio file not accessible" });
+      try {
+        console.log(`Proxying real Jumpshare URL: ${mix.jumpshareUrl}`);
+        // In production, proxy the real Jumpshare URL
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(mix.jumpshareUrl, {
+          timeout: 30000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; DHR-Player/1.0)',
+            'Accept': 'audio/*,*/*;q=0.1'
+          }
+        });
+        
+        if (!response.ok) {
+          console.error(`Real audio fetch failed: ${response.status} ${response.statusText}`);
+          return res.status(404).json({ error: "Audio file not accessible" });
+        }
+
+        console.log(`Real audio response headers:`, {
+          contentType: response.headers.get('content-type'),
+          contentLength: response.headers.get('content-length'),
+          status: response.status
+        });
+
+        res.set({
+          'Content-Type': response.headers.get('content-type') || 'audio/mpeg',
+          'Content-Length': response.headers.get('content-length') || '',
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*'
+        });
+
+        if (response.body) {
+          response.body.pipe(res);
+        } else {
+          console.error('Real audio response has no body');
+          return res.status(502).json({ error: "No audio data available" });
+        }
+      } catch (error) {
+        console.error('Real audio proxy error:', error);
+        return res.status(502).json({ error: "Audio streaming failed" });
       }
-
-      res.set({
-        'Content-Type': response.headers.get('content-type') || 'audio/mpeg',
-        'Content-Length': response.headers.get('content-length'),
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=3600',
-        'Access-Control-Allow-Origin': '*'
-      });
-
-      response.body?.pipe(res);
 
     } catch (error) {
       console.error("Error streaming audio:", error);
