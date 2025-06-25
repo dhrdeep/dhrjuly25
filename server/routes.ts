@@ -591,7 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const encodedPath = encodeURIComponent(mix.s3_url);
+        const encodedPath = encodeURIComponent(mix.s3Url);
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
         console.log(`Streaming from Spaces: ${spacesUrl}`);
         

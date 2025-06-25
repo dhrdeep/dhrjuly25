@@ -106,7 +106,7 @@ export class DrizzleStorage implements IStorage {
   
   // VIP mix methods
   async getAllVipMixes(): Promise<VipMix[]> {
-    return await db.select().from(vipMixes).where(eq(vipMixes.isActive, true)).orderBy(vipMixes.createdAt);
+    return await db.select().from(vipMixes).orderBy(vipMixes.createdAt);
   }
   
   async getVipMix(id: number): Promise<VipMix | undefined> {
