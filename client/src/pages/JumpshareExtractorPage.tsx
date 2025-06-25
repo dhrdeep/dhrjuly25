@@ -28,20 +28,12 @@ export default function JumpshareExtractorPage() {
   const [importResults, setImportResults] = useState<{ success: number; errors: string[] } | null>(null);
   const queryClient = useQueryClient();
 
+  const [isImporting, setIsImporting] = useState(false);
+  
   const bulkImportMutation = useMutation({
-    mutationFn: async (mixes: ExtractedMix[]) => {
-      return apiRequest('/api/vip-mixes/bulk-import', {
-        method: 'POST',
-        body: JSON.stringify({ mixes }),
-      });
-    },
-    onSuccess: (data) => {
-      setImportResults(data);
-      queryClient.invalidateQueries({ queryKey: ['/api/vip-mixes'] });
-    },
-    onError: (error) => {
-      console.error('Bulk import failed:', error);
-      setImportResults({ success: 0, errors: [error.message] });
+    mutationFn: async () => {
+      // This is now handled in importExtractedMixes
+      return { success: 0, errors: [] };
     },
   });
 
@@ -152,9 +144,38 @@ export default function JumpshareExtractorPage() {
     return Math.abs(hash).toString(36).substring(0, 8);
   };
 
-  const importExtractedMixes = () => {
+  const importExtractedMixes = async () => {
     if (extractedMixes.length === 0) return;
-    bulkImportMutation.mutate(extractedMixes);
+    
+    setIsImporting(true);
+    
+    // Process in batches of 50 to avoid payload size issues
+    const batchSize = 50;
+    const batches = [];
+    for (let i = 0; i < extractedMixes.length; i += batchSize) {
+      batches.push(extractedMixes.slice(i, i + batchSize));
+    }
+    
+    let totalSuccess = 0;
+    const allErrors: string[] = [];
+    
+    for (let i = 0; i < batches.length; i++) {
+      try {
+        console.log(`Processing batch ${i + 1} of ${batches.length}...`);
+        const result = await apiRequest('/api/vip-mixes/bulk-import', {
+          method: 'POST',
+          body: JSON.stringify({ mixes: batches[i] }),
+        });
+        totalSuccess += result.success;
+        allErrors.push(...result.errors);
+      } catch (error) {
+        allErrors.push(`Batch ${i + 1} failed: ${error.message}`);
+      }
+    }
+    
+    setImportResults({ success: totalSuccess, errors: allErrors });
+    queryClient.invalidateQueries({ queryKey: ['/api/vip-mixes'] });
+    setIsImporting(false);
   };
 
   return (
@@ -198,11 +219,11 @@ export default function JumpshareExtractorPage() {
                 {extractedMixes.length > 0 && (
                   <button
                     onClick={importExtractedMixes}
-                    disabled={bulkImportMutation.isPending}
+                    disabled={isImporting}
                     className="flex items-center space-x-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 disabled:bg-gray-500/20 disabled:text-gray-400 text-green-300 border border-green-400/30 rounded-lg transition-all"
                   >
                     <Upload className="h-4 w-4" />
-                    <span>{bulkImportMutation.isPending ? 'Importing...' : `Import ${extractedMixes.length} Mixes`}</span>
+                    <span>{isImporting ? 'Importing...' : `Import ${extractedMixes.length} Mixes (Batched)`}</span>
                   </button>
                 )}
                 
@@ -293,13 +314,21 @@ export default function JumpshareExtractorPage() {
             </div>
 
             <div className="bg-blue-900/20 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/20">
-              <h3 className="text-xl font-bold text-blue-300 mb-3">Next Steps:</h3>
-              <ol className="text-gray-300 space-y-2 text-sm">
-                <li>1. Extract mixes from your Jumpshare activity log</li>
-                <li>2. Review the generated mix data and metadata</li>
-                <li>3. Import all mixes into your VIP collection</li>
-                <li>4. Update Jumpshare URLs with actual links in VIP Admin</li>
-                <li>5. Your searchable mix library will be ready!</li>
+              <h3 className="text-xl font-bold text-blue-300 mb-3">Batch Processing:</h3>
+              <div className="text-gray-300 space-y-2 text-sm">
+                <p>• Processes large collections in batches of 50 mixes</p>
+                <p>• Avoids server payload size limitations</p>
+                <p>• Shows progress and handles errors gracefully</p>
+                <p>• Perfect for your 200+ mix collection</p>
+              </div>
+              
+              <h4 className="text-blue-300 font-bold mt-4 mb-2">Next Steps:</h4>
+              <ol className="text-gray-300 space-y-1 text-sm">
+                <li>1. Paste your full Jumpshare CSV export</li>
+                <li>2. Click "Extract Mixes" to parse filenames</li>
+                <li>3. Review extracted data in preview</li>
+                <li>4. Click "Import Mixes (Batched)" to process all</li>
+                <li>5. Update actual Jumpshare URLs in VIP Admin later</li>
               </ol>
             </div>
           </div>
