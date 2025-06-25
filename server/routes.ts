@@ -595,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Streaming from CDN: ${cdnUrl}`);
         
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(publicUrl, {
+        const response = await fetch(cdnUrl, {
           timeout: 30000,
           headers: {
             'User-Agent': 'DHR-VIP-Player/1.0',
@@ -993,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Downloading from CDN: ${cdnUrl}`);
         
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(publicUrl, {
+        const response = await fetch(cdnUrl, {
           timeout: 60000,
           headers: {
             'User-Agent': 'DHR-VIP-Download/1.0',
