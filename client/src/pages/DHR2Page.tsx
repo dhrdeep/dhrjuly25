@@ -118,10 +118,11 @@ const DHR2Page: React.FC = () => {
               height="600"
               frameBorder="0"
               style={{
-                border: 'none',
+                border: '2px solid #f79e02',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                maxWidth: '100%'
+                maxWidth: '100%',
+                backgroundColor: '#111827'
               }}
               title="DHR2 Everestcast Player"
             />
