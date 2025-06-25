@@ -1369,59 +1369,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return 'vip';
   }
 
-  // Live metadata endpoint - extract REAL track info directly from DHR stream
+  // Live metadata endpoint - get REAL track info from DHR stream
   app.get('/api/live-metadata', async (req, res) => {
     try {
-      const fetch = (await import('node-fetch')).default;
+      const { exec } = await import('child_process');
       
-      // Direct fetch from stream with metadata request
-      console.log('Extracting real metadata from DHR stream...');
-      const streamResponse = await fetch('https://streaming.shoutcast.com/dhr', {
-        method: 'GET',
-        headers: {
-          'Icy-MetaData': '1',
-          'User-Agent': 'Mozilla/5.0 (compatible; DHR-Website/1.0)',
-          'Accept': '*/*'
-        }
-      });
-      
-      if (streamResponse.ok) {
-        // Get stream chunk and extract metadata
-        const streamBuffer = await streamResponse.buffer();
-        const streamString = streamBuffer.toString();
-        
-        // Look for StreamTitle in the stream data
-        const titleMatch = streamString.match(/StreamTitle='([^']+)'/);
-        if (titleMatch && titleMatch[1] && titleMatch[1].trim().length > 5) {
-          const songTitle = titleMatch[1].trim();
-          
-          if (!songTitle.toLowerCase().includes('dhr') && 
-              !songTitle.toLowerCase().includes('deep house radio') &&
-              songTitle.length > 5) {
-            
-            const metadata = {
-              artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
-              title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
-              timestamp: new Date().toISOString()
-            };
-            
-            console.log('✅ REAL metadata from DHR stream:', metadata);
-            return res.json(metadata);
+      // Use a shell command to extract the actual metadata
+      exec('timeout 10s curl -s "https://streaming.shoutcast.com/dhr" --header "Icy-MetaData: 1" | strings | grep -o "StreamTitle=\'[^\']*\'" | head -1', 
+        (error: any, stdout: any, stderr: any) => {
+          if (stdout && stdout.trim()) {
+            const match = stdout.match(/StreamTitle='([^']+)'/);
+            if (match && match[1]) {
+              const songTitle = match[1].trim();
+              console.log('Real track extracted:', songTitle);
+              
+              if (songTitle.length > 5 && 
+                  !songTitle.toLowerCase().includes('dhr') && 
+                  !songTitle.toLowerCase().includes('deep house radio')) {
+                
+                const metadata = {
+                  artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
+                  title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
+                  timestamp: new Date().toISOString()
+                };
+                
+                console.log('✅ REAL metadata from stream:', metadata);
+                return res.json(metadata);
+              }
+            }
           }
+          
+          // If no metadata extracted, return live status
+          console.log('No track metadata found - showing live status');
+          res.json({ 
+            artist: 'DHR Live',
+            title: 'Deep House Stream',
+            timestamp: new Date().toISOString(),
+            status: 'live'
+          });
         }
-      }
-      
-      // Return live status when no track metadata available
-      console.log('Showing live stream status');
-      res.json({ 
-        artist: 'DHR Live',
-        title: 'Deep House Stream',
-        timestamp: new Date().toISOString(),
-        status: 'live'
-      });
+      );
       
     } catch (error) {
-      console.error('Error fetching real live metadata:', error);
+      console.error('Error extracting metadata:', error);
       res.json({ 
         artist: 'DHR Live',
         title: 'Deep House Stream',
