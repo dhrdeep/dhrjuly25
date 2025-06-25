@@ -333,19 +333,47 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">Free 24/7 Deep House Stream - No Registration Required</p>
             </div>
             <div className="flex justify-center">
-              <iframe
-                src="/evercast-player.html"
-                width="600"
-                height="1000"
-                frameBorder="0"
-                style={{
-                  border: 'none',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  maxWidth: '100%'
-                }}
-                title="DHR Live Player"
-              />
+              <div className="bg-gray-900/80 backdrop-blur-xl rounded-2xl p-8 border border-orange-400/30 max-w-md w-full">
+                {/* Player Header */}
+                <div className="text-center mb-6">
+                  <div className="relative inline-block mb-4">
+                    <img 
+                      src={DHR_LOGO_URL} 
+                      alt="DHR Logo"
+                      className="h-20 w-20 rounded-2xl shadow-2xl border-2 border-orange-400/50 mx-auto"
+                      onError={handleArtworkError}
+                    />
+                    <div className="absolute inset-0 rounded-2xl bg-orange-400/20 animate-pulse"></div>
+                  </div>
+                  <h3 className="text-xl font-bold text-white">DHR Live Stream</h3>
+                  <div className="flex items-center justify-center space-x-2 mt-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-orange-400">LIVE</span>
+                  </div>
+                </div>
+
+                {/* Audio Player */}
+                <div className="mb-6">
+                  <audio 
+                    controls 
+                    className="w-full rounded-lg"
+                    src="https://streaming.shoutcast.com/dhr"
+                    preload="none"
+                    style={{
+                      background: '#1f2937',
+                      borderRadius: '8px'
+                    }}
+                  >
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+
+                {/* Stream Info */}
+                <div className="text-center text-sm text-gray-400">
+                  <p>320kbps • Stereo • 24/7</p>
+                  <p className="mt-1">Deep House Radio - The Deepest Beats On The Net</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
