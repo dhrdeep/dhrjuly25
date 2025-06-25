@@ -66,29 +66,37 @@ const VIPPage: React.FC = () => {
       console.log('Loading audio URL:', audioUrl);
       
       if (audioRef.current) {
+        // Stop any currently playing audio first
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        
+        // Set new source and load
         audioRef.current.src = audioUrl;
         audioRef.current.load();
         
-        try {
-          const playPromise = audioRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              setCurrentlyPlaying(mixId);
-              setIsPlaying(true);
-              setNotification(`Now Playing: ${mixTitle}`);
-            }).catch((playError) => {
-              console.error('Play error:', playError);
-              setNotification(`Playback Error: ${mixTitle}`);
-              setCurrentlyPlaying(null);
-              setIsPlaying(false);
-            });
+        // Add event listener for when audio is ready to play
+        const canPlayHandler = () => {
+          if (audioRef.current) {
+            audioRef.current.play()
+              .then(() => {
+                setCurrentlyPlaying(mixId);
+                setIsPlaying(true);
+                setNotification(`Now Playing: ${mixTitle}`);
+                console.log('Audio playing successfully');
+              })
+              .catch((playError) => {
+                console.error('Play error:', playError);
+                setNotification(`Playback Error: ${mixTitle}`);
+                setCurrentlyPlaying(null);
+                setIsPlaying(false);
+              });
+            
+            // Remove the event listener after use
+            audioRef.current.removeEventListener('canplaythrough', canPlayHandler);
           }
-        } catch (playError) {
-          console.error('Play error:', playError);
-          setNotification(`Playback Error: ${mixTitle}`);
-          setCurrentlyPlaying(null);
-          setIsPlaying(false);
-        }
+        };
+        
+        audioRef.current.addEventListener('canplaythrough', canPlayHandler);
       }
     } catch (error) {
       setNotification(`Error Loading: ${mixTitle}`);
