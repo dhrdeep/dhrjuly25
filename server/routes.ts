@@ -583,20 +583,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Mix ${mixId} found: ${mix.title}`);
       
-      // Try new file hosting service first
-      try {
-        const streamUrl = await fileHostingService.getStreamUrl(mix);
-        if (streamUrl) {
-          console.log(`Found working stream URL: ${streamUrl}`);
+      // Try DigitalOcean Spaces first if s3Url exists
+      if (mix.s3Url) {
+        try {
+          const encodedPath = encodeURIComponent(mix.s3Url);
+          const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
+          console.log(`Trying Spaces URL: ${spacesUrl}`);
           
-          // If it's a local path, serve it directly
-          if (streamUrl.startsWith('/api/local-file/')) {
-            return res.status(404).json({ error: "Local file serving not implemented yet" });
-          }
-          
-          // Proxy the stream
           const fetch = (await import('node-fetch')).default;
-          const response = await fetch(streamUrl, {
+          const response = await fetch(spacesUrl, {
             timeout: 30000,
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -614,12 +609,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Access-Control-Allow-Origin': '*'
             });
 
-            console.log(`Successfully streaming from new hosting: ${mix.title}`);
+            console.log(`Successfully streaming from Spaces: ${mix.title}`);
             return response.body?.pipe(res);
           }
+        } catch (error) {
+          console.log(`Spaces streaming failed: ${error}`);
         }
-      } catch (error) {
-        console.log(`New hosting failed, trying Jumpshare: ${error}`);
       }
 
       // Fall back to Jumpshare if new hosting fails
@@ -978,20 +973,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // Try new file hosting service first
-      try {
-        const downloadUrl = await fileHostingService.getDownloadUrl(mix);
-        if (downloadUrl) {
-          console.log(`Found working download URL: ${downloadUrl}`);
+      // Try DigitalOcean Spaces download first if s3Url exists
+      if (mix.s3Url) {
+        try {
+          const encodedPath = encodeURIComponent(mix.s3Url);
+          const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
+          console.log(`Trying Spaces download: ${spacesUrl}`);
           
-          // If it's a local path, serve it directly
-          if (downloadUrl.startsWith('/api/local-file/')) {
-            return res.status(404).json({ error: "Local file serving not implemented yet" });
-          }
-          
-          // Proxy the download
           const fetch = (await import('node-fetch')).default;
-          const response = await fetch(downloadUrl, {
+          const response = await fetch(spacesUrl, {
             timeout: 60000,
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -1012,12 +1002,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Content-Length': response.headers.get('content-length') || ''
             });
 
-            console.log(`Successfully downloading from new hosting: ${mix.title}`);
+            console.log(`Successfully downloading from Spaces: ${mix.title}`);
             return response.body?.pipe(res);
           }
+        } catch (error) {
+          console.log(`Spaces download failed: ${error}`);
         }
-      } catch (error) {
-        console.log(`New hosting download failed, trying Jumpshare: ${error}`);
       }
 
       // Fall back to Jumpshare if new hosting fails
