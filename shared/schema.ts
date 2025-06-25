@@ -35,7 +35,7 @@ export const vipMixes = pgTable("vip_mixes", {
   genre: text("genre").notNull(),
   duration: text("duration").notNull(), // e.g., "2h 45m"
   fileSize: text("file_size").notNull(), // e.g., "378 MB"
-  filePath: text("file_path").notNull(), // Server file path
+  filePath: text("file_path"), // Server file path (optional for external hosting)
   jumpshareUrl: text("jumpshare_url"), // Jumpshare download/stream URL
   jumpsharePreviewUrl: text("jumpshare_preview_url"), // Jumpshare preview URL for streaming
   artworkUrl: text("artwork_url"),

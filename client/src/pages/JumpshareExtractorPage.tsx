@@ -9,9 +9,16 @@ interface ExtractedMix {
   genre: string;
   duration: string;
   fileSize: string;
+  filePath: string;
   jumpshareUrl: string;
+  jumpsharePreviewUrl: string;
+  artworkUrl: string;
   description: string;
   tags: string;
+  rating: number;
+  totalDownloads: number;
+  isExclusive: boolean;
+  isActive: boolean;
 }
 
 export default function JumpshareExtractorPage() {
@@ -65,9 +72,16 @@ export default function JumpshareExtractorPage() {
             genre: mixInfo.genre,
             duration: '1h 30m', // Default duration
             fileSize: '200 MB', // Default size
+            filePath: '', // External hosting, no local path
             jumpshareUrl: `https://jumpshare.com/v/${generateJumpshareId(filename)}`, // Generated URL
+            jumpsharePreviewUrl: `https://jumpshare.com/preview/${generateJumpshareId(filename)}`, // Preview URL
+            artworkUrl: '', // No artwork initially
             description: `${mixInfo.title} - ${mixInfo.artist}`,
-            tags: `${mixInfo.genre},deep house,${mixInfo.artist.toLowerCase().replace(/\s+/g, ',')}`
+            tags: `${mixInfo.genre},deep house,${mixInfo.artist.toLowerCase().replace(/\s+/g, ',')}`,
+            rating: 0,
+            totalDownloads: 0,
+            isExclusive: true,
+            isActive: true
           });
         }
       }
@@ -165,7 +179,9 @@ export default function JumpshareExtractorPage() {
               <textarea
                 value={jumpshareData}
                 onChange={(e) => setJumpshareData(e.target.value)}
-                placeholder="Paste your Jumpshare activity export here..."
+                placeholder={`Paste your Jumpshare CSV export here. Should contain lines like:
+"2025-06-06 18:42:01","Someone viewed 'LUCIDFLOW RADIO 189_ RIKO FORINSON.mp3' for the first time"
+"2025-06-05 19:41:58","Someone viewed 'marshallbuti_2022-04-22T11_39_09-07_00.mp3' for the first time"`}
                 className="w-full h-64 px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400/50 font-mono text-sm"
               />
               
@@ -189,6 +205,22 @@ export default function JumpshareExtractorPage() {
                     <span>{bulkImportMutation.isPending ? 'Importing...' : `Import ${extractedMixes.length} Mixes`}</span>
                   </button>
                 )}
+                
+                <button
+                  onClick={() => {
+                    // Load sample data for testing
+                    const sampleData = `"2025-06-06 18:42:01","Someone viewed 'LUCIDFLOW RADIO 189_ RIKO FORINSON [LUCIDFLOW.BANDCAMP.COM] (1).mp3' for the first time"
+"2025-06-05 19:41:58","Someone viewed 'marshallbuti_2022-04-22T11_39_09-07_00.mp3' for the first time"
+"2025-06-05 19:41:40","Someone viewed 'THE DEEP SESSION 049 HOSTED BY LEBRICO [GUEST MIX BY VALLIE M (Urban Deep Essentials)].mp3' for the first time"
+"2025-06-05 19:41:20","Someone viewed 'RISE  Episode 1  Buddynice Rise Mix.mp3' for the first time"
+"2025-06-01 08:20:33","Someone viewed 'La Rose - Smooth Shadows Episode 35 - Crack D.mp3' for the first time"`;
+                    setJumpshareData(sampleData);
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-400/30 rounded-lg transition-all text-sm"
+                >
+                  <FileText className="h-3 w-3" />
+                  <span>Load Sample</span>
+                </button>
               </div>
             </div>
 
