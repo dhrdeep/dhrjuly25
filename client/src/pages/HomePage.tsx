@@ -40,16 +40,16 @@ const HomePage: React.FC = () => {
   };
 
   const slogans = [
-    "The Deepest Beats On The Net",
-    "The Deeper Sound Of The Underground", 
-    "We Go Deep"
+    "The Deepest Beats On The Net!",
+    "The Deeper Sound Of The Underground!", 
+    "We Go Deep!"
   ];
 
-  // Rotate slogans every 4 seconds
+  // Rotate slogans every 12 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSloganIndex((prev) => (prev + 1) % slogans.length);
-    }, 4000);
+    }, 12000);
 
     return () => clearInterval(interval);
   }, []);
