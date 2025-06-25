@@ -594,8 +594,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
         console.log(`Streaming from Spaces: ${spacesUrl}`);
         
+        // Use signed URLs with credentials for private access
+        const AWS = require('aws-sdk');
+        const s3 = new AWS.S3({
+          endpoint: 'https://lon1.digitaloceanspaces.com',
+          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
+          secretAccessKey: process.env.S3_SECRET_KEY,
+          region: 'lon1'
+        });
+        
+        const signedUrl = s3.getSignedUrl('getObject', {
+          Bucket: 'dhrmixes',
+          Key: mix.s3Url,
+          Expires: 3600 // 1 hour
+        });
+        
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(spacesUrl, {
+        const response = await fetch(signedUrl, {
           timeout: 30000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -613,10 +628,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Access-Control-Allow-Origin': '*'
           });
 
-          console.log(`✅ Successfully streaming: ${mix.title} from ${spacesUrl}`);
+          console.log(`✅ Successfully streaming: ${mix.title} from signed URL`);
           return response.body?.pipe(res);
         } else {
-          console.log(`❌ Spaces responded with ${response.status} for ${spacesUrl}`);
+          console.log(`❌ Signed URL responded with ${response.status}`);
           return res.status(502).json({ error: "Audio streaming failed" });
         }
       } catch (error) {
@@ -991,8 +1006,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
         console.log(`Downloading from Spaces: ${spacesUrl}`);
         
+        // Use signed URLs with credentials for private access
+        const AWS = require('aws-sdk');
+        const s3 = new AWS.S3({
+          endpoint: 'https://lon1.digitaloceanspaces.com',
+          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
+          secretAccessKey: process.env.S3_SECRET_KEY,
+          region: 'lon1'
+        });
+        
+        const signedUrl = s3.getSignedUrl('getObject', {
+          Bucket: 'dhrmixes',
+          Key: mix.s3Url,
+          Expires: 3600 // 1 hour
+        });
+        
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(spacesUrl, {
+        const response = await fetch(signedUrl, {
           timeout: 60000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -1013,10 +1043,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Length': response.headers.get('content-length') || ''
           });
 
-          console.log(`✅ Successfully downloading: ${mix.title} from ${spacesUrl}`);
+          console.log(`✅ Successfully downloading: ${mix.title} from signed URL`);
           return response.body?.pipe(res);
         } else {
-          console.log(`❌ Spaces responded with ${response.status} for ${spacesUrl}`);
+          console.log(`❌ Signed URL responded with ${response.status}`);
           return res.status(502).json({ error: "Download failed" });
         }
       } catch (error) {
