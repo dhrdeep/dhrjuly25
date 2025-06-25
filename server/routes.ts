@@ -421,6 +421,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "User authentication required" });
       }
 
+      // Demo user gets VIP access for testing
+      if (userId === 'demo_user') {
+        const mix = await storage.getVipMix(mixId);
+        if (!mix) {
+          return res.status(404).json({ error: "Mix not found" });
+        }
+        
+        return res.json({
+          success: true,
+          downloadUrl: mix.jumpshareUrl,
+          remainingDownloads: 1, // Demo shows remaining after download
+          mix: {
+            title: mix.title,
+            artist: mix.artist,
+            fileSize: mix.fileSize
+          }
+        });
+      }
+
       // Check user subscription tier
       const user = await storage.getUser(userId);
       if (!user || user.subscriptionTier !== 'vip') {
