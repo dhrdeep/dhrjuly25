@@ -583,38 +583,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Mix ${mixId} found: ${mix.title}`);
       
-      // Try DigitalOcean Spaces first if s3Url exists
-      if (mix.s3Url) {
-        try {
-          const encodedPath = encodeURIComponent(mix.s3Url);
-          const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
-          console.log(`Trying Spaces URL: ${spacesUrl}`);
-          
-          const fetch = (await import('node-fetch')).default;
-          const response = await fetch(spacesUrl, {
-            timeout: 30000,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'audio/*,video/*,application/octet-stream,*/*'
-            }
+      // Stream directly from DigitalOcean Spaces - this is the ONLY option now
+      if (!mix.s3Url) {
+        console.log(`No s3Url for mix ${mixId}, cannot stream`);
+        return res.status(404).json({ error: "File not available for streaming" });
+      }
+
+      try {
+        const encodedPath = encodeURIComponent(mix.s3Url);
+        const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
+        console.log(`Streaming from Spaces: ${spacesUrl}`);
+        
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(spacesUrl, {
+          timeout: 30000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'audio/*,video/*,application/octet-stream,*/*'
+          }
+        });
+
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || 'audio/mpeg';
+          res.set({
+            'Content-Type': contentType,
+            'Content-Length': response.headers.get('content-length') || '',
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=3600',
+            'Access-Control-Allow-Origin': '*'
           });
 
-          if (response.ok) {
-            const contentType = response.headers.get('content-type') || 'audio/mpeg';
-            res.set({
-              'Content-Type': contentType,
-              'Content-Length': response.headers.get('content-length') || '',
-              'Accept-Ranges': 'bytes',
-              'Cache-Control': 'public, max-age=3600',
-              'Access-Control-Allow-Origin': '*'
-            });
-
-            console.log(`Successfully streaming from Spaces: ${mix.title}`);
-            return response.body?.pipe(res);
-          }
-        } catch (error) {
-          console.log(`Spaces streaming failed: ${error}`);
+          console.log(`✅ Successfully streaming: ${mix.title} from ${spacesUrl}`);
+          return response.body?.pipe(res);
+        } else {
+          console.log(`❌ Spaces responded with ${response.status} for ${spacesUrl}`);
+          return res.status(502).json({ error: "Audio streaming failed" });
         }
+      } catch (error) {
+        console.log(`❌ Spaces streaming error: ${error}`);
+        return res.status(502).json({ error: "Audio streaming failed" });
       }
 
       // Fall back to Jumpshare if new hosting fails
@@ -973,41 +980,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // Try DigitalOcean Spaces download first if s3Url exists
-      if (mix.s3Url) {
-        try {
-          const encodedPath = encodeURIComponent(mix.s3Url);
-          const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
-          console.log(`Trying Spaces download: ${spacesUrl}`);
-          
-          const fetch = (await import('node-fetch')).default;
-          const response = await fetch(spacesUrl, {
-            timeout: 60000,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'audio/*,video/*,application/octet-stream,*/*'
-            }
+      // Download directly from DigitalOcean Spaces - this is the ONLY option now
+      if (!mix.s3Url) {
+        console.log(`No s3Url for mix ${mixId}, cannot download`);
+        return res.status(404).json({ error: "File not available for download" });
+      }
+
+      try {
+        const encodedPath = encodeURIComponent(mix.s3Url);
+        const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
+        console.log(`Downloading from Spaces: ${spacesUrl}`);
+        
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(spacesUrl, {
+          timeout: 60000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'audio/*,video/*,application/octet-stream,*/*'
+          }
+        });
+
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || 'audio/mpeg';
+          let extension = '.mp3';
+          if (contentType.includes('wav')) extension = '.wav';
+          else if (contentType.includes('flac')) extension = '.flac';
+          else if (contentType.includes('aac')) extension = '.aac';
+
+          res.set({
+            'Content-Disposition': `attachment; filename="${mix.title}${extension}"`,
+            'Content-Type': contentType,
+            'Content-Length': response.headers.get('content-length') || ''
           });
 
-          if (response.ok) {
-            const contentType = response.headers.get('content-type') || 'audio/mpeg';
-            let extension = '.mp3';
-            if (contentType.includes('wav')) extension = '.wav';
-            else if (contentType.includes('flac')) extension = '.flac';
-            else if (contentType.includes('aac')) extension = '.aac';
-
-            res.set({
-              'Content-Disposition': `attachment; filename="${mix.title}${extension}"`,
-              'Content-Type': contentType,
-              'Content-Length': response.headers.get('content-length') || ''
-            });
-
-            console.log(`Successfully downloading from Spaces: ${mix.title}`);
-            return response.body?.pipe(res);
-          }
-        } catch (error) {
-          console.log(`Spaces download failed: ${error}`);
+          console.log(`✅ Successfully downloading: ${mix.title} from ${spacesUrl}`);
+          return response.body?.pipe(res);
+        } else {
+          console.log(`❌ Spaces responded with ${response.status} for ${spacesUrl}`);
+          return res.status(502).json({ error: "Download failed" });
         }
+      } catch (error) {
+        console.log(`❌ Spaces download error: ${error}`);
+        return res.status(502).json({ error: "Download failed" });
       }
 
       // Fall back to Jumpshare if new hosting fails
