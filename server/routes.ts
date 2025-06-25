@@ -613,11 +613,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Authentication required" });
       }
 
-      // Check VIP access (same logic as download endpoint)
-      if (userId !== 'demo_user') {
+      // Check VIP access and download limits for all users including demo
+      if (userId === 'demo_user') {
+        const remainingDownloads = await storage.getRemainingDownloads(userId as string);
+        if (remainingDownloads <= 0) {
+          return res.status(403).json({ error: "Daily download limit reached (2 downloads per day)" });
+        }
+      } else {
         const user = await storage.getUser(userId as string);
         if (!user || user.subscriptionTier !== 'vip') {
           return res.status(403).json({ error: "VIP subscription required" });
+        }
+        
+        const remainingDownloads = await storage.getRemainingDownloads(userId as string);
+        if (remainingDownloads <= 0) {
+          return res.status(403).json({ error: "Daily download limit reached" });
         }
       }
 
@@ -627,9 +637,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // For demo purposes with placeholder URLs
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder')) {
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
         return res.status(404).json({ error: "Demo mode - Real file URL needed" });
       }
+
+      // Record the download and update limits before serving file
+      await storage.recordDownload({
+        userId: userId as string,
+        mixId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      const today = new Date().toISOString().split('T')[0];
+      const currentLimit = await storage.getDailyDownloadLimit(userId as string);
+      const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
+      
+      await storage.updateDailyDownloadLimit(userId as string, {
+        downloadsUsed: newUsedCount,
+        maxDownloads: 2
+      });
 
       // In production, proxy the real Jumpshare download URL
       const fetch = (await import('node-fetch')).default;
