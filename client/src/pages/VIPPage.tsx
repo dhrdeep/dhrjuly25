@@ -32,8 +32,8 @@ const VIPPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // In a real app, this would come from auth context
-    const mockUser = { id: 'demo_user', username: 'Demo User', subscriptionTier: 'free' };
+    // Demo user with VIP access for testing
+    const mockUser = { id: 'demo_user', username: 'Demo User', subscriptionTier: 'vip' };
     setCurrentUser(mockUser);
     vipService.setCurrentUser(mockUser);
     
@@ -43,6 +43,73 @@ const VIPPage: React.FC = () => {
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
+  };
+
+  const handlePlay = async (mixId: number, mixTitle: string) => {
+    try {
+      // If same track is playing, pause it
+      if (currentlyPlaying === mixId && isPlaying) {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+        setNotification(`Paused: ${mixTitle}`);
+        return;
+      }
+
+      // Stop any currently playing audio
+      if (currentlyPlaying && audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+
+      // Use proxy endpoint to stream audio without exposing source
+      const audioUrl = `/api/stream/${mixId}`;
+      
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.load();
+        
+        try {
+          await audioRef.current.play();
+          setCurrentlyPlaying(mixId);
+          setIsPlaying(true);
+          setNotification(`Now Playing: ${mixTitle}`);
+        } catch (playError) {
+          setNotification(`Demo: Playing ${mixTitle} (Real Audio File Needed)`);
+          setCurrentlyPlaying(mixId);
+          setIsPlaying(true);
+        }
+      }
+    } catch (error) {
+      setNotification(`Error Loading: ${mixTitle}`);
+    }
+  };
+
+  const handleDownload = async (mixId: number, mixTitle: string) => {
+    try {
+      // Use proxy endpoint for downloads without exposing source
+      const downloadUrl = `/api/file/${mixId}?userId=${currentUser.id}`;
+      
+      // Create temporary link to trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${mixTitle}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setNotification(`Downloaded: ${mixTitle}`);
+      
+      // Refresh access info
+      vipService.checkAccess(currentUser.id).then(setAccess);
+    } catch (error) {
+      setNotification(`Download Error: ${mixTitle}`);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const vipStats = [
@@ -63,54 +130,7 @@ const VIPPage: React.FC = () => {
     return matchesSearch && matchesGenre;
   });
 
-  const handleDownload = async (mixId: number, mixTitle: string) => {
-    if (!access.canDownload) {
-      setNotification(access.message || 'VIP membership required for downloads');
-      return;
-    }
-    
-    if (!currentUser?.id) {
-      setNotification('Please sign in to download mixes');
-      return;
-    }
-    
-    const result = await vipService.downloadMix(mixId, currentUser.id);
-    setNotification(result.message);
-    
-    if (result.success) {
-      // Refresh access to update remaining downloads
-      const newAccess = await vipService.checkAccess(currentUser.id);
-      setAccess(newAccess);
-    }
-  };
 
-  const handlePlay = async (mixId: number, mixTitle: string) => {
-    if (!access.canPlay) {
-      setNotification(access.message || 'DHR1 subscription required to play mixes');
-      return;
-    }
-    
-    // Get mix details to access Jumpshare preview URL
-    try {
-      const response = await fetch(`/api/vip-mixes/${mixId}`);
-      if (response.ok) {
-        const mix = await response.json();
-        if (mix.jumpsharePreviewUrl && mix.jumpsharePreviewUrl.includes('jumpshare.com')) {
-          // Check if this is a real Jumpshare URL vs generated placeholder
-          if (mix.jumpsharePreviewUrl.includes('/preview/')) {
-            window.open(mix.jumpsharePreviewUrl, '_blank', 'noopener,noreferrer');
-            setNotification(`Opening stream: ${mixTitle}`);
-          } else {
-            setNotification(`Demo mode: ${mixTitle} - Real Jumpshare URL needed for audio playback`);
-          }
-        } else {
-          setNotification(`Demo mode: ${mixTitle} - Update with real Jumpshare URL in VIP Admin`);
-        }
-      }
-    } catch (error) {
-      setNotification(`Error loading mix: ${mixTitle}`);
-    }
-  };
 
   // Clear notification after 3 seconds
   useEffect(() => {
@@ -334,14 +354,24 @@ const VIPPage: React.FC = () => {
                         onClick={() => handlePlay(mix.id, mix.title)}
                         className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-all duration-200 ${
                           access.canPlay 
-                            ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 hover:text-orange-200 border border-orange-400/30'
+                            ? currentlyPlaying === mix.id && isPlaying
+                              ? 'bg-red-500/20 hover:bg-red-500/30 text-red-300 hover:text-red-200 border border-red-400/30'
+                              : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 hover:text-orange-200 border border-orange-400/30'
                             : 'bg-gray-600/50 text-gray-400 cursor-not-allowed border border-gray-600/30'
                         }`}
                         disabled={!access.canPlay}
                         title={access.canPlay ? 'Play mix' : 'DHR1 subscription required'}
                       >
-                        {access.canPlay ? <Play className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                        <span>Play</span>
+                        {access.canPlay ? (
+                          currentlyPlaying === mix.id && isPlaying ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )
+                        ) : (
+                          <Lock className="h-4 w-4" />
+                        )}
+                        <span>{currentlyPlaying === mix.id && isPlaying ? 'Pause' : 'Play'}</span>
                       </button>
                       
                       <button 
@@ -358,14 +388,14 @@ const VIPPage: React.FC = () => {
                       </button>
                     </div>
                     
-                    {/* Jumpshare Integration Preview */}
-                    <JumpsharePreview
-                      mix={mix}
-                      canPlay={access.canPlay}
-                      canDownload={access.canDownload}
-                      onPlay={() => handlePlay(mix.id, mix.title)}
-                      onDownload={() => handleDownload(mix.id, mix.title)}
-                    />
+                    {/* Genre and Tags */}
+                    {mix.genre && (
+                      <div className="mt-3">
+                        <span className="inline-block bg-orange-900/30 text-orange-300 px-2 py-1 rounded text-xs">
+                          {mix.genre}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -437,6 +467,128 @@ const VIPPage: React.FC = () => {
             </section>
           )}
         </div>
+
+        {/* Built-in Audio Player */}
+        {currentlyPlaying && (
+          <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4 z-50 shadow-2xl">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-center space-x-4">
+                {/* Track Info */}
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <img
+                    src={vipMixes.find(m => m.id === currentlyPlaying)?.artworkUrl || DHR_LOGO_URL}
+                    alt="Now Playing"
+                    className="w-12 h-12 rounded object-cover"
+                    onError={handleArtworkError}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-white font-medium truncate">
+                      {vipMixes.find(m => m.id === currentlyPlaying)?.title || 'Unknown Track'}
+                    </div>
+                    <div className="text-gray-400 text-sm truncate">
+                      {vipMixes.find(m => m.id === currentlyPlaying)?.artist || 'Unknown Artist'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      if (isPlaying) {
+                        audioRef.current?.pause();
+                        setIsPlaying(false);
+                      } else {
+                        audioRef.current?.play();
+                        setIsPlaying(true);
+                      }
+                    }}
+                    className="bg-orange-600 hover:bg-orange-700 text-white p-2 rounded-full transition-colors"
+                  >
+                    {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                  </button>
+                  
+                  <div className="flex items-center space-x-2 text-sm text-gray-400">
+                    <span>{formatTime(currentTime)}</span>
+                    <div className="w-32 h-1 bg-gray-700 rounded-full">
+                      <div 
+                        className="h-full bg-orange-500 rounded-full transition-all"
+                        style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                      ></div>
+                    </div>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Volume2 className="h-4 w-4 text-gray-400" />
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => {
+                        const newVolume = parseFloat(e.target.value);
+                        setVolume(newVolume);
+                        if (audioRef.current) {
+                          audioRef.current.volume = newVolume;
+                        }
+                      }}
+                      className="w-20 h-1 bg-gray-700 rounded-full appearance-none"
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setCurrentlyPlaying(null);
+                      setIsPlaying(false);
+                      if (audioRef.current) {
+                        audioRef.current.pause();
+                        audioRef.current.src = '';
+                      }
+                    }}
+                    className="text-gray-400 hover:text-white transition-colors p-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hidden audio element */}
+        <audio
+          ref={audioRef}
+          onTimeUpdate={() => {
+            if (audioRef.current) {
+              setCurrentTime(audioRef.current.currentTime);
+            }
+          }}
+          onLoadedMetadata={() => {
+            if (audioRef.current) {
+              setDuration(audioRef.current.duration);
+              audioRef.current.volume = volume;
+            }
+          }}
+          onEnded={() => {
+            setIsPlaying(false);
+            setCurrentlyPlaying(null);
+            setNotification('Track Ended');
+          }}
+          onError={() => {
+            setNotification('Audio Error - File Not Available');
+            setIsPlaying(false);
+          }}
+          preload="none"
+        />
+
+        {/* Notification */}
+        {notification && (
+          <div className="fixed top-4 right-4 bg-orange-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            {notification}
+          </div>
+        )}
     </div>
   );
 };
