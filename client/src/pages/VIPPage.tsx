@@ -67,27 +67,28 @@ const VIPPage: React.FC = () => {
       
       if (audioRef.current) {
         audioRef.current.src = audioUrl;
-        audioRef.current.dataset.mixId = mixId.toString();
         audioRef.current.load();
         
-        // Simple direct play approach
-        setTimeout(async () => {
-          try {
-            console.log('Attempting to play audio after short delay...');
-            if (audioRef.current) {
-              await audioRef.current.play();
+        try {
+          const playPromise = audioRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
               setCurrentlyPlaying(mixId);
               setIsPlaying(true);
               setNotification(`Now Playing: ${mixTitle}`);
-              console.log('Audio playing successfully');
-            }
-          } catch (playError) {
-            console.error('Play error:', playError);
-            setNotification(`Demo: Sample audio for ${mixTitle}`);
-            setCurrentlyPlaying(mixId);
-            setIsPlaying(true);
+            }).catch((playError) => {
+              console.error('Play error:', playError);
+              setNotification(`Playback Error: ${mixTitle}`);
+              setCurrentlyPlaying(null);
+              setIsPlaying(false);
+            });
           }
-        }, 500);
+        } catch (playError) {
+          console.error('Play error:', playError);
+          setNotification(`Playback Error: ${mixTitle}`);
+          setCurrentlyPlaying(null);
+          setIsPlaying(false);
+        }
       }
     } catch (error) {
       setNotification(`Error Loading: ${mixTitle}`);
@@ -604,17 +605,10 @@ const VIPPage: React.FC = () => {
           onPlay={() => {
             console.log('Audio started playing');
             setIsPlaying(true);
-            setCurrentlyPlaying(parseInt(audioRef.current?.dataset.mixId || '0'));
           }}
           onPause={() => {
             console.log('Audio paused');
             setIsPlaying(false);
-          }}
-          onWaiting={() => {
-            console.log('Audio waiting/buffering');
-          }}
-          onStalled={() => {
-            console.log('Audio stalled');
           }}
           preload="none"
         />
