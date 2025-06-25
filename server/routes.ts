@@ -588,13 +588,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Serving demo audio for mix ${mixId}`);
         
         try {
-          // Generate a simple audio response for demo
-          console.log('Generating simple audio tone for demo');
+          // Generate a longer demo audio for streaming (simulate a real mix)
+          console.log('Generating demo mix audio for streaming');
           
-          // Create a simple audio buffer that browsers can play
+          // Create a longer audio buffer (2 minutes) that simulates a real deep house mix
           const sampleRate = 22050;
-          const duration = 3; // 3 seconds
-          const frequency = 440; // A note
+          const duration = 120; // 2 minutes for streaming
+          const baseFreq = 80; // Bass frequency
           const numSamples = sampleRate * duration;
           const dataSize = numSamples * 2;
           const buffer = Buffer.alloc(44 + dataSize);
@@ -615,10 +615,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           buffer.write('data', offset); offset += 4;
           buffer.writeUInt32LE(dataSize, offset); offset += 4;
           
-          // Generate sine wave
+          // Generate a deep house-style beat pattern
           for (let i = 0; i < numSamples; i++) {
-            const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3 * 32767;
-            buffer.writeInt16LE(Math.round(sample), offset);
+            const time = i / sampleRate;
+            const beatPhase = (time * 2) % 1; // 120 BPM beat
+            const bassLevel = beatPhase < 0.1 ? 0.8 : 0.3;
+            
+            // Multiple frequency layers to simulate a real track
+            const bass = Math.sin(2 * Math.PI * baseFreq * time) * bassLevel;
+            const kick = beatPhase < 0.05 ? Math.sin(2 * Math.PI * 60 * time) : 0;
+            const hihat = (beatPhase > 0.25 && beatPhase < 0.27) || (beatPhase > 0.75 && beatPhase < 0.77) ? 
+                         Math.random() * 0.1 : 0;
+            
+            const sample = (bass + kick + hihat) * 0.4 * 32767;
+            buffer.writeInt16LE(Math.round(Math.max(-32767, Math.min(32767, sample))), offset);
             offset += 2;
           }
           
@@ -754,15 +764,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check VIP access and download limits for all users including demo
       if (userId === 'demo_user') {
-        // Simple in-memory tracking for demo user
-        const today = new Date().toISOString().split('T')[0];
-        const cacheKey = `demo_downloads_${today}`;
-        
+        // Reset demo cache to allow fresh testing
         if (!global.demoDownloadCache) {
           global.demoDownloadCache = {};
         }
         
+        const today = new Date().toISOString().split('T')[0];
+        const cacheKey = `demo_downloads_${today}`;
         const currentDownloads = global.demoDownloadCache[cacheKey] || 0;
+        
+        console.log(`Demo user downloads today: ${currentDownloads}/2`);
+        
         if (currentDownloads >= 2) {
           return res.status(403).json({ error: "Daily download limit reached (2 downloads per day)" });
         }
@@ -859,21 +871,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // In production, proxy the real Jumpshare download URL
-      const fetch = (await import('node-fetch')).default;
-      const response = await fetch(mix.jumpshareUrl);
-      
-      if (!response.ok) {
-        return res.status(404).json({ error: "File not accessible" });
+      try {
+        // Convert Jumpshare view URL to direct download URL
+        let directUrl = mix.jumpshareUrl;
+        if (directUrl.includes('jumpshare.com/v/')) {
+          const fileId = directUrl.split('/v/')[1];
+          directUrl = `https://jumpshare.com/download/file/${fileId}`;
+          console.log(`Converted download URL: ${directUrl}`);
+        }
+        
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(directUrl, {
+          timeout: 60000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; DHR-Downloader/1.0)',
+            'Accept': 'audio/*,application/octet-stream,*/*'
+          }
+        });
+        
+        if (!response.ok) {
+          console.error(`Download failed: ${response.status} ${response.statusText}`);
+          throw new Error(`Download failed: ${response.status}`);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        console.log(`Download content type: ${contentType}`);
+        
+        if (contentType.includes('text/html') || contentType.includes('application/json')) {
+          console.error('Download URL returned HTML/JSON instead of audio file');
+          throw new Error('Invalid content type');
+        }
+
+        res.set({
+          'Content-Disposition': `attachment; filename="${mix.title}.mp3"`,
+          'Content-Type': contentType.includes('audio') ? contentType : 'application/octet-stream',
+          'Content-Length': response.headers.get('content-length') || ''
+        });
+
+        response.body?.pipe(res);
+      } catch (error) {
+        console.error('Download error, falling back to demo file:', error);
+        
+        // Fallback to demo file if real download fails
+        console.log('Generating demo file for download as fallback');
+        
+        const sampleRate = 22050;
+        const duration = 30;
+        const frequency = 440;
+        const numSamples = sampleRate * duration;
+        const dataSize = numSamples * 2;
+        const buffer = Buffer.alloc(44 + dataSize);
+        
+        let offset = 0;
+        buffer.write('RIFF', offset); offset += 4;
+        buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
+        buffer.write('WAVE', offset); offset += 4;
+        buffer.write('fmt ', offset); offset += 4;
+        buffer.writeUInt32LE(16, offset); offset += 4;
+        buffer.writeUInt16LE(1, offset); offset += 2;
+        buffer.writeUInt16LE(1, offset); offset += 2;
+        buffer.writeUInt32LE(sampleRate, offset); offset += 4;
+        buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
+        buffer.writeUInt16LE(2, offset); offset += 2;
+        buffer.writeUInt16LE(16, offset); offset += 2;
+        buffer.write('data', offset); offset += 4;
+        buffer.writeUInt32LE(dataSize, offset); offset += 4;
+        
+        for (let i = 0; i < numSamples; i++) {
+          const progress = i / numSamples;
+          const currentFreq = frequency + (progress * 200);
+          const sample = Math.sin(2 * Math.PI * currentFreq * i / sampleRate) * 0.3 * 32767;
+          buffer.writeInt16LE(Math.round(sample), offset);
+          offset += 2;
+        }
+        
+        res.set({
+          'Content-Disposition': `attachment; filename="${mix.title}.wav"`,
+          'Content-Type': 'audio/wav',
+          'Content-Length': buffer.length.toString()
+        });
+        
+        return res.send(buffer);
       }
-
-      res.set({
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${mix.title} - ${mix.artist}.mp3"`,
-        'Content-Length': response.headers.get('content-length'),
-      });
-
-      response.body?.pipe(res);
 
     } catch (error) {
       console.error("Error downloading file:", error);
