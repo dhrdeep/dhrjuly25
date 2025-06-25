@@ -1141,6 +1141,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin system stats
+  app.get('/api/admin/stats', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const mixes = await storage.getAllVipMixes();
+      
+      // Calculate active subscribers (users with valid subscriptions)
+      const activeSubscribers = users.filter(user => {
+        if (!user.subscriptionExpiry) return false;
+        return new Date(user.subscriptionExpiry) > new Date();
+      }).length;
+
+      // Calculate total downloads
+      const totalDownloads = users.reduce((sum, user) => {
+        return sum + (user.totalDownloads || 0);
+      }, 0);
+
+      // Get last sync time (mock for now)
+      const lastSync = new Date().toLocaleDateString();
+
+      res.json({
+        totalUsers: users.length,
+        activeSubscribers,
+        totalMixes: mixes.length,
+        totalDownloads,
+        storageUsed: `${Math.round(mixes.length * 0.15)} GB`, // Estimate based on mix count
+        lastSync
+      });
+    } catch (error) {
+      console.error('Failed to fetch admin stats:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch system statistics' 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
