@@ -695,6 +695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
               const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
               authHeaders['Authorization'] = `Basic ${auth}`;
+              console.log(`Using Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
             }
             
             const testResponse = await fetch(directUrl, {
@@ -739,6 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
           const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
           streamHeaders['Authorization'] = `Basic ${auth}`;
+          console.log(`Streaming with Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
         }
         
         const response = await fetch(successfulResponse.url, {
@@ -1029,6 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
               const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
               downloadAuthHeaders['Authorization'] = `Basic ${auth}`;
+              console.log(`Testing download with Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
             }
             
             const testResponse = await fetch(testUrl, {
@@ -1072,6 +1075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
           const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
           downloadHeaders['Authorization'] = `Basic ${auth}`;
+          console.log(`Downloading with Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
         }
         
         const response = await fetch(successfulResponse.url, {
