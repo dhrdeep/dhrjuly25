@@ -135,6 +135,16 @@
   }
 }
 
+/* Slow orbit animation around the screen */
+@keyframes orbitSlowly {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .pulse-60bpm {
   animation: pulse60bpm 1s ease-in-out infinite;
 }

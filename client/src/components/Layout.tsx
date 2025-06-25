@@ -128,27 +128,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900" />
         
-        {/* Single centered background logo */}
+        {/* Single centered background logo - spinning around screen */}
         <div 
-          className="absolute opacity-5"
+          className="absolute"
           style={{
-            width: '800px',
-            height: '800px',
-            left: '50%',
-            top: '50%',
-            marginLeft: '-400px',
-            marginTop: '-400px',
-            animation: 'pulse60bpm 4s ease-in-out infinite'
+            width: '100vw',
+            height: '100vh',
+            left: '0',
+            top: '0',
+            animation: 'orbitSlowly 60s linear infinite'
           }}
         >
           <div
-            className="w-full h-full"
+            className="absolute opacity-10"
             style={{
+              width: '200px',
+              height: '200px',
+              left: '50%',
+              top: '20%',
+              marginLeft: '-100px',
+              marginTop: '-100px',
               backgroundImage: `url(${DHR_LOGO_URL})`,
               backgroundPosition: 'center',
-              backgroundSize: '30%',
+              backgroundSize: 'contain',
               backgroundRepeat: 'no-repeat',
-              animation: 'spin 300s linear infinite'
+              animation: 'pulse60bpm 1s ease-in-out infinite, spin 20s linear infinite'
             }}
           />
         </div>
