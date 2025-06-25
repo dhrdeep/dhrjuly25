@@ -163,7 +163,7 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-bold text-white mb-4">Primary Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {highPriorityActions.map((action, index) => (
-              <Link key={index} href={action.href}>
+              <Link key={index} to={action.href}>
                 <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-slate-700/50 rounded-lg">
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-bold text-white mb-4">Additional Tools</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {otherActions.map((action, index) => (
-              <Link key={index} href={action.href}>
+              <Link key={index} to={action.href}>
                 <div className="bg-slate-800/30 border border-slate-700 rounded-lg hover:bg-slate-800/50 transition-all cursor-pointer p-4">
                   <div className="flex items-center gap-3">
                     <action.icon className={`h-5 w-5 ${action.color}`} />
