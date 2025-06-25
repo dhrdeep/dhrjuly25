@@ -179,7 +179,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="text-3xl font-black bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
                   DHR
                 </span>
-                <p className="text-sm text-gray-400 -mt-1 tracking-wider">DEEP HOUSE RADIO</p>
               </div>
             </Link>
 
