@@ -595,8 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Generating signed URL for streaming: ${mix.title}`);
         
         // Use signed URLs with credentials for private access
-        const AWS = require('aws-sdk');
-        const s3 = new AWS.S3({
+        const AWS = await import('aws-sdk');
+        const s3 = new AWS.default.S3({
           endpoint: 'https://lon1.digitaloceanspaces.com',
           accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
           secretAccessKey: process.env.S3_SECRET_KEY,
@@ -614,7 +614,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timeout: 30000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'audio/*,video/*,application/octet-stream,*/*'
+            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+            'Authorization': `Bearer ${process.env.S3_ACCESS_KEY}`
           }
         });
 
@@ -628,7 +629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Access-Control-Allow-Origin': '*'
           });
 
-          console.log(`✅ Successfully streaming: ${mix.title} from signed URL`);
+          console.log(`✅ Successfully streaming: ${mix.title} from ${spacesUrl}`);
           return response.body?.pipe(res);
         } else {
           console.log(`❌ Signed URL responded with ${response.status}`);
@@ -1007,8 +1008,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Generating signed URL for download: ${mix.title}`);
         
         // Use signed URLs with credentials for private access
-        const AWS = require('aws-sdk');
-        const s3 = new AWS.S3({
+        const AWS = await import('aws-sdk');
+        const s3 = new AWS.default.S3({
           endpoint: 'https://lon1.digitaloceanspaces.com',
           accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
           secretAccessKey: process.env.S3_SECRET_KEY,
@@ -1026,7 +1027,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timeout: 60000,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'audio/*,video/*,application/octet-stream,*/*'
+            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+            'Authorization': `Bearer ${process.env.S3_ACCESS_KEY}`
           }
         });
 
@@ -1043,7 +1045,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Length': response.headers.get('content-length') || ''
           });
 
-          console.log(`✅ Successfully downloading: ${mix.title} from signed URL`);
+          console.log(`✅ Successfully downloading: ${mix.title} from ${spacesUrl}`);
           return response.body?.pipe(res);
         } else {
           console.log(`❌ Signed URL responded with ${response.status}`);
