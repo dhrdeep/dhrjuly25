@@ -176,7 +176,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="absolute inset-0 rounded-2xl bg-orange-400/20 animate-pulse"></div>
               </div>
               <div>
-                <span className="text-3xl font-black elegant-text bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-3xl font-black bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
                   DHR
                 </span>
                 <p className="text-sm text-gray-400 -mt-1 tracking-wider">DEEP HOUSE RADIO</p>
