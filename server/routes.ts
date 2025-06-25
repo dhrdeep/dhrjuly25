@@ -590,9 +590,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Direct public URL approach - Space must be configured for public read access
-        const publicUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${mix.s3Url}`;
-        console.log(`Streaming directly from public URL: ${publicUrl}`);
+        // Use CDN endpoint for public access (you've enabled CDN in your Space settings)
+        const cdnUrl = `https://dhrmixes.lon1.cdn.digitaloceanspaces.com/${mix.s3Url}`;
+        console.log(`Streaming from CDN: ${cdnUrl}`);
         
         const fetch = (await import('node-fetch')).default;
         const response = await fetch(publicUrl, {
@@ -988,9 +988,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Direct public URL approach - Space must be configured for public read access
-        const publicUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${mix.s3Url}`;
-        console.log(`Downloading directly from public URL: ${publicUrl}`);
+        // Use CDN endpoint for public access (you've enabled CDN in your Space settings)
+        const cdnUrl = `https://dhrmixes.lon1.cdn.digitaloceanspaces.com/${mix.s3Url}`;
+        console.log(`Downloading from CDN: ${cdnUrl}`);
         
         const fetch = (await import('node-fetch')).default;
         const response = await fetch(publicUrl, {
