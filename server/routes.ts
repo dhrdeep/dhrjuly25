@@ -423,8 +423,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Demo user gets VIP access but still has download limits
       if (userId === 'demo_user') {
-        const remainingDownloads = await storage.getRemainingDownloads(userId);
-        if (remainingDownloads <= 0) {
+        // Simple in-memory tracking for demo user
+        const today = new Date().toISOString().split('T')[0];
+        const cacheKey = `demo_downloads_${today}`;
+        
+        // Use a simple counter (in production this would be in Redis or database)
+        if (!global.demoDownloadCache) {
+          global.demoDownloadCache = {};
+        }
+        
+        const currentDownloads = global.demoDownloadCache[cacheKey] || 0;
+        if (currentDownloads >= 2) {
           return res.status(429).json({ error: "Daily download limit reached (2 downloads per day)" });
         }
 
@@ -433,28 +442,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ error: "Mix not found" });
         }
 
-        // Record the download for demo user too
-        await storage.recordDownload({
-          userId,
-          mixId,
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
-        });
-
-        // Update daily download count for demo user
-        const today = new Date().toISOString().split('T')[0];
-        const currentLimit = await storage.getDailyDownloadLimit(userId);
-        const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
-        
-        await storage.updateDailyDownloadLimit(userId, {
-          downloadsUsed: newUsedCount,
-          maxDownloads: 2
-        });
+        // Increment counter
+        global.demoDownloadCache[cacheKey] = currentDownloads + 1;
         
         return res.json({
           success: true,
           downloadUrl: mix.jumpshareUrl,
-          remainingDownloads: remainingDownloads - 1,
+          remainingDownloads: 2 - global.demoDownloadCache[cacheKey],
           mix: {
             title: mix.title,
             artist: mix.artist,
@@ -528,12 +522,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Demo user gets VIP access for testing all features
       if (userId === 'demo_user') {
+        // Check demo cache for remaining downloads
+        const today = new Date().toISOString().split('T')[0];
+        const cacheKey = `demo_downloads_${today}`;
+        
+        if (!global.demoDownloadCache) {
+          global.demoDownloadCache = {};
+        }
+        
+        const used = global.demoDownloadCache[cacheKey] || 0;
+        const remaining = Math.max(0, 2 - used);
+        
         res.json({
           subscriptionTier: 'vip',
-          remainingDownloads: 2,
+          remainingDownloads: remaining,
           maxDownloads: 2,
-          used: 0,
-          canDownload: true,
+          used: used,
+          canDownload: remaining > 0,
           canPlay: true
         });
         return;
@@ -615,8 +620,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check VIP access and download limits for all users including demo
       if (userId === 'demo_user') {
-        const remainingDownloads = await storage.getRemainingDownloads(userId as string);
-        if (remainingDownloads <= 0) {
+        // Simple in-memory tracking for demo user
+        const today = new Date().toISOString().split('T')[0];
+        const cacheKey = `demo_downloads_${today}`;
+        
+        if (!global.demoDownloadCache) {
+          global.demoDownloadCache = {};
+        }
+        
+        const currentDownloads = global.demoDownloadCache[cacheKey] || 0;
+        if (currentDownloads >= 2) {
           return res.status(403).json({ error: "Daily download limit reached (2 downloads per day)" });
         }
       } else {
@@ -642,21 +655,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Record the download and update limits before serving file
-      await storage.recordDownload({
-        userId: userId as string,
-        mixId,
-        ipAddress: req.ip,
-        userAgent: req.get('User-Agent')
-      });
+      if (userId === 'demo_user') {
+        // Update demo cache
+        const today = new Date().toISOString().split('T')[0];
+        const cacheKey = `demo_downloads_${today}`;
+        global.demoDownloadCache[cacheKey] = (global.demoDownloadCache[cacheKey] || 0) + 1;
+      } else {
+        await storage.recordDownload({
+          userId: userId as string,
+          mixId,
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        });
 
-      const today = new Date().toISOString().split('T')[0];
-      const currentLimit = await storage.getDailyDownloadLimit(userId as string);
-      const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
-      
-      await storage.updateDailyDownloadLimit(userId as string, {
-        downloadsUsed: newUsedCount,
-        maxDownloads: 2
-      });
+        const today = new Date().toISOString().split('T')[0];
+        const currentLimit = await storage.getDailyDownloadLimit(userId as string);
+        const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
+        
+        await storage.updateDailyDownloadLimit(userId as string, {
+          downloadsUsed: newUsedCount,
+          maxDownloads: 2
+        });
+      }
 
       // In production, proxy the real Jumpshare download URL
       const fetch = (await import('node-fetch')).default;

@@ -150,17 +150,28 @@ export class DrizzleStorage implements IStorage {
   
   async updateDailyDownloadLimit(userId: string, limitData: InsertDailyDownloadLimit): Promise<DailyDownloadLimit> {
     const today = new Date().toISOString().split('T')[0];
-    const [updated] = await db.insert(dailyDownloadLimits)
-      .values({ ...limitData, userId, downloadDate: today })
-      .onConflictDoUpdate({
-        target: [dailyDownloadLimits.userId, dailyDownloadLimits.downloadDate],
-        set: { 
+    
+    // First try to find existing record
+    const [existing] = await db.select().from(dailyDownloadLimits)
+      .where(and(eq(dailyDownloadLimits.userId, userId), eq(dailyDownloadLimits.downloadDate, today)));
+    
+    if (existing) {
+      // Update existing record
+      const [updated] = await db.update(dailyDownloadLimits)
+        .set({ 
           downloadsUsed: limitData.downloadsUsed,
           updatedAt: new Date() 
-        }
-      })
-      .returning();
-    return updated;
+        })
+        .where(eq(dailyDownloadLimits.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Insert new record
+      const [created] = await db.insert(dailyDownloadLimits)
+        .values({ ...limitData, userId, downloadDate: today })
+        .returning();
+      return created;
+    }
   }
   
   async getRemainingDownloads(userId: string): Promise<number> {
