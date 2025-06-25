@@ -80,7 +80,7 @@ const HomePage: React.FC = () => {
 
   const shareContent = (platform: string) => {
     const url = window.location.href;
-    const text = 'Check Out DHR - Deep House Radio For The Finest Deep House Music 24/7! The Deepest Beats On The Net 🎵';
+    const text = 'Check Out DHR For The Finest Deep House Music 24/7! The Deepest Beats On The Net 🎵';
     
     let shareUrl = '';
     
