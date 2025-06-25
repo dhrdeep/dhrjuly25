@@ -17,6 +17,15 @@ export class S3Provider implements FileHostingProvider {
     private secretKey: string
   ) {}
 
+  private getAuthHeaders() {
+    // For DigitalOcean Spaces, we can use the access key as both username and password
+    const auth = Buffer.from(`${this.accessKey}:${this.secretKey || this.accessKey}`).toString('base64');
+    return {
+      'Authorization': `Basic ${auth}`,
+      'User-Agent': 'DHR-Music-Player/1.0'
+    };
+  }
+
   async getStreamUrl(mix: VipMix): Promise<string | null> {
     if (!mix.s3Url) return null;
     
@@ -25,8 +34,10 @@ export class S3Provider implements FileHostingProvider {
       return mix.s3Url;
     }
     
-    // Generate signed URL for private buckets
-    return `${this.endpoint}/${this.bucket}/${mix.s3Url}`;
+    // For DigitalOcean Spaces, construct the public URL
+    const publicUrl = `${this.endpoint}/${this.bucket}/${mix.s3Url}`;
+    console.log(`Generated Spaces URL: ${publicUrl}`);
+    return publicUrl;
   }
 
   async getDownloadUrl(mix: VipMix): Promise<string | null> {
@@ -76,6 +87,14 @@ export class FileHostingService {
         process.env.S3_SECRET_KEY || ''
       ));
     }
+    
+    // Temporary hardcoded configuration for testing
+    this.providers.push(new S3Provider(
+      'https://lon1.digitaloceanspaces.com',
+      'dhrmixes',
+      'dop_v1_51cf4d8c436f993972d7317bcec5b15eedaca686e97205d8695a3f830a442bc6',
+      'dop_v1_51cf4d8c436f993972d7317bcec5b15eedaca686e97205d8695a3f830a442bc6'
+    ));
 
     // Add local and direct providers
     this.providers.push(new LocalProvider());
