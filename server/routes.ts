@@ -583,8 +583,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Mix ${mixId} found: ${mix.title}, URL: ${mix.jumpshareUrl}`);
 
-      // Only use demo audio for mixes that explicitly don't have real URLs
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK') || !mix.jumpshareUrl.startsWith('http')) {
+      // Only use demo audio for mixes without valid URLs - try real URLs first
+      const hasRealUrl = mix.jumpshareUrl && 
+                        mix.jumpshareUrl.startsWith('http') && 
+                        !mix.jumpshareUrl.includes('placeholder') && 
+                        !mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK');
+      
+      if (!hasRealUrl) {
         console.log(`Serving demo audio for mix ${mixId}`);
         
         try {
@@ -653,22 +658,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log(`Converting Jumpshare URL to direct download: ${mix.jumpshareUrl}`);
         
-        // Convert Jumpshare view URL to direct download URL
-        let directUrl = mix.jumpshareUrl;
-        if (directUrl.includes('jumpshare.com/v/')) {
-          // Extract the file ID and try different URL patterns
-          const fileId = directUrl.split('/v/')[1];
-          // Try the download endpoint pattern
-          directUrl = `https://jumpshare.com/download/file/${fileId}`;
-          console.log(`Converted to download URL: ${directUrl}`);
+        // Try multiple Jumpshare URL patterns to access real files
+        const fileId = mix.jumpshareUrl.includes('/v/') ? mix.jumpshareUrl.split('/v/')[1] : null;
+        
+        const urlsToTry = fileId ? [
+          mix.jumpshareUrl, // Original URL
+          `https://jumpshare.com/s/${fileId}`, // Short URL pattern
+          `https://jumpshare.com/download/${fileId}`, // Download pattern  
+          `https://jumpshare.com/d/${fileId}`, // Direct pattern
+          `https://api.jumpshare.com/v1/files/${fileId}/download`, // API pattern
+          `https://jumpshare.com/download/file/${fileId}` // Full download path
+        ] : [mix.jumpshareUrl];
+        
+        console.log(`Trying ${urlsToTry.length} URL patterns for file ID: ${fileId}`);
+        
+        let successfulResponse = null;
+        for (const directUrl of urlsToTry) {
+          try {
+            console.log(`Attempting: ${directUrl}`);
+            const testResponse = await fetch(directUrl, {
+              method: 'HEAD', // Just check headers first
+              timeout: 15000,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+                'Referer': 'https://jumpshare.com/'
+              }
+            });
+            
+            const contentType = testResponse.headers.get('content-type') || '';
+            console.log(`${directUrl} -> ${testResponse.status} (${contentType})`);
+            
+            if (testResponse.ok && 
+                !contentType.includes('text/html') && 
+                !contentType.includes('application/json')) {
+              console.log(`Found working URL: ${directUrl}`);
+              successfulResponse = { url: directUrl, contentType };
+              break;
+            }
+          } catch (e) {
+            console.log(`Failed: ${directUrl} - ${e.message}`);
+          }
         }
         
+        if (!successfulResponse) {
+          throw new Error('No working URL pattern found');
+        }
+        
+        // Now fetch the actual audio data
+        console.log(`Fetching audio from: ${successfulResponse.url}`);
+        
         const fetch = (await import('node-fetch')).default;
-        const response = await fetch(directUrl, {
+        const response = await fetch(successfulResponse.url, {
           timeout: 30000,
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; DHR-Player/1.0)',
-            'Accept': 'audio/*,*/*;q=0.1'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+            'Referer': 'https://jumpshare.com/'
           }
         });
         
@@ -767,15 +813,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.send(buffer);
         }
 
+        const actualContentType = response.headers.get('content-type') || successfulResponse.contentType;
         res.set({
-          'Content-Type': contentType || 'audio/mpeg',
+          'Content-Type': actualContentType || 'audio/mpeg',
           'Content-Length': response.headers.get('content-length') || '',
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'public, max-age=3600',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Range'
         });
 
         if (response.body) {
+          console.log(`Successfully streaming real audio file`);
           response.body.pipe(res);
         } else {
           console.error('Audio response has no body');
@@ -835,8 +885,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // Only generate demo downloads for mixes that explicitly don't have real URLs  
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK') || !mix.jumpshareUrl.startsWith('http')) {
+      // Only generate demo downloads for mixes without valid URLs - try real URLs first
+      const hasRealUrl = mix.jumpshareUrl && 
+                        mix.jumpshareUrl.startsWith('http') && 
+                        !mix.jumpshareUrl.includes('placeholder') && 
+                        !mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK');
+      
+      if (!hasRealUrl) {
         console.log('Generating demo file for download');
         
         // Generate a longer demo audio file (30 seconds) for downloads
@@ -912,20 +967,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Convert Jumpshare view URL to direct download URL
-        let directUrl = mix.jumpshareUrl;
-        if (directUrl.includes('jumpshare.com/v/')) {
-          const fileId = directUrl.split('/v/')[1];
-          directUrl = `https://jumpshare.com/download/file/${fileId}`;
-          console.log(`Converted download URL: ${directUrl}`);
+        // Use the same comprehensive URL testing approach as streaming
+        const fileId = mix.jumpshareUrl.includes('/v/') ? mix.jumpshareUrl.split('/v/')[1] : null;
+        
+        const urlsToTry = fileId ? [
+          mix.jumpshareUrl, // Original URL
+          `https://jumpshare.com/s/${fileId}`, // Short URL pattern
+          `https://jumpshare.com/download/${fileId}`, // Download pattern  
+          `https://jumpshare.com/d/${fileId}`, // Direct pattern
+          `https://api.jumpshare.com/v1/files/${fileId}/download`, // API pattern
+          `https://jumpshare.com/download/file/${fileId}` // Full download path
+        ] : [mix.jumpshareUrl];
+        
+        console.log(`Testing ${urlsToTry.length} download URL patterns for: ${mix.title}`);
+        
+        let successfulResponse = null;
+        const fetch = (await import('node-fetch')).default;
+        
+        for (const testUrl of urlsToTry) {
+          try {
+            console.log(`Testing download URL: ${testUrl}`);
+            const testResponse = await fetch(testUrl, {
+              method: 'HEAD',
+              timeout: 15000,
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+                'Referer': 'https://jumpshare.com/'
+              }
+            });
+            
+            const contentType = testResponse.headers.get('content-type') || '';
+            console.log(`${testUrl} -> ${testResponse.status} (${contentType})`);
+            
+            if (testResponse.ok && 
+                !contentType.includes('text/html') && 
+                !contentType.includes('application/json')) {
+              console.log(`Found working download URL: ${testUrl}`);
+              successfulResponse = { url: testUrl, contentType };
+              break;
+            }
+          } catch (e) {
+            console.log(`Download URL failed: ${testUrl} - ${e.message}`);
+          }
         }
         
-        const fetch = (await import('node-fetch')).default;
-        const response = await fetch(directUrl, {
+        if (!successfulResponse) {
+          throw new Error('No working download URL found');
+        }
+        
+        // Fetch the actual file
+        console.log(`Downloading from: ${successfulResponse.url}`);
+        const response = await fetch(successfulResponse.url, {
           timeout: 60000,
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; DHR-Downloader/1.0)',
-            'Accept': 'audio/*,application/octet-stream,*/*'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+            'Referer': 'https://jumpshare.com/'
           }
         });
         
@@ -934,20 +1032,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error(`Download failed: ${response.status}`);
         }
 
-        const contentType = response.headers.get('content-type') || '';
-        console.log(`Download content type: ${contentType}`);
+        const actualContentType = response.headers.get('content-type') || successfulResponse.contentType;
+        console.log(`Successfully downloading: ${actualContentType}`);
         
-        if (contentType.includes('text/html') || contentType.includes('application/json')) {
-          console.error('Download URL returned HTML/JSON instead of audio file');
-          throw new Error('Invalid content type');
+        if (actualContentType.includes('text/html') || actualContentType.includes('application/json')) {
+          console.error('Download returned HTML/JSON instead of audio file');
+          throw new Error('Invalid content type received');
         }
 
+        // Determine file extension from content type
+        let extension = '.mp3';
+        if (actualContentType.includes('wav')) extension = '.wav';
+        else if (actualContentType.includes('flac')) extension = '.flac';
+        else if (actualContentType.includes('aac')) extension = '.aac';
+
         res.set({
-          'Content-Disposition': `attachment; filename="${mix.title}.mp3"`,
-          'Content-Type': contentType.includes('audio') ? contentType : 'application/octet-stream',
+          'Content-Disposition': `attachment; filename="${mix.title}${extension}"`,
+          'Content-Type': actualContentType || 'application/octet-stream',
           'Content-Length': response.headers.get('content-length') || ''
         });
 
+        console.log(`Streaming real audio file: ${mix.title}${extension}`);
         response.body?.pipe(res);
       } catch (error) {
         console.error('Download error, falling back to demo file:', error);
