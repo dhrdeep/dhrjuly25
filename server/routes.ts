@@ -592,15 +592,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const encodedPath = encodeURIComponent(mix.s3Url);
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
-        console.log(`Generating signed URL for streaming: ${mix.title}`);
+        console.log(`Creating signed URL for streaming: ${mix.title}`);
         
-        // Use signed URLs with credentials for private access
+        // Use AWS SDK with proper configuration for DigitalOcean Spaces
         const AWS = await import('aws-sdk');
         const s3 = new AWS.default.S3({
-          endpoint: 'https://lon1.digitaloceanspaces.com',
+          endpoint: new AWS.default.Endpoint('https://lon1.digitaloceanspaces.com'),
           accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
           secretAccessKey: process.env.S3_SECRET_KEY,
-          region: 'lon1'
+          region: 'lon1',
+          s3ForcePathStyle: false
         });
         
         const signedUrl = s3.getSignedUrl('getObject', {
@@ -609,13 +610,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           Expires: 3600 // 1 hour
         });
         
+        console.log(`Using signed URL for streaming`);
+        
         const fetch = (await import('node-fetch')).default;
         const response = await fetch(signedUrl, {
           timeout: 30000,
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-            'Authorization': `Bearer ${process.env.S3_ACCESS_KEY}`
+            'User-Agent': 'DHR-VIP-Player/1.0',
+            'Accept': 'audio/mpeg, audio/*, */*'
           }
         });
 
@@ -1005,15 +1007,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const encodedPath = encodeURIComponent(mix.s3Url);
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
-        console.log(`Generating signed URL for download: ${mix.title}`);
+        console.log(`Creating signed URL for download: ${mix.title}`);
         
-        // Use signed URLs with credentials for private access
+        // Use AWS SDK with proper configuration for DigitalOcean Spaces
         const AWS = await import('aws-sdk');
         const s3 = new AWS.default.S3({
-          endpoint: 'https://lon1.digitaloceanspaces.com',
+          endpoint: new AWS.default.Endpoint('https://lon1.digitaloceanspaces.com'),
           accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
           secretAccessKey: process.env.S3_SECRET_KEY,
-          region: 'lon1'
+          region: 'lon1',
+          s3ForcePathStyle: false
         });
         
         const signedUrl = s3.getSignedUrl('getObject', {
@@ -1022,13 +1025,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           Expires: 3600 // 1 hour
         });
         
+        console.log(`Using signed URL for download`);
+        
         const fetch = (await import('node-fetch')).default;
         const response = await fetch(signedUrl, {
           timeout: 60000,
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-            'Authorization': `Bearer ${process.env.S3_ACCESS_KEY}`
+            'User-Agent': 'DHR-VIP-Download/1.0',
+            'Accept': 'audio/mpeg, audio/*, */*'
           }
         });
 
