@@ -1376,7 +1376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use a shell command to extract the actual metadata
       exec('timeout 10s curl -s "https://streaming.shoutcast.com/dhr" --header "Icy-MetaData: 1" | strings | grep -o "StreamTitle=\'[^\']*\'" | head -1', 
-        (error: any, stdout: any, stderr: any) => {
+        async (error: any, stdout: any, stderr: any) => {
           if (stdout && stdout.trim()) {
             const match = stdout.match(/StreamTitle='([^']+)'/);
             if (match && match[1]) {
@@ -1399,11 +1399,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          // If no metadata extracted, return live status
-          console.log('No track metadata found - showing live status');
+          // Shell command failed, try Node.js HTTP approach for production deployment
+          try {
+            console.log('Shell command failed, trying Node.js HTTP approach for production...');
+            const fetch = (await import('node-fetch')).default;
+            
+            const response = await fetch('https://streaming.shoutcast.com/dhr', {
+              headers: {
+                'Icy-MetaData': '1',
+                'User-Agent': 'DHR-Metadata-Extractor/1.0'
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.text();
+              const streamTitleMatch = data.match(/StreamTitle='([^']+)'/);
+              
+              if (streamTitleMatch && streamTitleMatch[1]) {
+                const songTitle = streamTitleMatch[1].trim();
+                console.log('Real track extracted via Node.js HTTP:', songTitle);
+                
+                if (songTitle.length > 5 && 
+                    !songTitle.toLowerCase().includes('dhr') && 
+                    !songTitle.toLowerCase().includes('deep house radio')) {
+                  
+                  const metadata = {
+                    artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
+                    title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
+                    timestamp: new Date().toISOString()
+                  };
+                  
+                  console.log('✅ REAL metadata from Node.js HTTP stream:', metadata);
+                  return res.json(metadata);
+                }
+              }
+            }
+          } catch (httpError) {
+            console.log('Node.js HTTP approach also failed:', httpError);
+          }
+          
+          // Both methods failed, return live status
+          console.log('All metadata extraction methods failed - showing live status');
           res.json({ 
             artist: 'DHR Live',
-            title: 'Deep House Stream',
+            title: 'Loading Live Track Info...',
             timestamp: new Date().toISOString(),
             status: 'live'
           });
@@ -1414,7 +1453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error extracting metadata:', error);
       res.json({ 
         artist: 'DHR Live',
-        title: 'Deep House Stream',
+        title: 'Loading Live Track Info...',
         timestamp: new Date().toISOString(),
         status: 'live'
       });

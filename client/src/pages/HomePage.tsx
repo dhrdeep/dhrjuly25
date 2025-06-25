@@ -59,12 +59,20 @@ const HomePage: React.FC = () => {
     const fetchLiveMetadata = async () => {
       try {
         // Scrape metadata from Everestcast stream 1 (premium player)
-        const response = await fetch('/api/live-metadata');
+        const response = await fetch('/api/live-metadata', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         if (response.ok) {
           const data = await response.json();
+          console.log('Live metadata fetched:', data);
           if (data.artist && data.title) {
             setLiveTrackInfo({ artist: data.artist, title: data.title });
           }
+        } else {
+          console.error('Metadata API response not ok:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch live metadata:', error);
@@ -273,12 +281,12 @@ const HomePage: React.FC = () => {
                     {liveTrackInfo ? (
                       <>
                         <h3 className="font-bold text-white">{liveTrackInfo.artist}</h3>
-                        <p className="text-gray-400">{liveTrackInfo.title}</p>
+                        <p className="text-gray-400">"{liveTrackInfo.title}"</p>
                       </>
                     ) : (
                       <>
                         <h3 className="font-bold text-white">DHR Live</h3>
-                        <p className="text-gray-400">Deep House Stream</p>
+                        <p className="text-gray-400">"Loading Live Track Info..."</p>
                       </>
                     )}
                     <div className="flex items-center space-x-2 mt-2">
@@ -506,7 +514,7 @@ const HomePage: React.FC = () => {
                     </a>
                     
                     <a 
-                      href="https://play.google.com/store/apps/details?id=com.dhr.deephouseradio" 
+                      href="https://play.google.com/store/apps/details?id=com.ni.deephouseradio" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center justify-center space-x-3 bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-xl transition-colors duration-300 border border-gray-600 hover:border-orange-400/50"
