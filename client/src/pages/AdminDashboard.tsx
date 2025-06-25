@@ -162,43 +162,82 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Primary Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {highPriorityActions.map((action, index) => (
-              <Link key={index} to={action.href}>
-                <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 bg-slate-700/50 rounded-lg">
-                      <action.icon className={`h-6 w-6 ${action.color}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-semibold mb-2">{action.title}</h3>
-                      <p className="text-slate-400 text-sm">{action.description}</p>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-slate-500" />
+            <Link to="/sync">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                    <Sync className="h-6 w-6 text-orange-500" />
                   </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">Sync System</h3>
+                    <p className="text-slate-400 text-sm">Patreon, BMAC & Spaces Sync</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-slate-500" />
                 </div>
-              </Link>
-            ))}
+              </div>
+            </Link>
+            
+            <Link to="/vip-admin">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                    <Music className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">VIP Content Management</h3>
+                    <p className="text-slate-400 text-sm">Manage premium mixes and access</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-slate-500" />
+                </div>
+              </div>
+            </Link>
+            
+            <Link to="/user-management">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                    <Users className="h-6 w-6 text-green-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">User Management</h3>
+                    <p className="text-slate-400 text-sm">View and manage subscribers</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-slate-500" />
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
 
         {/* Secondary Actions */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4">Additional Tools</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {otherActions.map((action, index) => (
-              <Link key={index} to={action.href}>
-                <div className="bg-slate-800/30 border border-slate-700 rounded-lg hover:bg-slate-800/50 transition-all cursor-pointer p-4">
-                  <div className="flex items-center gap-3">
-                    <action.icon className={`h-5 w-5 ${action.color}`} />
-                    <div className="flex-1">
-                      <h3 className="text-white font-medium text-sm">{action.title}</h3>
-                      <p className="text-slate-400 text-xs">{action.description}</p>
-                    </div>
-                    <ExternalLink className="h-3 w-3 text-slate-500" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Link to="/bulk-import">
+              <div className="bg-slate-800/30 border border-slate-700 rounded-lg hover:bg-slate-800/50 transition-all cursor-pointer p-4">
+                <div className="flex items-center gap-3">
+                  <Upload className="h-5 w-5 text-orange-500" />
+                  <div className="flex-1">
+                    <h3 className="text-white font-medium text-sm">Bulk Import</h3>
+                    <p className="text-slate-400 text-xs">Import multiple mix files</p>
                   </div>
+                  <ExternalLink className="h-3 w-3 text-slate-500" />
                 </div>
-              </Link>
-            ))}
+              </div>
+            </Link>
+            
+            <Link to="/storage-setup">
+              <div className="bg-slate-800/30 border border-slate-700 rounded-lg hover:bg-slate-800/50 transition-all cursor-pointer p-4">
+                <div className="flex items-center gap-3">
+                  <Settings className="h-5 w-5 text-slate-500" />
+                  <div className="flex-1">
+                    <h3 className="text-white font-medium text-sm">Storage Configuration</h3>
+                    <p className="text-slate-400 text-xs">Configure file hosting settings</p>
+                  </div>
+                  <ExternalLink className="h-3 w-3 text-slate-500" />
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
 
