@@ -100,14 +100,7 @@ export default function AdminDashboard() {
       color: 'text-slate-500',
       priority: 'medium'
     },
-    {
-      title: 'Jumpshare Extractor',
-      description: 'Extract mixes from Jumpshare exports',
-      icon: Package,
-      href: '/jumpshare-extract',
-      color: 'text-yellow-500',
-      priority: 'low'
-    }
+
   ];
 
   const highPriorityActions = quickActions.filter(action => action.priority === 'high');

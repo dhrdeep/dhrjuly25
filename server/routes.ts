@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
+import { fileHostingService } from "./fileHostingService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Patreon OAuth endpoint to replace Supabase edge function
@@ -445,9 +446,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Increment counter
         global.demoDownloadCache[cacheKey] = currentDownloads + 1;
         
+        // Use file hosting service for demo downloads
+        const downloadUrl = await fileHostingService.getDownloadUrl(mix);
+        
         return res.json({
           success: true,
-          downloadUrl: mix.jumpshareUrl,
+          downloadUrl,
           remainingDownloads: 2 - global.demoDownloadCache[cacheKey],
           mix: {
             title: mix.title,
@@ -498,9 +502,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalDownloads: (mix.totalDownloads || 0) + 1
       });
 
+      // Use file hosting service for downloads
+      const downloadUrl = await fileHostingService.getDownloadUrl(mix);
+      
       res.json({
         success: true,
-        downloadUrl: mix.jumpshareUrl,
+        downloadUrl,
         remainingDownloads: remainingDownloads - 1,
         mix: {
           title: mix.title,
@@ -637,312 +644,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
 
-      // Fall back to Jumpshare if new hosting fails
-      const hasRealUrl = mix.jumpshareUrl && 
-                        mix.jumpshareUrl.startsWith('http') && 
-                        !mix.jumpshareUrl.includes('placeholder') && 
-                        !mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK');
-      
-      if (!hasRealUrl) {
-        console.log(`Serving demo audio for mix ${mixId}`);
-        
-        try {
-          // Generate a longer demo audio for streaming (simulate a real mix)
-          console.log('Generating demo mix audio for streaming');
-          
-          // Create a longer audio buffer (2 minutes) that simulates a real deep house mix
-          const sampleRate = 22050;
-          const duration = 120; // 2 minutes for streaming
-          const baseFreq = 80; // Bass frequency
-          const numSamples = sampleRate * duration;
-          const dataSize = numSamples * 2;
-          const buffer = Buffer.alloc(44 + dataSize);
-          
-          let offset = 0;
-          // WAV header
-          buffer.write('RIFF', offset); offset += 4;
-          buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
-          buffer.write('WAVE', offset); offset += 4;
-          buffer.write('fmt ', offset); offset += 4;
-          buffer.writeUInt32LE(16, offset); offset += 4;
-          buffer.writeUInt16LE(1, offset); offset += 2; // PCM
-          buffer.writeUInt16LE(1, offset); offset += 2; // mono
-          buffer.writeUInt32LE(sampleRate, offset); offset += 4;
-          buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
-          buffer.writeUInt16LE(2, offset); offset += 2;
-          buffer.writeUInt16LE(16, offset); offset += 2;
-          buffer.write('data', offset); offset += 4;
-          buffer.writeUInt32LE(dataSize, offset); offset += 4;
-          
-          // Generate a deep house-style beat pattern
-          for (let i = 0; i < numSamples; i++) {
-            const time = i / sampleRate;
-            const beatPhase = (time * 2) % 1; // 120 BPM beat
-            const bassLevel = beatPhase < 0.1 ? 0.8 : 0.3;
-            
-            // Multiple frequency layers to simulate a real track
-            const bass = Math.sin(2 * Math.PI * baseFreq * time) * bassLevel;
-            const kick = beatPhase < 0.05 ? Math.sin(2 * Math.PI * 60 * time) : 0;
-            const hihat = (beatPhase > 0.25 && beatPhase < 0.27) || (beatPhase > 0.75 && beatPhase < 0.77) ? 
-                         Math.random() * 0.1 : 0;
-            
-            const sample = (bass + kick + hihat) * 0.4 * 32767;
-            buffer.writeInt16LE(Math.round(Math.max(-32767, Math.min(32767, sample))), offset);
-            offset += 2;
-          }
-          
-          res.set({
-            'Content-Type': 'audio/wav',
-            'Content-Length': buffer.length.toString(),
-            'Accept-Ranges': 'bytes',
-            'Cache-Control': 'public, max-age=3600',
-            'Access-Control-Allow-Origin': '*'
-          });
-          
-          res.send(buffer);
-          return;
-          
+      // No s3Url available, return error
+      return res.status(404).json({ error: "File not available for streaming" });
 
-        } catch (error) {
-          console.error('Demo audio proxy error:', error);
-          return res.status(502).json({ error: "Demo audio streaming failed" });
-        }
-      }
 
-      try {
-        console.log(`Converting Jumpshare URL to direct download: ${mix.jumpshareUrl}`);
-        
-        // Try multiple Jumpshare URL patterns to access real files
-        const fileId = mix.jumpshareUrl.includes('/v/') ? mix.jumpshareUrl.split('/v/')[1] : null;
-        
-        const urlsToTry = fileId ? [
-          mix.jumpshareUrl, // Original URL
-          `https://jumpshare.com/s/${fileId}`, // Short URL pattern
-          `https://jumpshare.com/download/${fileId}`, // Download pattern  
-          `https://jumpshare.com/d/${fileId}`, // Direct pattern
-          `https://api.jumpshare.com/v1/files/${fileId}/download`, // API pattern
-          `https://jumpshare.com/download/file/${fileId}` // Full download path
-        ] : [mix.jumpshareUrl];
-        
-        console.log(`Trying ${urlsToTry.length} URL patterns for file ID: ${fileId}`);
-        
-        let successfulResponse = null;
-        const fetch = (await import('node-fetch')).default;
-        
-        for (const directUrl of urlsToTry) {
-          try {
-            console.log(`Attempting: ${directUrl}`);
-            
-            // Build authentication headers if credentials are available
-            const authHeaders = {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'audio/*,video/*,application/octet-stream,application/json,*/*',
-              'Referer': 'https://jumpshare.com/'
-            };
-            
-            // Add API key authentication if available
-            if (process.env.JUMPSHARE_API_KEY) {
-              authHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
-            }
-            
-            // Add basic auth if username/password available
-            if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
-              const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
-              authHeaders['Authorization'] = `Basic ${auth}`;
-              console.log(`Using Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
-            }
-            
-            const testResponse = await fetch(directUrl, {
-              method: 'HEAD',
-              timeout: 15000,
-              headers: authHeaders
-            });
-            
-            const contentType = testResponse.headers.get('content-type') || '';
-            console.log(`${directUrl} -> ${testResponse.status} (${contentType})`);
-            
-            // For API endpoints, check if we get JSON with download URL
-            if (testResponse.ok && contentType.includes('application/json')) {
-              try {
-                const jsonResponse = await fetch(directUrl, {
-                  method: 'GET',
-                  timeout: 15000,
-                  headers: authHeaders
-                });
-                const data = await jsonResponse.json();
-                console.log(`API response:`, JSON.stringify(data, null, 2));
-                
-                // Look for download URL in the response
-                if (data.download_url || data.downloadUrl || data.url) {
-                  const downloadUrl = data.download_url || data.downloadUrl || data.url;
-                  console.log(`Found download URL from API: ${downloadUrl}`);
-                  successfulResponse = { url: downloadUrl, contentType: 'audio/mpeg' };
-                  break;
-                }
-              } catch (e) {
-                console.log(`Failed to parse JSON from ${directUrl}`);
-              }
-            }
-            
-            // For direct audio content
-            if (testResponse.ok && 
-                !contentType.includes('text/html') && 
-                (contentType.includes('audio') || contentType.includes('octet-stream'))) {
-              console.log(`Found working URL: ${directUrl}`);
-              successfulResponse = { url: directUrl, contentType };
-              break;
-            }
-          } catch (e) {
-            console.log(`Failed: ${directUrl} - ${e.message}`);
-          }
-        }
-        
-        if (!successfulResponse) {
-          throw new Error('No working URL pattern found');
-        }
-        
-        // Now fetch the actual audio data
-        console.log(`Fetching audio from: ${successfulResponse.url}`);
-        
-        // Build the same authentication headers for the actual request
-        const streamHeaders = {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-          'Referer': 'https://jumpshare.com/'
-        };
-        
-        if (process.env.JUMPSHARE_API_KEY) {
-          streamHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
-        }
-        
-        if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
-          const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
-          streamHeaders['Authorization'] = `Basic ${auth}`;
-          console.log(`Streaming with Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
-        }
-        
-        const response = await fetch(successfulResponse.url, {
-          timeout: 30000,
-          headers: streamHeaders
-        });
-        
-        if (!response.ok) {
-          console.error(`Audio fetch failed: ${response.status} ${response.statusText}`);
-          return res.status(404).json({ error: "Audio file not accessible" });
-        }
-
-        console.log(`Audio response headers:`, {
-          contentType: response.headers.get('content-type'),
-          contentLength: response.headers.get('content-length'),
-          status: response.status
-        });
-
-        // Check if we got HTML instead of audio
-        const contentType = response.headers.get('content-type') || '';
-        if (contentType.includes('text/html')) {
-          console.error('Received HTML instead of audio, trying alternative URL patterns');
-          
-          // Try alternative Jumpshare URL patterns
-          const fileId = mix.jumpshareUrl.split('/v/')[1];
-          const alternativeUrls = [
-            `https://jumpshare.com/s/${fileId}`,
-            `https://jumpshare.com/download/${fileId}`,
-            `https://jumpshare.com/d/${fileId}`
-          ];
-          
-          for (const altUrl of alternativeUrls) {
-            try {
-              console.log(`Trying alternative URL: ${altUrl}`);
-              const altResponse = await fetch(altUrl, {
-                timeout: 10000,
-                headers: {
-                  'User-Agent': 'Mozilla/5.0 (compatible; DHR-Player/1.0)',
-                  'Accept': 'audio/*,*/*;q=0.1'
-                }
-              });
-              
-              if (altResponse.ok && !altResponse.headers.get('content-type')?.includes('text/html')) {
-                console.log(`Alternative URL worked: ${altUrl}`);
-                res.set({
-                  'Content-Type': altResponse.headers.get('content-type') || 'audio/mpeg',
-                  'Content-Length': altResponse.headers.get('content-length') || '',
-                  'Accept-Ranges': 'bytes',
-                  'Cache-Control': 'public, max-age=3600',
-                  'Access-Control-Allow-Origin': '*'
-                });
-                
-                if (altResponse.body) {
-                  return altResponse.body.pipe(res);
-                }
-              }
-            } catch (e) {
-              console.log(`Alternative URL failed: ${altUrl}`);
-            }
-          }
-          
-          console.error('All URL patterns failed, falling back to demo audio');
-          // Fall back to demo audio generation
-          const sampleRate = 22050;
-          const duration = 3;
-          const frequency = 440;
-          const numSamples = sampleRate * duration;
-          const dataSize = numSamples * 2;
-          const buffer = Buffer.alloc(44 + dataSize);
-          
-          let offset = 0;
-          buffer.write('RIFF', offset); offset += 4;
-          buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
-          buffer.write('WAVE', offset); offset += 4;
-          buffer.write('fmt ', offset); offset += 4;
-          buffer.writeUInt32LE(16, offset); offset += 4;
-          buffer.writeUInt16LE(1, offset); offset += 2;
-          buffer.writeUInt16LE(1, offset); offset += 2;
-          buffer.writeUInt32LE(sampleRate, offset); offset += 4;
-          buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
-          buffer.writeUInt16LE(2, offset); offset += 2;
-          buffer.writeUInt16LE(16, offset); offset += 2;
-          buffer.write('data', offset); offset += 4;
-          buffer.writeUInt32LE(dataSize, offset); offset += 4;
-          
-          for (let i = 0; i < numSamples; i++) {
-            const sample = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3 * 32767;
-            buffer.writeInt16LE(Math.round(sample), offset);
-            offset += 2;
-          }
-          
-          res.set({
-            'Content-Type': 'audio/wav',
-            'Content-Length': buffer.length.toString(),
-            'Accept-Ranges': 'bytes',
-            'Cache-Control': 'public, max-age=3600',
-            'Access-Control-Allow-Origin': '*'
-          });
-          
-          return res.send(buffer);
-        }
-
-        const actualContentType = response.headers.get('content-type') || successfulResponse.contentType;
-        res.set({
-          'Content-Type': actualContentType || 'audio/mpeg',
-          'Content-Length': response.headers.get('content-length') || '',
-          'Accept-Ranges': 'bytes',
-          'Cache-Control': 'public, max-age=3600',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-          'Access-Control-Allow-Headers': 'Range'
-        });
-
-        if (response.body) {
-          console.log(`Successfully streaming real audio file`);
-          response.body.pipe(res);
-        } else {
-          console.error('Audio response has no body');
-          return res.status(502).json({ error: "No audio data available" });
-        }
-      } catch (error) {
-        console.error('Audio proxy error:', error);
-        return res.status(502).json({ error: "Audio streaming failed" });
-      }
 
     } catch (error) {
       console.error("Error streaming audio:", error);

@@ -15,8 +15,7 @@ import SimpleAdminPage from './pages/SimpleAdminPage';
 import AdminDashboard from './pages/AdminDashboard';
 import VIPAdminPage from './pages/VIPAdminPage';
 import BulkImportPage from './pages/BulkImportPage';
-import JumpshareSetupPage from './pages/JumpshareSetupPage';
-import JumpshareExtractorPage from './pages/JumpshareExtractorPage';
+
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
 
@@ -38,8 +37,7 @@ function App() {
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/vip-admin" element={<VIPAdminPage />} />
             <Route path="/bulk-import" element={<BulkImportPage />} />
-            <Route path="/storage-setup" element={<JumpshareSetupPage />} />
-            <Route path="/jumpshare-extract" element={<JumpshareExtractorPage />} />
+
             <Route path="/sync" element={<SyncPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
           </Routes>

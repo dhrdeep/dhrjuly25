@@ -119,7 +119,7 @@ export class VipService {
         };
       }
 
-      // Open Jumpshare download in new tab
+      // Open download URL in new tab
       if (data.downloadUrl) {
         window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
       }

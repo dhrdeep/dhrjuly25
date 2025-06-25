@@ -46,8 +46,7 @@ export const vipMixes = pgTable("vip_mixes", {
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  jumpshareUrl: text("jumpshare_url"),
-  jumpsharePreviewUrl: text("jumpshare_preview_url"),
+
   tags: text("tags"),
   s3Url: text("s3_url")
 });

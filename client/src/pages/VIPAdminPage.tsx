@@ -30,8 +30,7 @@ export default function VIPAdminPage() {
   const startEditing = (mix: VipMix) => {
     setEditingMix(mix.id);
     setFormData({
-      jumpshareUrl: mix.jumpshareUrl || '',
-      jumpsharePreviewUrl: mix.jumpsharePreviewUrl || '',
+      s3Url: mix.s3Url || '',
     });
   };
 
@@ -64,16 +63,16 @@ export default function VIPAdminPage() {
           <h1 className="text-5xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent mb-4">
             VIP Content Management
           </h1>
-          <p className="text-xl text-gray-300">Update Jumpshare Links For Your 1TB Collection</p>
+          <p className="text-xl text-gray-300">Manage Your 1TB DigitalOcean Spaces Collection</p>
           
           {/* Quick Admin Links */}
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             <a
-              href="/jumpshare-extract"
+              href="/sync"
               className="inline-flex items-center px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-400/30 rounded-lg transition-all"
             >
               <Zap className="h-4 w-4 mr-2" />
-              Jumpshare Extractor
+              Sync DigitalOcean Spaces
             </a>
             
             <a
@@ -115,27 +114,14 @@ export default function VIPAdminPage() {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Jumpshare Download URL
+                          DigitalOcean Spaces S3 URL
                         </label>
                         <input
                           type="url"
-                          value={formData.jumpshareUrl || ''}
-                          onChange={(e) => setFormData({ ...formData, jumpshareUrl: e.target.value })}
+                          value={formData.s3Url || ''}
+                          onChange={(e) => setFormData({ ...formData, s3Url: e.target.value })}
                           className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400/50"
-                          placeholder="https://jumpshare.com/download/your-mix-link"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Jumpshare Preview/Stream URL
-                        </label>
-                        <input
-                          type="url"
-                          value={formData.jumpsharePreviewUrl || ''}
-                          onChange={(e) => setFormData({ ...formData, jumpsharePreviewUrl: e.target.value })}
-                          className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600/30 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-400/50"
-                          placeholder="https://jumpshare.com/preview/your-mix-link"
+                          placeholder="01 mix sinitsa 22.mp3"
                         />
                       </div>
                       
@@ -161,38 +147,18 @@ export default function VIPAdminPage() {
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2 text-sm">
                         <Download className="h-4 w-4 text-orange-400" />
-                        <span className="text-gray-300">Download:</span>
+                        <span className="text-gray-300">DigitalOcean:</span>
                         <span className="text-orange-300">
-                          {mix.jumpshareUrl || 'Not set'}
+                          {mix.s3Url || 'Not set'}
                         </span>
-                        {mix.jumpshareUrl && (
-                          <a 
-                            href={mix.jumpshareUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-orange-400 hover:text-orange-300"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
                       </div>
                       
                       <div className="flex items-center space-x-2 text-sm">
                         <Play className="h-4 w-4 text-orange-400" />
-                        <span className="text-gray-300">Stream:</span>
+                        <span className="text-gray-300">S3 URL:</span>
                         <span className="text-orange-300">
-                          {mix.jumpsharePreviewUrl || 'Not set'}
+                          {mix.s3Url || 'Not set'}
                         </span>
-                        {mix.jumpsharePreviewUrl && (
-                          <a 
-                            href={mix.jumpsharePreviewUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-orange-400 hover:text-orange-300"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
                       </div>
                     </div>
                   )}
@@ -213,12 +179,12 @@ export default function VIPAdminPage() {
         </div>
 
         <div className="mt-12 p-6 bg-orange-500/10 border border-orange-400/30 rounded-lg">
-          <h3 className="text-lg font-bold text-orange-300 mb-3">How To Get Jumpshare Links:</h3>
+          <h3 className="text-lg font-bold text-orange-300 mb-3">DigitalOcean Spaces Integration:</h3>
           <ol className="text-gray-300 space-y-2">
-            <li>1. Upload your mix files to Jumpshare</li>
-            <li>2. For downloads: Copy the direct download link</li>
-            <li>3. For streaming: Copy the preview link (allows streaming without download)</li>
-            <li>4. Paste both URLs in the form above and save</li>
+            <li>1. Upload your mix files to DigitalOcean Spaces (dhrmixes bucket)</li>
+            <li>2. Use the Sync page to automatically detect and add new files</li>
+            <li>3. Files are automatically available for streaming and download</li>
+            <li>4. Secure access controlled through VIP subscription tiers</li>
           </ol>
         </div>
       </div>

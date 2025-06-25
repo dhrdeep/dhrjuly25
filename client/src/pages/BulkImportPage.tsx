@@ -9,8 +9,7 @@ interface BulkMix {
   genre: string;
   duration: string;
   fileSize: string;
-  jumpshareUrl: string;
-  jumpsharePreviewUrl?: string;
+  s3Url: string;
   artworkUrl?: string;
   description?: string;
   tags?: string;
@@ -42,9 +41,9 @@ export default function BulkImportPage() {
   });
 
   const downloadTemplate = () => {
-    const template = `title,artist,genre,duration,fileSize,jumpshareUrl,jumpsharePreviewUrl,artworkUrl,description,tags
-"Deep House Vibes Vol. 1","DJ Example","deep house","1h 30m","210 MB","https://jumpshare.com/download/mix1","https://jumpshare.com/preview/mix1","https://example.com/artwork1.jpg","Amazing deep house journey","deep,house,electronic"
-"Tech House Sessions","Another DJ","tech house","2h 15m","315 MB","https://jumpshare.com/download/mix2","https://jumpshare.com/preview/mix2","https://example.com/artwork2.jpg","Underground tech house","tech,house,underground"`;
+    const template = `title,artist,genre,duration,fileSize,s3Url,artworkUrl,description,tags
+"Deep House Vibes Vol. 1","DJ Example","deep house","1h 30m","210 MB","01 mix example 1.mp3","https://example.com/artwork1.jpg","Amazing deep house journey","deep,house,electronic"
+"Tech House Sessions","Another DJ","tech house","2h 15m","315 MB","02 tech house sessions.mp3","https://example.com/artwork2.jpg","Underground tech house","tech,house,underground"`;
     
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -75,8 +74,8 @@ export default function BulkImportPage() {
         });
         
         // Validate required fields
-        if (!mix.title || !mix.artist || !mix.jumpshareUrl) {
-          errors.push(`Row ${i + 1}: Missing required fields (title, artist, jumpshareUrl)`);
+        if (!mix.title || !mix.artist || !mix.s3Url) {
+          errors.push(`Row ${i + 1}: Missing required fields (title, artist, s3Url)`);
           continue;
         }
         
@@ -86,8 +85,7 @@ export default function BulkImportPage() {
           genre: mix.genre || 'deep house',
           duration: mix.duration || '1h 30m',
           fileSize: mix.fileSize || '200 MB',
-          jumpshareUrl: mix.jumpshareUrl,
-          jumpsharePreviewUrl: mix.jumpsharePreviewUrl,
+          s3Url: mix.s3Url,
           artworkUrl: mix.artworkUrl,
           description: mix.description,
           tags: mix.tags
@@ -131,7 +129,7 @@ export default function BulkImportPage() {
                   <ul className="list-disc list-inside space-y-1 text-sm">
                     <li><strong>title</strong> - Mix title</li>
                     <li><strong>artist</strong> - Artist/DJ name</li>
-                    <li><strong>jumpshareUrl</strong> - Download link (can be any hosting URL)</li>
+                    <li><strong>s3Url</strong> - DigitalOcean Spaces filename (e.g., "01 mix name.mp3")</li>
                   </ul>
                 </div>
                 
@@ -141,7 +139,7 @@ export default function BulkImportPage() {
                     <li><strong>genre</strong> - Music genre</li>
                     <li><strong>duration</strong> - Mix length</li>
                     <li><strong>fileSize</strong> - File size</li>
-                    <li><strong>jumpsharePreviewUrl</strong> - Stream link</li>
+
                     <li><strong>artworkUrl</strong> - Cover image</li>
                     <li><strong>description</strong> - Mix description</li>
                     <li><strong>tags</strong> - Search tags (comma-separated)</li>
@@ -158,24 +156,24 @@ export default function BulkImportPage() {
               </button>
             </div>
 
-            {/* Jumpshare Integration Guide */}
+            {/* DigitalOcean Spaces Guide */}
             <div className="bg-blue-900/20 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/20">
               <h2 className="text-2xl font-black text-blue-300 mb-4">
                 Need Help With Storage Setup?
               </h2>
               
               <p className="text-gray-300 mb-4">
-                Ready to import your mix collection? If you have a Jumpshare activity export, 
-                use the Jumpshare Extractor to automatically parse your collection.
+                Ready to import your mix collection? Upload files to DigitalOcean Spaces 
+                and use the sync function to automatically add them to your database.
               </p>
               
               <div className="flex flex-wrap gap-4">
                 <a
-                  href="/jumpshare-extract"
+                  href="/sync"
                   className="inline-flex items-center px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-400/30 rounded-lg transition-all"
                 >
                   <Zap className="h-4 w-4 mr-2" />
-                  Extract From Jumpshare Export
+                  Sync From DigitalOcean Spaces
                 </a>
                 
                 <a
@@ -188,10 +186,10 @@ export default function BulkImportPage() {
                 
                 <button
                   onClick={() => {
-                    const exampleCsv = `title,artist,genre,duration,fileSize,jumpshareUrl,jumpsharePreviewUrl,artworkUrl,description,tags
-"Deep House Vibes Vol. 1","DJ Example","deep house","1h 30m","210 MB","https://jumpshare.com/download/mix1","https://jumpshare.com/preview/mix1","https://example.com/artwork1.jpg","Amazing deep house journey","deep,house,electronic,chill"
-"Tech House Sessions","Another DJ","tech house","2h 15m","315 MB","https://jumpshare.com/download/mix2","https://jumpshare.com/preview/mix2","https://example.com/artwork2.jpg","Underground tech house","tech,house,underground,energy"
-"Melodic Progressive","Third Artist","progressive","1h 45m","250 MB","https://jumpshare.com/download/mix3","https://jumpshare.com/preview/mix3","https://example.com/artwork3.jpg","Emotional progressive journey","progressive,melodic,emotional"`;
+                    const exampleCsv = `title,artist,genre,duration,fileSize,s3Url,artworkUrl,description,tags
+"Deep House Vibes Vol. 1","DJ Example","deep house","1h 30m","210 MB","01 deep house vibes.mp3","https://example.com/artwork1.jpg","Amazing deep house journey","deep,house,electronic,chill"
+"Tech House Sessions","Another DJ","tech house","2h 15m","315 MB","02 tech house sessions.mp3","https://example.com/artwork2.jpg","Underground tech house","tech,house,underground,energy"
+"Melodic Progressive","Third Artist","progressive","1h 45m","250 MB","03 melodic progressive.mp3","https://example.com/artwork3.jpg","Emotional progressive journey","progressive,melodic,emotional"`;
                     setCsvData(exampleCsv);
                   }}
                   className="inline-flex items-center px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-400/30 rounded-lg transition-all"
