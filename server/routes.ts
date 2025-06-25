@@ -365,6 +365,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/vip-mixes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const mix = await storage.updateVipMix(id, updates);
+      res.json(mix);
+    } catch (error) {
+      console.error("Error updating VIP mix:", error);
+      res.status(500).json({ error: "Failed to update VIP mix" });
+    }
+  });
+
   // Download tracking and access control
   app.post("/api/download/:mixId", async (req, res) => {
     try {

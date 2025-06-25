@@ -12,6 +12,7 @@ import ForumPage from './pages/ForumPage';
 import UploadPage from './pages/UploadPage';
 import ShopPage from './pages/ShopPage';
 import SimpleAdminPage from './pages/SimpleAdminPage';
+import VIPAdminPage from './pages/VIPAdminPage';
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/admin" element={<SimpleAdminPage />} />
+            <Route path="/vip-admin" element={<VIPAdminPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
           </Routes>
         </Layout>
