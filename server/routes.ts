@@ -582,11 +582,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Mix ${mixId} found: ${mix.title}`);
-      console.log(`Mix object:`, JSON.stringify(mix, null, 2));
       
       // Stream directly from DigitalOcean Spaces - this is the ONLY option now
-      if (!mix.s3_url) {
-        console.log(`No s3_url for mix ${mixId}, cannot stream - checking all fields:`, Object.keys(mix));
+      if (!mix.s3Url) {
+        console.log(`No s3Url for mix ${mixId}, cannot stream`);
         return res.status(404).json({ error: "File not available for streaming" });
       }
 
@@ -982,13 +981,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Download directly from DigitalOcean Spaces - this is the ONLY option now
-      if (!mix.s3_url) {
-        console.log(`No s3_url for mix ${mixId}, cannot download`);
+      if (!mix.s3Url) {
+        console.log(`No s3Url for mix ${mixId}, cannot download`);
         return res.status(404).json({ error: "File not available for download" });
       }
 
       try {
-        const encodedPath = encodeURIComponent(mix.s3_url);
+        const encodedPath = encodeURIComponent(mix.s3Url);
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
         console.log(`Downloading from Spaces: ${spacesUrl}`);
         
