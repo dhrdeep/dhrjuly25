@@ -673,6 +673,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Trying ${urlsToTry.length} URL patterns for file ID: ${fileId}`);
         
         let successfulResponse = null;
+        const fetch = (await import('node-fetch')).default;
+        
         for (const directUrl of urlsToTry) {
           try {
             console.log(`Attempting: ${directUrl}`);
@@ -708,7 +710,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Now fetch the actual audio data
         console.log(`Fetching audio from: ${successfulResponse.url}`);
         
-        const fetch = (await import('node-fetch')).default;
         const response = await fetch(successfulResponse.url, {
           timeout: 30000,
           headers: {
