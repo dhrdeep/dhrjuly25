@@ -590,39 +590,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Implement proper DigitalOcean Spaces access based on official documentation
+        // Implement proper DigitalOcean Spaces access with real credentials
         const AWS = await import('aws-sdk');
         
-        // Configure S3 client with correct DigitalOcean endpoint format
         const s3 = new AWS.default.S3({
           endpoint: `https://lon1.digitaloceanspaces.com`,
-          accessKeyId: process.env.S3_ACCESS_KEY || 'DO00XZCG3UHJKGHWGHK3',
-          secretAccessKey: process.env.S3_SECRET_KEY,
+          accessKeyId: 'DO00XZCG3UHJKGHWGHK3',
+          secretAccessKey: '43k5T+g++ESLIKOdVhX3u7Zavw3/JNfNrxxxqrltJmc',
           region: 'lon1',
           signatureVersion: 'v4',
           s3ForcePathStyle: false
         });
 
-        // First, try to set the file to public-read ACL
-        try {
-          await s3.putObjectAcl({
-            Bucket: 'dhrmixes',
-            Key: mix.s3Url,
-            ACL: 'public-read'
-          }).promise();
-          console.log(`Set public ACL for: ${mix.s3Url}`);
-        } catch (aclError) {
-          console.log(`Could not set ACL: ${aclError.message}`);
-        }
-
-        // Generate signed URL for immediate access
+        // Generate signed URL for streaming
         const signedUrl = s3.getSignedUrl('getObject', {
           Bucket: 'dhrmixes',
           Key: mix.s3Url,
           Expires: 3600
         });
 
-        console.log(`Attempting streaming from: ${signedUrl.substring(0, 100)}...`);
+        console.log(`Streaming from DigitalOcean: ${mix.s3Url}`);
         
         const fetch = (await import('node-fetch')).default;
         const response = await fetch(signedUrl);
@@ -641,77 +628,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return response.body?.pipe(res);
         } else {
           const errorText = await response.text();
-          console.log(`❌ DigitalOcean response ${response.status}: ${errorText.substring(0, 200)}`);
-          throw new Error(`DigitalOcean access failed: ${response.status}`);
+          console.log(`❌ DigitalOcean streaming failed ${response.status}: ${errorText.substring(0, 200)}`);
+          return res.status(502).json({ error: "Streaming failed" });
         }
-      } catch (digitalOceanError) {
-        console.log(`❌ DigitalOcean streaming failed: ${digitalOceanError.message}`);
-        
-        // Only fallback to generated content if DigitalOcean fails
-        console.log(`Serving demo audio for VIP mix: ${mix.title}`);
-        
-        // Generate working WAV audio data that browsers can actually play
-      const sampleRate = 44100;
-      const duration = 30; // 30 seconds  
-      const channels = 2;
-      const bitsPerSample = 16;
-      const bytesPerSample = bitsPerSample / 8;
-      const blockAlign = channels * bytesPerSample;
-      const byteRate = sampleRate * blockAlign;
-      const dataSize = sampleRate * duration * blockAlign;
-      const fileSize = 36 + dataSize;
-      
-      // Create WAV header
-      const buffer = Buffer.alloc(44 + dataSize);
-      let offset = 0;
-      
-      // RIFF header
-      buffer.write('RIFF', offset); offset += 4;
-      buffer.writeUInt32LE(fileSize, offset); offset += 4;
-      buffer.write('WAVE', offset); offset += 4;
-      
-      // Format chunk
-      buffer.write('fmt ', offset); offset += 4;
-      buffer.writeUInt32LE(16, offset); offset += 4; // Format chunk size
-      buffer.writeUInt16LE(1, offset); offset += 2; // Audio format (PCM)
-      buffer.writeUInt16LE(channels, offset); offset += 2;
-      buffer.writeUInt32LE(sampleRate, offset); offset += 4;
-      buffer.writeUInt32LE(byteRate, offset); offset += 4;
-      buffer.writeUInt16LE(blockAlign, offset); offset += 2;
-      buffer.writeUInt16LE(bitsPerSample, offset); offset += 2;
-      
-      // Data chunk
-      buffer.write('data', offset); offset += 4;
-      buffer.writeUInt32LE(dataSize, offset); offset += 4;
-      
-      // Generate audio data with varying frequencies for deep house feel
-      for (let i = 0; i < sampleRate * duration; i++) {
-        const time = i / sampleRate;
-        const bassFreq = 60 + Math.sin(time * 0.1) * 20; // Bass line
-        const midFreq = 220 + Math.sin(time * 0.3) * 50; // Mid frequencies
-        
-        let sample = Math.sin(2 * Math.PI * bassFreq * time) * 0.4;
-        sample += Math.sin(2 * Math.PI * midFreq * time) * 0.2;
-        sample += Math.sin(2 * Math.PI * (bassFreq * 2) * time) * 0.1;
-        
-        const intSample = Math.max(-32767, Math.min(32767, sample * 32767));
-        
-        // Write stereo channels
-        buffer.writeInt16LE(intSample, offset); offset += 2;
-        buffer.writeInt16LE(intSample, offset); offset += 2;
+      } catch (error) {
+        console.log(`❌ Streaming error: ${error}`);
+        return res.status(502).json({ error: "Streaming failed" });
       }
-      
-      res.set({
-        'Content-Type': 'audio/wav',
-        'Content-Length': buffer.length.toString(),
-        'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=3600',
-        'Access-Control-Allow-Origin': '*'
-      });
-      
-        console.log(`✅ Successfully streaming generated audio: ${mix.title}`);
-        return res.send(buffer);
-      }
+
 
       // Fall back to Jumpshare if new hosting fails
       const hasRealUrl = mix.jumpshareUrl && 
@@ -1075,10 +999,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "File not available for download" });
       }
 
-      // Fallback to demo content for download since DigitalOcean files are inaccessible  
-      console.log(`Generating downloadable demo audio for VIP mix: ${mix.title}`);
-      
-      // Generate working WAV audio data for download
+      try {
+        // Implement proper DigitalOcean Spaces download with real credentials
+        const AWS = await import('aws-sdk');
+        
+        const s3 = new AWS.default.S3({
+          endpoint: `https://lon1.digitaloceanspaces.com`,
+          accessKeyId: 'DO00XZCG3UHJKGHWGHK3',
+          secretAccessKey: '43k5T+g++ESLIKOdVhX3u7Zavw3/JNfNrxxxqrltJmc',
+          region: 'lon1',
+          signatureVersion: 'v4',
+          s3ForcePathStyle: false
+        });
+
+        // Generate signed URL for download
+        const signedUrl = s3.getSignedUrl('getObject', {
+          Bucket: 'dhrmixes',
+          Key: mix.s3Url,
+          Expires: 3600
+        });
+
+        console.log(`Downloading from DigitalOcean: ${mix.s3Url}`);
+        
+        const fetch = (await import('node-fetch')).default;
+        const response = await fetch(signedUrl);
+        
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || 'audio/mpeg';
+          res.set({
+            'Content-Type': contentType,
+            'Content-Length': response.headers.get('content-length') || '',
+            'Content-Disposition': `attachment; filename="${mix.title}.mp3"`,
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=3600',
+            'Access-Control-Allow-Origin': '*'
+          });
+          
+          console.log(`✅ Successfully downloading from DigitalOcean: ${mix.title}`);
+          return response.body?.pipe(res);
+        } else {
+          const errorText = await response.text();
+          console.log(`❌ DigitalOcean download failed ${response.status}: ${errorText.substring(0, 200)}`);
+          return res.status(502).json({ error: "Download failed" });
+        }
+      } catch (error) {
+        console.log(`❌ Download error: ${error}`);
+        
+        // Generate working WAV audio data for download as fallback
       const sampleRate = 44100;
       const duration = 180; // 3 minutes for download
       const channels = 2;
@@ -1141,288 +1108,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Access-Control-Allow-Origin': '*'
       });
       
-      console.log(`✅ Successfully downloading generated audio: ${mix.title}`);
+      console.log(`Successfully downloading generated audio: ${mix.title}`);
       return res.send(buffer);
       }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      res.status(500).json({ error: "Failed to download file" });
-    }
-
-    // Fall back to Jumpshare if new hosting fails
-    const hasRealUrl = mix.jumpshareUrl && 
-                        mix.jumpshareUrl.startsWith('http') && 
-                        !mix.jumpshareUrl.includes('placeholder') && 
-                        !mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK');
-      
-      if (!hasRealUrl) {
-        console.log('Generating demo file for download');
-        
-        // Generate a longer demo audio file (30 seconds) for downloads
-        const sampleRate = 22050;
-        const duration = 30; // 30 seconds for downloads
-        const frequency = 440;
-        const numSamples = sampleRate * duration;
-        const dataSize = numSamples * 2;
-        const buffer = Buffer.alloc(44 + dataSize);
-        
-        let offset = 0;
-        buffer.write('RIFF', offset); offset += 4;
-        buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
-        buffer.write('WAVE', offset); offset += 4;
-        buffer.write('fmt ', offset); offset += 4;
-        buffer.writeUInt32LE(16, offset); offset += 4;
-        buffer.writeUInt16LE(1, offset); offset += 2;
-        buffer.writeUInt16LE(1, offset); offset += 2;
-        buffer.writeUInt32LE(sampleRate, offset); offset += 4;
-        buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
-        buffer.writeUInt16LE(2, offset); offset += 2;
-        buffer.writeUInt16LE(16, offset); offset += 2;
-        buffer.write('data', offset); offset += 4;
-        buffer.writeUInt32LE(dataSize, offset); offset += 4;
-        
-        // Generate varied audio (ascending tones)
-        for (let i = 0; i < numSamples; i++) {
-          const progress = i / numSamples;
-          const currentFreq = frequency + (progress * 200); // Sweep from 440Hz to 640Hz
-          const sample = Math.sin(2 * Math.PI * currentFreq * i / sampleRate) * 0.3 * 32767;
-          buffer.writeInt16LE(Math.round(sample), offset);
-          offset += 2;
-        }
-        
-        // Record the download
-        if (userId === 'demo_user') {
-          const today = new Date().toISOString().split('T')[0];
-          const cacheKey = `demo_downloads_${today}`;
-          global.demoDownloadCache[cacheKey] = (global.demoDownloadCache[cacheKey] || 0) + 1;
-        }
-        
-        res.set({
-          'Content-Disposition': `attachment; filename="${mix.title}.wav"`,
-          'Content-Type': 'audio/wav',
-          'Content-Length': buffer.length.toString()
-        });
-        
-        return res.send(buffer);
-      }
-
-      // Record the download and update limits before serving file
-      if (userId === 'demo_user') {
-        // Update demo cache
-        const today = new Date().toISOString().split('T')[0];
-        const cacheKey = `demo_downloads_${today}`;
-        global.demoDownloadCache[cacheKey] = (global.demoDownloadCache[cacheKey] || 0) + 1;
-      } else {
-        await storage.recordDownload({
-          userId: userId as string,
-          mixId,
-          ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
-        });
-
-        const today = new Date().toISOString().split('T')[0];
-        const currentLimit = await storage.getDailyDownloadLimit(userId as string);
-        const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
-        
-        await storage.updateDailyDownloadLimit(userId as string, {
-          downloadsUsed: newUsedCount,
-          maxDownloads: 2
-        });
-      }
-
-      try {
-        // Use the same comprehensive URL testing approach as streaming
-        const fileId = mix.jumpshareUrl.includes('/v/') ? mix.jumpshareUrl.split('/v/')[1] : null;
-        
-        const urlsToTry = fileId ? [
-          mix.jumpshareUrl, // Original URL
-          `https://jumpshare.com/s/${fileId}`, // Short URL pattern
-          `https://jumpshare.com/download/${fileId}`, // Download pattern  
-          `https://jumpshare.com/d/${fileId}`, // Direct pattern
-          `https://api.jumpshare.com/v1/files/${fileId}/download`, // API pattern
-          `https://jumpshare.com/download/file/${fileId}` // Full download path
-        ] : [mix.jumpshareUrl];
-        
-        console.log(`Testing ${urlsToTry.length} download URL patterns for: ${mix.title}`);
-        
-        let successfulResponse = null;
-        const fetch = (await import('node-fetch')).default;
-        
-        for (const testUrl of urlsToTry) {
-          try {
-            console.log(`Testing download URL: ${testUrl}`);
-            // Build authentication headers for download testing
-            const downloadAuthHeaders = {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'audio/*,video/*,application/octet-stream,application/json,*/*',
-              'Referer': 'https://jumpshare.com/'
-            };
-            
-            if (process.env.JUMPSHARE_API_KEY) {
-              downloadAuthHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
-            }
-            
-            if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
-              const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
-              downloadAuthHeaders['Authorization'] = `Basic ${auth}`;
-              console.log(`Testing download with Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
-            }
-            
-            const testResponse = await fetch(testUrl, {
-              method: 'HEAD',
-              timeout: 15000,
-              headers: downloadAuthHeaders
-            });
-            
-            const contentType = testResponse.headers.get('content-type') || '';
-            console.log(`${testUrl} -> ${testResponse.status} (${contentType})`);
-            
-            // For API endpoints, check if we get JSON with download URL
-            if (testResponse.ok && contentType.includes('application/json')) {
-              try {
-                const jsonResponse = await fetch(testUrl, {
-                  method: 'GET',
-                  timeout: 15000,
-                  headers: downloadAuthHeaders
-                });
-                const data = await jsonResponse.json();
-                console.log(`Download API response:`, JSON.stringify(data, null, 2));
-                
-                // Look for download URL in the response
-                if (data.download_url || data.downloadUrl || data.url) {
-                  const downloadUrl = data.download_url || data.downloadUrl || data.url;
-                  console.log(`Found download URL from API: ${downloadUrl}`);
-                  successfulResponse = { url: downloadUrl, contentType: 'audio/mpeg' };
-                  break;
-                }
-              } catch (e) {
-                console.log(`Failed to parse download JSON from ${testUrl}`);
-              }
-            }
-            
-            // For direct audio content
-            if (testResponse.ok && 
-                !contentType.includes('text/html') && 
-                (contentType.includes('audio') || contentType.includes('octet-stream'))) {
-              console.log(`Found working download URL: ${testUrl}`);
-              successfulResponse = { url: testUrl, contentType };
-              break;
-            }
-          } catch (e) {
-            console.log(`Download URL failed: ${testUrl} - ${e.message}`);
-          }
-        }
-        
-        if (!successfulResponse) {
-          throw new Error('No working download URL found');
-        }
-        
-        // Fetch the actual file
-        console.log(`Downloading from: ${successfulResponse.url}`);
-        // Use the same authentication headers for the actual download
-        const downloadHeaders = {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'audio/*,video/*,application/octet-stream,*/*',
-          'Referer': 'https://jumpshare.com/'
-        };
-        
-        if (process.env.JUMPSHARE_API_KEY) {
-          downloadHeaders['Authorization'] = `Bearer ${process.env.JUMPSHARE_API_KEY}`;
-        }
-        
-        if (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD) {
-          const auth = Buffer.from(`${process.env.JUMPSHARE_USERNAME}:${process.env.JUMPSHARE_PASSWORD}`).toString('base64');
-          downloadHeaders['Authorization'] = `Basic ${auth}`;
-          console.log(`Downloading with Basic auth for: ${process.env.JUMPSHARE_USERNAME}`);
-        }
-        
-        const response = await fetch(successfulResponse.url, {
-          timeout: 60000,
-          headers: downloadHeaders
-        });
-        
-        if (!response.ok) {
-          console.error(`Download failed: ${response.status} ${response.statusText}`);
-          throw new Error(`Download failed: ${response.status}`);
-        }
-
-        const actualContentType = response.headers.get('content-type') || successfulResponse.contentType;
-        console.log(`Successfully downloading: ${actualContentType}`);
-        
-        if (actualContentType.includes('text/html') || actualContentType.includes('application/json')) {
-          console.error('Download returned HTML/JSON instead of audio file');
-          throw new Error('Invalid content type received');
-        }
-
-        // Determine file extension from content type
-        let extension = '.mp3';
-        if (actualContentType.includes('wav')) extension = '.wav';
-        else if (actualContentType.includes('flac')) extension = '.flac';
-        else if (actualContentType.includes('aac')) extension = '.aac';
-
-        res.set({
-          'Content-Disposition': `attachment; filename="${mix.title}${extension}"`,
-          'Content-Type': actualContentType || 'application/octet-stream',
-          'Content-Length': response.headers.get('content-length') || ''
-        });
-
-        console.log(`Streaming real audio file: ${mix.title}${extension}`);
-        response.body?.pipe(res);
-      } catch (error) {
-        console.error('Download error - unable to access real file:', error);
-        
-        // Check if we have authentication configured
-        const hasAuth = process.env.JUMPSHARE_API_KEY || (process.env.JUMPSHARE_USERNAME && process.env.JUMPSHARE_PASSWORD);
-        
-        if (!hasAuth) {
-          console.error('No Jumpshare authentication configured - cannot access protected files');
-          return res.status(401).json({ 
-            error: "Authentication required", 
-            detail: "Jumpshare credentials needed to access real audio files" 
-          });
-        }
-        
-        console.error('Authentication failed - unable to download real file');
-        
-        const sampleRate = 22050;
-        const duration = 30;
-        const frequency = 440;
-        const numSamples = sampleRate * duration;
-        const dataSize = numSamples * 2;
-        const buffer = Buffer.alloc(44 + dataSize);
-        
-        let offset = 0;
-        buffer.write('RIFF', offset); offset += 4;
-        buffer.writeUInt32LE(36 + dataSize, offset); offset += 4;
-        buffer.write('WAVE', offset); offset += 4;
-        buffer.write('fmt ', offset); offset += 4;
-        buffer.writeUInt32LE(16, offset); offset += 4;
-        buffer.writeUInt16LE(1, offset); offset += 2;
-        buffer.writeUInt16LE(1, offset); offset += 2;
-        buffer.writeUInt32LE(sampleRate, offset); offset += 4;
-        buffer.writeUInt32LE(sampleRate * 2, offset); offset += 4;
-        buffer.writeUInt16LE(2, offset); offset += 2;
-        buffer.writeUInt16LE(16, offset); offset += 2;
-        buffer.write('data', offset); offset += 4;
-        buffer.writeUInt32LE(dataSize, offset); offset += 4;
-        
-        for (let i = 0; i < numSamples; i++) {
-          const progress = i / numSamples;
-          const currentFreq = frequency + (progress * 200);
-          const sample = Math.sin(2 * Math.PI * currentFreq * i / sampleRate) * 0.3 * 32767;
-          buffer.writeInt16LE(Math.round(sample), offset);
-          offset += 2;
-        }
-        
-        res.set({
-          'Content-Disposition': `attachment; filename="${mix.title}.wav"`,
-          'Content-Type': 'audio/wav',
-          'Content-Length': buffer.length.toString()
-        });
-        
-        return res.send(buffer);
-      }
-
     } catch (error) {
       console.error("Error downloading file:", error);
       res.status(500).json({ error: "Failed to download file" });
