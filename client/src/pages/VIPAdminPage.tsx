@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { VipMix } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
-import { Edit, Save, X, ExternalLink, Download, Play } from 'lucide-react';
+import { Edit, Save, X, ExternalLink, Download, Play, Zap, Upload, Cloud, Music } from 'lucide-react';
 
 export default function VIPAdminPage() {
   const [editingMix, setEditingMix] = useState<number | null>(null);
@@ -65,6 +65,41 @@ export default function VIPAdminPage() {
             VIP Content Management
           </h1>
           <p className="text-xl text-gray-300">Update Jumpshare Links For Your 1TB Collection</p>
+          
+          {/* Quick Admin Links */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <a
+              href="/jumpshare-extract"
+              className="inline-flex items-center px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-400/30 rounded-lg transition-all"
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Jumpshare Extractor
+            </a>
+            
+            <a
+              href="/bulk-import"
+              className="inline-flex items-center px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-400/30 rounded-lg transition-all"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Bulk Import CSV
+            </a>
+            
+            <a
+              href="/storage-setup"
+              className="inline-flex items-center px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-400/30 rounded-lg transition-all"
+            >
+              <Cloud className="h-4 w-4 mr-2" />
+              Storage Setup Guide
+            </a>
+            
+            <a
+              href="/vip"
+              className="inline-flex items-center px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-400/30 rounded-lg transition-all"
+            >
+              <Music className="h-4 w-4 mr-2" />
+              View VIP Page
+            </a>
+          </div>
         </header>
 
         <div className="space-y-6">

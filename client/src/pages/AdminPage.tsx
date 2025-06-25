@@ -22,7 +22,11 @@ import {
   BarChart3,
   AlertTriangle,
   Info,
-  Coffee } from 'lucide-react';
+  Coffee,
+  Zap,
+  Upload,
+  Cloud,
+  Music } from 'lucide-react';
 import { patreonService, DHR_PATREON_TIERS } from '../services/patreonService';
 import { subscriptionService } from '../services/subscriptionService';
 import { buyMeCoffeeService } from '../services/buyMeCoffeeService';
