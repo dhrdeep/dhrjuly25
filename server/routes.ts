@@ -582,10 +582,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`Mix ${mixId} found: ${mix.title}`);
+      console.log(`Mix object:`, JSON.stringify(mix, null, 2));
       
       // Stream directly from DigitalOcean Spaces - this is the ONLY option now
       if (!mix.s3_url) {
-        console.log(`No s3_url for mix ${mixId}, cannot stream`);
+        console.log(`No s3_url for mix ${mixId}, cannot stream - checking all fields:`, Object.keys(mix));
         return res.status(404).json({ error: "File not available for streaming" });
       }
 

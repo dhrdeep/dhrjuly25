@@ -32,20 +32,24 @@ export const vipMixes = pgTable("vip_mixes", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   artist: text("artist").notNull(),
-  genre: text("genre").notNull(),
-  duration: text("duration").notNull(), // e.g., "2h 45m"
-  fileSize: text("file_size").notNull(), // e.g., "378 MB"
-  filePath: text("file_path"), // Server file path (optional for external hosting)
-  jumpshareUrl: text("jumpshare_url"), // Jumpshare download/stream URL
-  jumpsharePreviewUrl: text("jumpshare_preview_url"), // Jumpshare preview URL for streaming
-  artworkUrl: text("artwork_url"),
+  genre: text("genre"),
+  duration: text("duration"),
+  file_size: text("file_size"), 
+  file_path: text("file_path"),
+  download_url: text("download_url"),
+  stream_url: text("stream_url"),
+  artwork_url: text("artwork_url"),
   description: text("description"),
-  rating: integer("rating").default(0), // 1-5 stars
-  totalDownloads: integer("total_downloads").default(0),
-  isExclusive: boolean("is_exclusive").default(true),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow()
+  rating: integer("rating").default(0),
+  total_downloads: integer("total_downloads").default(0),
+  is_exclusive: boolean("is_exclusive").default(true),
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+  updated_at: timestamp("updated_at").notNull().defaultNow(),
+  jumpshare_url: text("jumpshare_url"),
+  jumpshare_preview_url: text("jumpshare_preview_url"),
+  tags: text("tags"),
+  s3_url: text("s3_url")
 });
 
 export const userDownloads = pgTable("user_downloads", {
