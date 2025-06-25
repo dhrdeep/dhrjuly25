@@ -592,7 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const encodedPath = encodeURIComponent(mix.s3Url);
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
-        console.log(`Streaming from Spaces: ${spacesUrl}`);
+        console.log(`Generating signed URL for streaming: ${mix.title}`);
         
         // Use signed URLs with credentials for private access
         const AWS = require('aws-sdk');
@@ -1004,7 +1004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const encodedPath = encodeURIComponent(mix.s3Url);
         const spacesUrl = `https://dhrmixes.lon1.digitaloceanspaces.com/${encodedPath}`;
-        console.log(`Downloading from Spaces: ${spacesUrl}`);
+        console.log(`Generating signed URL for download: ${mix.title}`);
         
         // Use signed URLs with credentials for private access
         const AWS = require('aws-sdk');
