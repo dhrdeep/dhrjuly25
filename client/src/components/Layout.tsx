@@ -165,18 +165,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo with Elegant DHR Title */}
-            <Link to="/" className="flex items-center space-x-3">
-              <img 
-                src={DHR_LOGO_URL} 
-                alt="DHR Logo"
-                className="h-10 w-10 rounded-lg shadow-lg border border-orange-400/20"
-                onError={handleArtworkError}
-              />
+            <Link to="/" className="flex items-center space-x-4">
+              <div className="relative">
+                <img 
+                  src={DHR_LOGO_URL} 
+                  alt="DHR Logo"
+                  className="h-14 w-14 rounded-2xl shadow-2xl border-2 border-orange-400/50"
+                  onError={handleArtworkError}
+                />
+                <div className="absolute inset-0 rounded-2xl bg-orange-400/20 animate-pulse"></div>
+              </div>
               <div>
-                <span className="text-xl font-bold elegant-text bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-3xl font-black elegant-text bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                   DHR
                 </span>
-                <p className="text-xs text-gray-400 -mt-1">Deep House Radio</p>
+                <p className="text-sm text-gray-400 -mt-1 tracking-wider">DEEP HOUSE RADIO</p>
               </div>
             </Link>
 
