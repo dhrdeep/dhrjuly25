@@ -59,10 +59,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const socialLinks = [
     { name: 'Instagram', icon: Instagram, url: 'https://instagram.com/deephouseradio', color: '#E4405F' },
-    { name: 'Twitter', icon: Twitter, url: 'https://twitter.com/deephouseradio', color: '#1DA1F2' },
-    { name: 'Facebook', icon: Facebook, url: 'https://facebook.com/deephouseradio', color: '#4267B2' },
-    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/deephouseradio', color: '#FF0000' },
-    { name: 'SoundCloud', icon: Music, url: 'https://soundcloud.com/deephouseradio', color: '#FF5500' }
+    { name: 'Twitter', icon: Twitter, url: 'https://twitter.com/deephouseradi0', color: '#1DA1F2' },
+    { name: 'Facebook', icon: Facebook, url: 'https://facebook.com/deephouseradi0', color: '#4267B2' },
+    { name: 'YouTube', icon: Youtube, url: 'https://youtube.com/@deephouseradio', color: '#FF0000' },
   ];
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {

@@ -11,6 +11,15 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 25, 2025**: Complete User Experience Enhancement Package
+  - Fixed "Enter The Deep" button to properly scroll to free media player section on homepage
+  - Enhanced free media player with Pop Out and Sleep Timer buttons (removed playback speed per user request)
+  - Updated stream quality indicators: Free=128kbps with ads, Premium=320kbps uninterrupted
+  - Implemented subscription-based Track Identifier access (DHR1/DHR2/VIP subscribers only)
+  - Added live metadata display with API endpoint for real-time "Now Playing" information
+  - Updated social media links: Instagram @deephouseradio, Twitter/Facebook @deephouseradi0
+  - Applied title case capitalization throughout website as requested
+  - Maintained all existing functionality without removal per user requirements
 - **June 25, 2025**: Mobile App Store Links Restored
   - Added App Store and Google Play download buttons to homepage community section
   - Integrated app download links into navigation social share dropdown
@@ -138,8 +147,15 @@ The project uses environment variables for configuration:
 - Implement proper subscription expiration checking - deny access when subscriptions expire
 - Track identification feature requires active subscription (DHR1 or higher)
 - **Design Consistency**: Apply title case (Capital Letter At Start Of Every Word) for all text content
-- **Typography**: Use font-black weight for main headings to maintain modern, bold appearance
+- **Typography**: Use font-black weight for main headings to maintain modern, bold appearance  
 - **Simplicity Preference**: Keep implementations simple, use copy-paste approaches when they work effectively
+- **CRITICAL**: Never delete or remove working functionality without explicit user permission
+- **Navigation Flow**: "Enter The Deep" button scrolls to free media player (not Track Identifier)
+- **Access Control**: Track Identifier requires paid subscription (DHR1/DHR2/VIP), VIP functions require VIP membership
+- **Player Features**: Homepage player needs Pop Out and Sleep Timer buttons (no playback speed control)
+- **Social Media**: Instagram @deephouseradio, Twitter/Facebook @deephouseradi0
+- **Stream Quality**: Free=128kbps with ads, Premium=320kbps uninterrupted
+- **Live Metadata**: Scrape from Everestcast premium player 1 for accurate "LIVE NOW" information
 
 ## Migration Status
 ✅ **Completed Successfully**: 

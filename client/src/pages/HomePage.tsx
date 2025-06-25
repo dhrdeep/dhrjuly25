@@ -23,13 +23,17 @@ import {
   Waves,
   Volume2,
   Download,
-  Eye
+  Eye,
+  ExternalLink,
+  Clock,
+  Maximize2
 } from 'lucide-react';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
 const HomePage: React.FC = () => {
   const [currentSloganIndex, setCurrentSloganIndex] = useState(0);
+  const [liveTrackInfo, setLiveTrackInfo] = useState<{artist: string, title: string} | null>(null);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -48,6 +52,30 @@ const HomePage: React.FC = () => {
     }, 4000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch live track metadata from Everestcast API
+  useEffect(() => {
+    const fetchLiveMetadata = async () => {
+      try {
+        // Scrape metadata from Everestcast stream 1 (premium player)
+        const response = await fetch('/api/live-metadata');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.artist && data.title) {
+            setLiveTrackInfo({ artist: data.artist, title: data.title });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch live metadata:', error);
+      }
+    };
+
+    // Fetch immediately and then every 30 seconds
+    fetchLiveMetadata();
+    const metadataInterval = setInterval(fetchLiveMetadata, 30000);
+
+    return () => clearInterval(metadataInterval);
   }, []);
 
   const shareContent = (platform: string) => {
@@ -178,14 +206,20 @@ const HomePage: React.FC = () => {
             
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/track-ident"
+              <button
+                onClick={() => {
+                  // Scroll to the free media player section
+                  const playerSection = document.querySelector('[data-player-section]');
+                  if (playerSection) {
+                    playerSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
                 className="group flex items-center justify-center space-x-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-10 py-5 rounded-2xl text-lg font-bold shadow-2xl transform hover:scale-105 transition-all duration-300"
               >
                 <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
                 <span>Enter The Deep</span>
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </button>
               
               <Link
                 to="/vip"
@@ -325,7 +359,7 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* Live Player Section */}
-          <div className="bg-gradient-to-r from-gray-900/60 to-gray-800/60 rounded-3xl p-8 backdrop-blur-xl border border-orange-400/20">
+          <div data-player-section className="bg-gradient-to-r from-gray-900/60 to-gray-800/60 rounded-3xl p-8 backdrop-blur-xl border border-orange-400/20">
             <div className="text-center mb-8">
               <h3 className="text-3xl font-bold mb-4 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
                 Listen Live Now
@@ -348,8 +382,19 @@ const HomePage: React.FC = () => {
                   <h3 className="text-xl font-bold text-white">DHR Live Stream</h3>
                   <div className="flex items-center justify-center space-x-2 mt-2">
                     <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-orange-400">LIVE</span>
+                    <span className="text-sm text-orange-400">LIVE NOW</span>
                   </div>
+                  
+                  {/* Live Track Info */}
+                  {liveTrackInfo && (
+                    <div className="mt-3 p-3 bg-orange-500/10 rounded-lg border border-orange-400/20">
+                      <div className="text-center">
+                        <div className="text-sm text-orange-400 font-semibold mb-1">Now Playing:</div>
+                        <div className="text-white font-medium">{liveTrackInfo.artist}</div>
+                        <div className="text-gray-300 text-sm">"{liveTrackInfo.title}"</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Audio Player */}
@@ -368,10 +413,42 @@ const HomePage: React.FC = () => {
                   </audio>
                 </div>
 
+                {/* Player Controls */}
+                <div className="flex justify-center space-x-4 mb-6">
+                  <button 
+                    onClick={() => window.open('/', '_blank')}
+                    className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 px-4 py-2 rounded-lg text-orange-400 hover:text-orange-300 transition-colors"
+                    title="Pop Out Player"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span className="text-sm">Pop Out</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => {
+                      const minutes = prompt('Sleep timer (minutes):');
+                      if (minutes && !isNaN(Number(minutes))) {
+                        setTimeout(() => {
+                          const audio = document.querySelector('audio');
+                          if (audio) audio.pause();
+                          alert('Sleep timer activated - player stopped');
+                        }, Number(minutes) * 60 * 1000);
+                        alert(`Sleep timer set for ${minutes} minutes`);
+                      }
+                    }}
+                    className="flex items-center space-x-2 bg-blue-500/20 hover:bg-blue-500/30 px-4 py-2 rounded-lg text-blue-400 hover:text-blue-300 transition-colors"
+                    title="Sleep Timer"
+                  >
+                    <Clock className="h-4 w-4" />
+                    <span className="text-sm">Sleep Timer</span>
+                  </button>
+                </div>
+
                 {/* Stream Info */}
                 <div className="text-center text-sm text-gray-400">
-                  <p>320kbps • Stereo • 24/7</p>
+                  <p>128kbps • Free Stream • 24/7</p>
                   <p className="mt-1">Deep House Radio - The Deepest Beats On The Net</p>
+                  <p className="mt-1 text-xs text-orange-400">Upgrade for 320kbps uninterrupted premium streams</p>
                 </div>
               </div>
             </div>

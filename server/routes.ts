@@ -1365,6 +1365,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return 'vip';
   }
 
+  // Live metadata endpoint - scrape from Everestcast stream 1
+  app.get('/api/live-metadata', async (req, res) => {
+    try {
+      // Mock live metadata for now - replace with actual Everestcast scraping
+      const mockMetadata = {
+        artist: 'Deep House Artist',
+        title: 'Atmospheric Deep House Mix',
+        timestamp: new Date().toISOString()
+      };
+      
+      res.json(mockMetadata);
+    } catch (error) {
+      console.error('Error fetching live metadata:', error);
+      res.status(500).json({ error: 'Failed to fetch live metadata' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
