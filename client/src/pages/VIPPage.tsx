@@ -90,12 +90,16 @@ const VIPPage: React.FC = () => {
       const response = await fetch(`/api/vip-mixes/${mixId}`);
       if (response.ok) {
         const mix = await response.json();
-        if (mix.jumpsharePreviewUrl) {
-          // Open Jumpshare preview for streaming in new tab
-          window.open(mix.jumpsharePreviewUrl, '_blank', 'noopener,noreferrer');
-          setNotification(`Opening stream: ${mixTitle}`);
+        if (mix.jumpsharePreviewUrl && mix.jumpsharePreviewUrl.includes('jumpshare.com')) {
+          // Check if this is a real Jumpshare URL vs generated placeholder
+          if (mix.jumpsharePreviewUrl.includes('/preview/')) {
+            window.open(mix.jumpsharePreviewUrl, '_blank', 'noopener,noreferrer');
+            setNotification(`Opening stream: ${mixTitle}`);
+          } else {
+            setNotification(`Demo mode: ${mixTitle} - Real Jumpshare URL needed for audio playback`);
+          }
         } else {
-          setNotification(`Playing: ${mixTitle} (demo mode)`);
+          setNotification(`Demo mode: ${mixTitle} - Update with real Jumpshare URL in VIP Admin`);
         }
       }
     } catch (error) {
