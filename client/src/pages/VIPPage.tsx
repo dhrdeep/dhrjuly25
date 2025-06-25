@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Crown, Download, Play, Search, Filter, Star, Clock, Users, HardDrive, Lock, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Crown, Download, Play, Search, Filter, Star, Clock, Users, HardDrive, Lock, AlertCircle, Pause, Volume2 } from 'lucide-react';
 import { vipService, VipAccess } from '../services/vipService';
 import { VipMix } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import JumpsharePreview from '../components/JumpsharePreview';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -19,6 +18,12 @@ const VIPPage: React.FC = () => {
   });
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [notification, setNotification] = useState<string>('');
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Fetch VIP mixes from database
   const { data: vipMixes = [], isLoading } = useQuery({

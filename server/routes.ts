@@ -540,6 +540,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Proxy route to stream audio files without exposing external URLs
+  app.get("/api/stream/:mixId", async (req, res) => {
+    try {
+      const mixId = parseInt(req.params.mixId);
+      const mix = await storage.getVipMix(mixId);
+      
+      if (!mix) {
+        return res.status(404).json({ error: "Mix not found" });
+      }
+
+      // For demo purposes with placeholder URLs, return a sample audio file
+      // In production, you would fetch from mix.jumpshareUrl
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder')) {
+        // Return a sample audio URL for testing
+        return res.redirect('https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav');
+      }
+
+      // In production, proxy the real Jumpshare URL
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(mix.jumpshareUrl);
+      
+      if (!response.ok) {
+        return res.status(404).json({ error: "Audio file not accessible" });
+      }
+
+      res.set({
+        'Content-Type': response.headers.get('content-type') || 'audio/mpeg',
+        'Content-Length': response.headers.get('content-length'),
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=3600'
+      });
+
+      response.body?.pipe(res);
+
+    } catch (error) {
+      console.error("Error streaming audio:", error);
+      res.status(500).json({ error: "Failed to stream audio" });
+    }
+  });
+
+  // Proxy route for downloading files without exposing external source
+  app.get("/api/file/:mixId", async (req, res) => {
+    try {
+      const mixId = parseInt(req.params.mixId);
+      const { userId } = req.query;
+
+      if (!userId) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Check VIP access (same logic as download endpoint)
+      if (userId !== 'demo_user') {
+        const user = await storage.getUser(userId as string);
+        if (!user || user.subscriptionTier !== 'vip') {
+          return res.status(403).json({ error: "VIP subscription required" });
+        }
+      }
+
+      const mix = await storage.getVipMix(mixId);
+      if (!mix) {
+        return res.status(404).json({ error: "Mix not found" });
+      }
+
+      // For demo purposes with placeholder URLs
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder')) {
+        return res.status(404).json({ error: "Demo mode - Real file URL needed" });
+      }
+
+      // In production, proxy the real Jumpshare download URL
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(mix.jumpshareUrl);
+      
+      if (!response.ok) {
+        return res.status(404).json({ error: "File not accessible" });
+      }
+
+      res.set({
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${mix.title} - ${mix.artist}.mp3"`,
+        'Content-Length': response.headers.get('content-length'),
+      });
+
+      response.body?.pipe(res);
+
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      res.status(500).json({ error: "Failed to download file" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
