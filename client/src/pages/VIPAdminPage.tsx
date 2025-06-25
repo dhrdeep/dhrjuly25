@@ -102,7 +102,7 @@ export default function VIPAdminPage() {
         </header>
 
         <div className="space-y-6">
-          {vipMixes.map((mix: VipMix) => (
+          {(vipMixes as VipMix[]).map((mix: VipMix) => (
             <div key={mix.id} className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 border border-orange-400/20">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

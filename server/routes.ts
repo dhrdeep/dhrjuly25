@@ -493,6 +493,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newUsedCount = (currentLimit?.downloadsUsed || 0) + 1;
       
       await storage.updateDailyDownloadLimit(userId, {
+        userId,
+        downloadDate: today,
         downloadsUsed: newUsedCount,
         maxDownloads: 2 // VIP daily limit
       });

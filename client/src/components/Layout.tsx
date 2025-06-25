@@ -108,7 +108,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (!currentUser) return 'text-gray-400';
     switch (currentUser.subscriptionTier) {
       case 'vip': return 'text-orange-400';
-      case 'premium': return 'text-amber-400';
+      case 'dhr2': return 'text-amber-400';
+      case 'dhr1': return 'text-yellow-400';
       default: return 'text-gray-400';
     }
   };

@@ -182,7 +182,10 @@ export class DrizzleStorage implements IStorage {
     if (!limit) {
       // For demo_user, initialize with 2 downloads if no record exists
       if (userId === 'demo_user') {
+        const today = new Date().toISOString().split('T')[0];
         await this.updateDailyDownloadLimit(userId, {
+          userId,
+          downloadDate: today,
           downloadsUsed: 0,
           maxDownloads: 2
         });
