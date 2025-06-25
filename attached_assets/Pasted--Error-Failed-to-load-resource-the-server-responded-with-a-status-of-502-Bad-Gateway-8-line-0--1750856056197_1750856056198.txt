@@ -1,0 +1,98 @@
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (8, line 0)
+[Error] Audio error:
+SyntheticBaseEvent
+
+_reactName: "onError"
+
+_targetInst: null
+
+bubbles: false
+
+cancelable: true
+
+currentTarget: null
+
+defaultPrevented: false
+
+eventPhase: 2
+
+isDefaultPrevented: function()
+
+isPropagationStopped: function()
+
+isTrusted: true
+
+nativeEvent: Event {isTrusted: true, type: "error", target: <audio>, currentTarget: null, eventPhase: 0, …}
+
+target: <audio>
+
+timeStamp: 10364
+
+type: "error"
+
+SyntheticBaseEvent Prototype
+	onError (VIPPage.tsx:1173)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+[Error] Failed to load resource: the server responded with a status of 502 (Bad Gateway) (8, line 0)
+[Error] Audio error:
+SyntheticBaseEvent
+
+_reactName: "onError"
+
+_targetInst: null
+
+bubbles: false
+
+cancelable: true
+
+currentTarget: null
+
+defaultPrevented: false
+
+eventPhase: 2
+
+isDefaultPrevented: function()
+
+isPropagationStopped: function()
+
+isTrusted: true
+
+nativeEvent: Event {isTrusted: true, type: "error", target: <audio>, currentTarget: null, eventPhase: 0, …}
+
+target: <audio>
+
+timeStamp: 32597
+
+type: "error"
+
+SyntheticBaseEvent Prototype
+	onError (VIPPage.tsx:1173)
+	callCallback2 (chunk-UZOKQUDP.js:3674)
+	dispatchEvent
+	invokeGuardedCallbackDev (chunk-UZOKQUDP.js:3699)
+	invokeGuardedCallback (chunk-UZOKQUDP.js:3733)
+	invokeGuardedCallbackAndCatchFirstError (chunk-UZOKQUDP.js:3736)
+	executeDispatch (chunk-UZOKQUDP.js:7014)
+	processDispatchQueueItemsInOrder (chunk-UZOKQUDP.js:7034)
+	processDispatchQueue (chunk-UZOKQUDP.js:7043)
+	dispatchEventsForPlugins (chunk-UZOKQUDP.js:7051)
+	batchedUpdates$1 (chunk-UZOKQUDP.js:18913)
+	batchedUpdates (chunk-UZOKQUDP.js:3579)
+	dispatchEventForPluginEventSystem (chunk-UZOKQUDP.js:7173)
+	dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay (chunk-UZOKQUDP.js:5478)
+	dispatchEvent (chunk-UZOKQUDP.js:5472:93)
+> Selected Element
+< <polygon points="6 3 20 12 6 21 6 3"></polygon>

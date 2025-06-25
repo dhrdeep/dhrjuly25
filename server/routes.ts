@@ -682,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Build authentication headers if credentials are available
             const authHeaders = {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+              'Accept': 'audio/*,video/*,application/octet-stream,application/json,*/*',
               'Referer': 'https://jumpshare.com/'
             };
             
@@ -707,9 +707,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const contentType = testResponse.headers.get('content-type') || '';
             console.log(`${directUrl} -> ${testResponse.status} (${contentType})`);
             
+            // For API endpoints, check if we get JSON with download URL
+            if (testResponse.ok && contentType.includes('application/json')) {
+              try {
+                const jsonResponse = await fetch(directUrl, {
+                  method: 'GET',
+                  timeout: 15000,
+                  headers: authHeaders
+                });
+                const data = await jsonResponse.json();
+                console.log(`API response:`, JSON.stringify(data, null, 2));
+                
+                // Look for download URL in the response
+                if (data.download_url || data.downloadUrl || data.url) {
+                  const downloadUrl = data.download_url || data.downloadUrl || data.url;
+                  console.log(`Found download URL from API: ${downloadUrl}`);
+                  successfulResponse = { url: downloadUrl, contentType: 'audio/mpeg' };
+                  break;
+                }
+              } catch (e) {
+                console.log(`Failed to parse JSON from ${directUrl}`);
+              }
+            }
+            
+            // For direct audio content
             if (testResponse.ok && 
                 !contentType.includes('text/html') && 
-                !contentType.includes('application/json')) {
+                (contentType.includes('audio') || contentType.includes('octet-stream'))) {
               console.log(`Found working URL: ${directUrl}`);
               successfulResponse = { url: directUrl, contentType };
               break;
@@ -1020,7 +1044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Build authentication headers for download testing
             const downloadAuthHeaders = {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Accept': 'audio/*,video/*,application/octet-stream,*/*',
+              'Accept': 'audio/*,video/*,application/octet-stream,application/json,*/*',
               'Referer': 'https://jumpshare.com/'
             };
             
@@ -1043,9 +1067,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const contentType = testResponse.headers.get('content-type') || '';
             console.log(`${testUrl} -> ${testResponse.status} (${contentType})`);
             
+            // For API endpoints, check if we get JSON with download URL
+            if (testResponse.ok && contentType.includes('application/json')) {
+              try {
+                const jsonResponse = await fetch(testUrl, {
+                  method: 'GET',
+                  timeout: 15000,
+                  headers: downloadAuthHeaders
+                });
+                const data = await jsonResponse.json();
+                console.log(`Download API response:`, JSON.stringify(data, null, 2));
+                
+                // Look for download URL in the response
+                if (data.download_url || data.downloadUrl || data.url) {
+                  const downloadUrl = data.download_url || data.downloadUrl || data.url;
+                  console.log(`Found download URL from API: ${downloadUrl}`);
+                  successfulResponse = { url: downloadUrl, contentType: 'audio/mpeg' };
+                  break;
+                }
+              } catch (e) {
+                console.log(`Failed to parse download JSON from ${testUrl}`);
+              }
+            }
+            
+            // For direct audio content
             if (testResponse.ok && 
                 !contentType.includes('text/html') && 
-                !contentType.includes('application/json')) {
+                (contentType.includes('audio') || contentType.includes('octet-stream'))) {
               console.log(`Found working download URL: ${testUrl}`);
               successfulResponse = { url: testUrl, contentType };
               break;
