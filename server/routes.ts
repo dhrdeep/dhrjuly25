@@ -377,6 +377,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/vip-mixes/bulk-import", async (req, res) => {
+    try {
+      const { mixes } = req.body;
+      if (!Array.isArray(mixes) || mixes.length === 0) {
+        return res.status(400).json({ error: "Invalid mixes data" });
+      }
+
+      const results = { success: 0, errors: [] as string[] };
+      
+      for (let i = 0; i < mixes.length; i++) {
+        try {
+          const mixData = {
+            ...mixes[i],
+            rating: 5,
+            totalDownloads: 0,
+            isExclusive: true,
+            isActive: true
+          };
+          
+          const validatedData = insertVipMixSchema.parse(mixData);
+          await storage.createVipMix(validatedData);
+          results.success++;
+        } catch (error) {
+          results.errors.push(`Mix ${i + 1}: ${error.message}`);
+        }
+      }
+      
+      res.json(results);
+    } catch (error) {
+      console.error("Error in bulk import:", error);
+      res.status(500).json({ error: "Failed to process bulk import" });
+    }
+  });
+
   // Download tracking and access control
   app.post("/api/download/:mixId", async (req, res) => {
     try {

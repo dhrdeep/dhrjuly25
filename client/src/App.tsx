@@ -13,6 +13,8 @@ import UploadPage from './pages/UploadPage';
 import ShopPage from './pages/ShopPage';
 import SimpleAdminPage from './pages/SimpleAdminPage';
 import VIPAdminPage from './pages/VIPAdminPage';
+import BulkImportPage from './pages/BulkImportPage';
+import JumpshareSetupPage from './pages/JumpshareSetupPage';
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/admin" element={<SimpleAdminPage />} />
             <Route path="/vip-admin" element={<VIPAdminPage />} />
+            <Route path="/bulk-import" element={<BulkImportPage />} />
+            <Route path="/storage-setup" element={<JumpshareSetupPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
           </Routes>
         </Layout>
