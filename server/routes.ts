@@ -578,13 +578,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // For demo purposes with placeholder URLs, generate a simple tone
+      // For demo purposes with placeholder URLs, proxy a working audio file
       if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || !mix.jumpshareUrl.startsWith('http')) {
         console.log(`Serving demo audio for mix ${mixId}`);
         
-        // For demo purposes, just redirect to a working audio stream
-        console.log('Redirecting to working audio stream for demo');
-        return res.redirect('https://archive.org/download/testmp3testfile/mpthreetest.mp3');
+        try {
+          // Proxy a working audio file from archive.org
+          const fetch = (await import('node-fetch')).default;
+          const audioUrl = 'https://archive.org/download/testmp3testfile/mpthreetest.mp3';
+          const response = await fetch(audioUrl);
+          
+          if (!response.ok) {
+            console.error(`Demo audio fetch failed: ${response.status}`);
+            return res.status(404).json({ error: "Demo audio not available" });
+          }
+
+          // Set proper headers for audio streaming
+          res.set({
+            'Content-Type': 'audio/mpeg',
+            'Content-Length': response.headers.get('content-length') || '',
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=3600',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+            'Access-Control-Allow-Headers': 'Range'
+          });
+
+          // Stream the audio directly to client
+          response.body?.pipe(res);
+          return;
+        } catch (error) {
+          console.error('Demo audio proxy error:', error);
+          return res.status(502).json({ error: "Demo audio streaming failed" });
+        }
       }
 
       // In production, proxy the real Jumpshare URL
