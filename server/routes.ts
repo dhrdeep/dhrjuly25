@@ -583,8 +583,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Mix ${mixId} found: ${mix.title}, URL: ${mix.jumpshareUrl}`);
 
-      // Check if we have a valid Jumpshare URL to work with
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK')) {
+      // Only use demo audio for mixes that explicitly don't have real URLs
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK') || !mix.jumpshareUrl.startsWith('http')) {
         console.log(`Serving demo audio for mix ${mixId}`);
         
         try {
@@ -686,7 +686,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if we got HTML instead of audio
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('text/html')) {
-          console.error('Received HTML instead of audio, falling back to demo audio');
+          console.error('Received HTML instead of audio, trying alternative URL patterns');
+          
+          // Try alternative Jumpshare URL patterns
+          const fileId = mix.jumpshareUrl.split('/v/')[1];
+          const alternativeUrls = [
+            `https://jumpshare.com/s/${fileId}`,
+            `https://jumpshare.com/download/${fileId}`,
+            `https://jumpshare.com/d/${fileId}`
+          ];
+          
+          for (const altUrl of alternativeUrls) {
+            try {
+              console.log(`Trying alternative URL: ${altUrl}`);
+              const altResponse = await fetch(altUrl, {
+                timeout: 10000,
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (compatible; DHR-Player/1.0)',
+                  'Accept': 'audio/*,*/*;q=0.1'
+                }
+              });
+              
+              if (altResponse.ok && !altResponse.headers.get('content-type')?.includes('text/html')) {
+                console.log(`Alternative URL worked: ${altUrl}`);
+                res.set({
+                  'Content-Type': altResponse.headers.get('content-type') || 'audio/mpeg',
+                  'Content-Length': altResponse.headers.get('content-length') || '',
+                  'Accept-Ranges': 'bytes',
+                  'Cache-Control': 'public, max-age=3600',
+                  'Access-Control-Allow-Origin': '*'
+                });
+                
+                if (altResponse.body) {
+                  return altResponse.body.pipe(res);
+                }
+              }
+            } catch (e) {
+              console.log(`Alternative URL failed: ${altUrl}`);
+            }
+          }
+          
+          console.error('All URL patterns failed, falling back to demo audio');
           // Fall back to demo audio generation
           const sampleRate = 22050;
           const duration = 3;
@@ -795,8 +835,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Mix not found" });
       }
 
-      // For demo purposes with placeholder URLs, provide a demo download
-      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK')) {
+      // Only generate demo downloads for mixes that explicitly don't have real URLs  
+      if (!mix.jumpshareUrl || mix.jumpshareUrl.includes('placeholder') || mix.jumpshareUrl.includes('YOUR_ACTUAL_DOWNLOAD_LINK') || !mix.jumpshareUrl.startsWith('http')) {
         console.log('Generating demo file for download');
         
         // Generate a longer demo audio file (30 seconds) for downloads
