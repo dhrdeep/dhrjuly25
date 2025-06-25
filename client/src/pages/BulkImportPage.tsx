@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Upload, Download, FileText, AlertCircle, CheckCircle, Search, Cloud } from 'lucide-react';
+import { Upload, Download, FileText, AlertCircle, CheckCircle, Search, Cloud, Zap } from 'lucide-react';
 
 interface BulkMix {
   title: string;
@@ -165,17 +165,25 @@ export default function BulkImportPage() {
               </h2>
               
               <p className="text-gray-300 mb-4">
-                Ready to import your mix collection? Use the example data or paste your own CSV. 
-                For 1000+ mixes, check our storage setup guides for the best hosting solution.
+                Ready to import your mix collection? If you have a Jumpshare activity export, 
+                use the Jumpshare Extractor to automatically parse your collection.
               </p>
               
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href="/jumpshare-extract"
+                  className="inline-flex items-center px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-400/30 rounded-lg transition-all"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Extract From Jumpshare Export
+                </a>
+                
                 <a
                   href="/storage-setup"
                   className="inline-flex items-center px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-400/30 rounded-lg transition-all"
                 >
                   <Cloud className="h-4 w-4 mr-2" />
-                  View Storage Setup Guide
+                  Storage Setup Guide
                 </a>
                 
                 <button
