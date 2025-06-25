@@ -34,8 +34,9 @@ export class S3Provider implements FileHostingProvider {
       return mix.s3Url;
     }
     
-    // For DigitalOcean Spaces, construct the public URL
-    const publicUrl = `${this.endpoint}/${mix.s3Url}`;
+    // For DigitalOcean Spaces, construct the public URL with proper encoding
+    const encodedPath = encodeURIComponent(mix.s3Url);
+    const publicUrl = `${this.endpoint}/${encodedPath}`;
     console.log(`Generated Spaces URL: ${publicUrl}`);
     return publicUrl;
   }
