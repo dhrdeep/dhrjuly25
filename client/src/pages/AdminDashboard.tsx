@@ -80,7 +80,7 @@ export default function AdminDashboard() {
       title: 'User Management',
       description: 'View and manage subscribers',
       icon: Users,
-      href: '/admin',
+      href: '/user-management',
       color: 'text-green-500',
       priority: 'high'
     },

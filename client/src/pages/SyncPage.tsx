@@ -14,8 +14,13 @@ interface SyncResult {
 
 function SyncPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isPatreonLoading, setIsPatreonLoading] = useState(false);
+  const [isBmacLoading, setIsBmacLoading] = useState(false);
   const [result, setResult] = useState<SyncResult | null>(null);
+  const [patreonResult, setPatreonResult] = useState<any>(null);
+  const [bmacResult, setBmacResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [bmacApiKey, setBmacApiKey] = useState('');
 
   const handleSync = async () => {
     setIsLoading(true);
@@ -44,49 +49,78 @@ function SyncPage() {
     }
   };
 
+  const handlePatreonSync = async () => {
+    setIsPatreonLoading(true);
+    setError(null);
+    setPatreonResult(null);
+
+    try {
+      const response = await fetch('/api/sync-patreon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Patreon sync failed');
+      }
+
+      setPatreonResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setIsPatreonLoading(false);
+    }
+  };
+
+  const handleBmacSync = async () => {
+    if (!bmacApiKey.trim()) {
+      setError('Please enter your Buy Me a Coffee API key');
+      return;
+    }
+
+    setIsBmacLoading(true);
+    setError(null);
+    setBmacResult(null);
+
+    try {
+      const response = await fetch('/api/sync-bmac', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ apiKey: bmacApiKey }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Buy Me a Coffee sync failed');
+      }
+
+      setBmacResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setIsBmacLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-white mb-2">
-            Sync DigitalOcean Space
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-black bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent mb-2">
+            Sync System
           </h1>
-          <p className="text-slate-400 text-lg">
-            Automatically add new mix files from your Space to the database
+          <p className="text-gray-300">
+            Synchronize Patreon subscribers, Buy Me a Coffee supporters, and DigitalOcean Spaces content
           </p>
-        </div>
-
-        {/* Main Sync Card */}
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg mb-6">
-          <div className="p-6">
-            <h2 className="text-white text-xl font-semibold flex items-center gap-2 mb-2">
-              <Database className="w-5 h-5" />
-              Space Database Sync
-            </h2>
-            <p className="text-slate-400 mb-4">
-              This will scan your DigitalOcean Space for new MP3 files and automatically 
-              add them to the VIP mix database. Existing files will not be duplicated.
-            </p>
-            <button 
-              onClick={handleSync}
-              disabled={isLoading}
-              className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-orange-600/50 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Scanning Space...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4" />
-                  Sync New Files
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        </header>
 
         {/* Error Display */}
         {error && (
@@ -99,79 +133,181 @@ function SyncPage() {
           </div>
         )}
 
-        {/* Success Result */}
-        {result && result.success && (
-          <div className="bg-green-900/20 border border-green-700 rounded-lg mb-6">
-            <div className="p-6">
-              <h2 className="text-green-400 text-xl font-semibold flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5" />
-                Sync Completed Successfully
-              </h2>
-              <p className="text-green-300 mb-4">
-                {result.message}
-              </p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-3 bg-slate-700/50 rounded-lg">
-                  <div className="text-2xl font-bold text-white">{result.newFiles}</div>
-                  <div className="text-sm text-slate-400">New Files Found</div>
-                </div>
-                <div className="text-center p-3 bg-slate-700/50 rounded-lg">
-                  <div className="text-2xl font-bold text-white">{result.addedMixes.length}</div>
-                  <div className="text-sm text-slate-400">Mixes Added</div>
-                </div>
+        {/* Patreon Sync Section */}
+        <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-8 border border-orange-400/20 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <Database className="h-8 w-8 text-orange-400" />
+              <div>
+                <h2 className="text-2xl font-bold text-white">Patreon Sync</h2>
+                <p className="text-gray-400">Sync all Patreon campaign members and tiers</p>
               </div>
+            </div>
+            
+            <button
+              onClick={handlePatreonSync}
+              disabled={isPatreonLoading}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                isPatreonLoading
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              {isPatreonLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-5 w-5" />
+              )}
+              <span>{isPatreonLoading ? 'Syncing...' : 'Sync Patreon'}</span>
+            </button>
+          </div>
 
+          {patreonResult && (
+            <div className="mt-6 p-4 bg-green-900/30 border border-green-400/30 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+                <span className="text-green-300 font-medium">Patreon Sync Complete</span>
+              </div>
+              <p className="text-green-200">{patreonResult.message}</p>
+              <div className="text-sm text-green-300 mt-2">
+                Total: {patreonResult.totalPatrons} | New: {patreonResult.newUsers} | Updated: {patreonResult.updatedUsers}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Buy Me a Coffee Sync Section */}
+        <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-8 border border-blue-400/20 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <Database className="h-8 w-8 text-blue-400" />
+              <div>
+                <h2 className="text-2xl font-bold text-white">Buy Me a Coffee Sync</h2>
+                <p className="text-gray-400">Sync Buy Me a Coffee supporters</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <input
+              type="password"
+              value={bmacApiKey}
+              onChange={(e) => setBmacApiKey(e.target.value)}
+              placeholder="Enter Buy Me a Coffee API Key"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+            />
+          </div>
+
+          <button
+            onClick={handleBmacSync}
+            disabled={isBmacLoading || !bmacApiKey.trim()}
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              isBmacLoading || !bmacApiKey.trim()
+                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            {isBmacLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-5 w-5" />
+            )}
+            <span>{isBmacLoading ? 'Syncing...' : 'Sync BMAC'}</span>
+          </button>
+
+          {bmacResult && (
+            <div className="mt-6 p-4 bg-green-900/30 border border-green-400/30 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+                <span className="text-green-300 font-medium">BMAC Sync Complete</span>
+              </div>
+              <p className="text-green-200">{bmacResult.message}</p>
+              <div className="text-sm text-green-300 mt-2">
+                Total: {bmacResult.totalSupporters} | New: {bmacResult.newUsers} | Updated: {bmacResult.updatedUsers}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* DigitalOcean Spaces Sync Section */}
+        <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-8 border border-orange-400/20 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <Database className="h-8 w-8 text-orange-400" />
+              <div>
+                <h2 className="text-2xl font-bold text-white">DigitalOcean Spaces Sync</h2>
+                <p className="text-gray-400">Scan dhrmixes Space for new content</p>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleSync}
+              disabled={isLoading}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                isLoading
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
+            >
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-5 w-5" />
+              )}
+              <span>{isLoading ? 'Syncing...' : 'Sync Spaces'}</span>
+            </button>
+          </div>
+
+          {result && result.success && (
+            <div className="mt-6 p-4 bg-green-900/30 border border-green-400/30 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+                <span className="text-green-300 font-medium">Spaces Sync Complete</span>
+              </div>
+              <p className="text-green-200">{result.message}</p>
+              <div className="text-sm text-green-300 mt-2">
+                New Files: {result.newFiles} | Added Mixes: {result.addedMixes.length}
+              </div>
               {result.addedMixes.length > 0 && (
-                <div>
-                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                    <Music className="w-4 h-4" />
-                    Newly Added Mixes
-                  </h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {result.addedMixes.map((mix) => (
-                      <div key={mix.id} className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
-                        <div>
-                          <div className="text-white font-medium">{mix.title}</div>
-                          <div className="text-sm text-slate-400">{mix.filename}</div>
-                        </div>
-                        <div className="px-2 py-1 bg-orange-600/20 text-orange-400 text-xs rounded">
-                          ID: {mix.id}
-                        </div>
+                <div className="mt-4">
+                  <h4 className="text-green-200 font-medium mb-2">Newly Added:</h4>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {result.addedMixes.map((mix: any) => (
+                      <div key={mix.id} className="text-sm text-green-100">
+                        {mix.title} ({mix.filename})
                       </div>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Instructions */}
-        <div className="bg-slate-800/30 border border-slate-700 rounded-lg">
-          <div className="p-6">
-            <h2 className="text-white text-xl font-semibold mb-4">How It Works</h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-orange-600 text-white text-xs flex items-center justify-center font-bold">1</div>
-                <div>
-                  <div className="text-white font-medium">Upload Files to DigitalOcean Space</div>
-                  <div className="text-slate-400 text-sm">Add new MP3 files to your dhrmixes Space</div>
-                </div>
+        {/* Usage Instructions */}
+        <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 border border-gray-400/20">
+          <h2 className="text-xl font-bold text-white mb-4">Sync Instructions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-orange-400 font-bold">1</span>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-orange-600 text-white text-xs flex items-center justify-center font-bold">2</div>
-                <div>
-                  <div className="text-white font-medium">Run Sync Operation</div>
-                  <div className="text-slate-400 text-sm">Click the sync button to scan for new files</div>
-                </div>
+              <h3 className="font-bold text-orange-300 mb-2">Patreon Sync</h3>
+              <p className="text-gray-400 text-sm">Import all campaign members with their subscription tiers and payment status</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-blue-400 font-bold">2</span>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-orange-600 text-white text-xs flex items-center justify-center font-bold">3</div>
-                <div>
-                  <div className="text-white font-medium">Automatic Database Update</div>
-                  <div className="text-slate-400 text-sm">New mixes are automatically added and available to VIP users</div>
-                </div>
+              <h3 className="font-bold text-blue-300 mb-2">BMAC Sync</h3>
+              <p className="text-gray-400 text-sm">Add Buy Me a Coffee supporters with API key authentication</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-orange-400 font-bold">3</span>
               </div>
+              <h3 className="font-bold text-orange-300 mb-2">Spaces Sync</h3>
+              <p className="text-gray-400 text-sm">Detect new MP3 files in DigitalOcean Space and add to VIP library</p>
             </div>
           </div>
         </div>

@@ -822,6 +822,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync Patreon subscribers
+  app.post("/api/sync-patreon", async (req, res) => {
+    try {
+      console.log("Starting Patreon sync...");
+      
+      // Get stored Patreon tokens
+      const tokens = await storage.getPatreonTokens();
+      if (!tokens || !tokens.accessToken) {
+        return res.status(401).json({ 
+          success: false, 
+          error: "No Patreon tokens found. Please authenticate first." 
+        });
+      }
+
+      const syncResults = {
+        totalPatrons: 0,
+        newUsers: 0,
+        updatedUsers: 0,
+        errors: [] as string[]
+      };
+
+      // Fetch campaign data
+      const campaignResponse = await fetch('https://www.patreon.com/api/oauth2/v2/campaigns?include=members&fields%5Bmember%5D=full_name,email,patron_status,currently_entitled_amount_cents,last_charge_status,last_charge_date,next_charge_date&fields%5Bcampaign%5D=patron_count', {
+        headers: {
+          'Authorization': `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!campaignResponse.ok) {
+        const errorText = await campaignResponse.text();
+        console.error('Patreon API error:', errorText);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Patreon API error: ${campaignResponse.status}` 
+        });
+      }
+
+      const campaignData = await campaignResponse.json();
+      const campaign = campaignData.data[0];
+      const members = campaignData.included || [];
+
+      syncResults.totalPatrons = members.length;
+
+      // Process each member
+      for (const member of members) {
+        try {
+          const attributes = member.attributes;
+          const patronId = member.id;
+          
+          if (!attributes.email) continue;
+
+          // Determine subscription tier based on amount
+          const amountCents = attributes.currently_entitled_amount_cents || 0;
+          let tier = 'free';
+          if (amountCents >= 1000) tier = 'vip';      // €10+
+          else if (amountCents >= 500) tier = 'dhr2';  // €5+
+          else if (amountCents >= 300) tier = 'dhr1';  // €3+
+
+          // Check if user exists
+          let user = await storage.getUserByEmail(attributes.email);
+          
+          const userData = {
+            id: patronId,
+            email: attributes.email,
+            username: attributes.full_name || `patron_${patronId}`,
+            subscriptionTier: tier,
+            subscriptionStatus: attributes.patron_status === 'active_patron' ? 'active' : 'inactive',
+            subscriptionSource: 'patreon',
+            subscriptionStartDate: attributes.last_charge_date ? new Date(attributes.last_charge_date) : new Date(),
+            patreonTier: tier,
+            preferences: {}
+          };
+
+          if (user) {
+            // Update existing user
+            await storage.updateUser(user.id, userData);
+            syncResults.updatedUsers++;
+          } else {
+            // Create new user
+            await storage.createUser(userData);
+            syncResults.newUsers++;
+          }
+        } catch (error) {
+          syncResults.errors.push(`Error processing member ${member.id}: ${error}`);
+        }
+      }
+
+      console.log(`Patreon sync completed: ${syncResults.newUsers} new, ${syncResults.updatedUsers} updated`);
+
+      res.json({
+        success: true,
+        message: `Synced ${syncResults.totalPatrons} Patreon members`,
+        ...syncResults
+      });
+
+    } catch (error) {
+      console.error('Patreon sync error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: (error as Error).message 
+      });
+    }
+  });
+
+  // Sync Buy Me a Coffee supporters
+  app.post("/api/sync-bmac", async (req, res) => {
+    try {
+      console.log("Starting Buy Me a Coffee sync...");
+      
+      const { apiKey } = req.body;
+      if (!apiKey) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Buy Me a Coffee API key required" 
+        });
+      }
+
+      const syncResults = {
+        totalSupporters: 0,
+        newUsers: 0,
+        updatedUsers: 0,
+        errors: [] as string[]
+      };
+
+      // Fetch supporters from Buy Me a Coffee API
+      const response = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        return res.status(500).json({ 
+          success: false, 
+          error: `Buy Me a Coffee API error: ${response.status}` 
+        });
+      }
+
+      const data = await response.json();
+      const supporters = data.data || [];
+
+      syncResults.totalSupporters = supporters.length;
+
+      // Process each supporter
+      for (const supporter of supporters) {
+        try {
+          const supporterId = supporter.supporter_id || supporter.id;
+          const email = supporter.supporter_email;
+          const name = supporter.supporter_name;
+          const amount = supporter.support_coffee_price || 3; // Default €3
+
+          if (!email) continue;
+
+          // Determine tier based on support amount
+          let tier = 'dhr1'; // Default for supporters
+          if (amount >= 10) tier = 'vip';
+          else if (amount >= 5) tier = 'dhr2';
+
+          // Check if user exists
+          let user = await storage.getUserByEmail(email);
+          
+          const userData = {
+            id: supporterId.toString(),
+            email: email,
+            username: name || `supporter_${supporterId}`,
+            subscriptionTier: tier,
+            subscriptionStatus: 'active',
+            subscriptionSource: 'bmac',
+            subscriptionStartDate: new Date(supporter.support_created_on || Date.now()),
+            patreonTier: null,
+            preferences: {}
+          };
+
+          if (user) {
+            await storage.updateUser(user.id, userData);
+            syncResults.updatedUsers++;
+          } else {
+            await storage.createUser(userData);
+            syncResults.newUsers++;
+          }
+        } catch (error) {
+          syncResults.errors.push(`Error processing supporter ${supporter.id}: ${error}`);
+        }
+      }
+
+      console.log(`BMAC sync completed: ${syncResults.newUsers} new, ${syncResults.updatedUsers} updated`);
+
+      res.json({
+        success: true,
+        message: `Synced ${syncResults.totalSupporters} Buy Me a Coffee supporters`,
+        ...syncResults
+      });
+
+    } catch (error) {
+      console.error('BMAC sync error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: (error as Error).message 
+      });
+    }
+  });
+
   // Sync DigitalOcean Space with database
   app.post("/api/sync-space", async (req, res) => {
     try {
@@ -842,6 +1046,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         error: (error as Error).message 
+      });
+    }
+  });
+
+  // Patreon sync endpoint
+  app.post('/api/sync-patreon', async (req, res) => {
+    try {
+      console.log('Starting Patreon sync...');
+      
+      // Get Patreon tokens from database
+      const tokens = await storage.getPatreonTokens();
+      if (!tokens) {
+        return res.status(401).json({
+          success: false,
+          error: 'No Patreon tokens found. Please authenticate first.'
+        });
+      }
+
+      // Fetch all campaign members with pagination
+      let allMembers: any[] = [];
+      let nextCursor: string | null = null;
+      let totalPatrons = 0;
+      let newUsers = 0;
+      let updatedUsers = 0;
+
+      do {
+        const url = new URL('https://www.patreon.com/api/oauth2/v2/campaigns/421011/members');
+        url.searchParams.set('include', 'currently_entitled_tiers,user');
+        url.searchParams.set('fields[member]', 'patron_status,currently_entitled_amount_cents,pledge_relationship_start,last_charge_date,last_charge_status,lifetime_support_cents');
+        url.searchParams.set('fields[user]', 'email,first_name,last_name,full_name,image_url');
+        url.searchParams.set('fields[tier]', 'title,amount_cents');
+        url.searchParams.set('page[count]', '1000');
+        
+        if (nextCursor) {
+          url.searchParams.set('page[cursor]', nextCursor);
+        }
+
+        const response = await fetch(url.toString(), {
+          headers: {
+            'Authorization': `Bearer ${tokens.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Patreon API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        allMembers = allMembers.concat(data.data || []);
+        nextCursor = data.meta?.pagination?.cursors?.next || null;
+        
+        console.log(`Fetched batch: ${data.data?.length || 0} members, Total so far: ${allMembers.length}`);
+      } while (nextCursor);
+
+      totalPatrons = allMembers.length;
+      console.log(`Total Patreon members fetched: ${totalPatrons}`);
+
+      // Process members and sync to database
+      for (const member of allMembers) {
+        try {
+          const userData = member.relationships?.user?.data;
+          const userInfo = member.included?.find((item: any) => item.type === 'user' && item.id === userData?.id);
+          
+          if (!userInfo || !userInfo.attributes?.email) continue;
+
+          const patronData = {
+            id: userInfo.id,
+            email: userInfo.attributes.email,
+            username: userInfo.attributes.full_name || userInfo.attributes.first_name || 'Unknown',
+            subscriptionTier: mapPatreonTier(member.attributes.currently_entitled_amount_cents),
+            subscriptionStatus: member.attributes.patron_status === 'active_patron' ? 'active' : 'inactive',
+            subscriptionSource: 'patreon',
+            subscriptionStartDate: member.attributes.pledge_relationship_start ? new Date(member.attributes.pledge_relationship_start) : null,
+            patreonTier: member.attributes.currently_entitled_amount_cents ? `€${(member.attributes.currently_entitled_amount_cents / 100).toFixed(2)}` : null,
+            preferences: {},
+            lastLoginAt: null
+          };
+
+          // Check if user exists
+          const existingUser = await storage.getUser(userInfo.id);
+          
+          if (existingUser) {
+            await storage.updateUser(userInfo.id, patronData);
+            updatedUsers++;
+          } else {
+            await storage.createUser(patronData);
+            newUsers++;
+          }
+        } catch (memberError) {
+          console.error('Error processing member:', memberError);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Patreon sync completed successfully`,
+        totalPatrons,
+        newUsers,
+        updatedUsers
+      });
+
+    } catch (error) {
+      console.error('Patreon sync error:', error);
+      res.status(500).json({
+        success: false,
+        error: (error as Error).message
+      });
+    }
+  });
+
+  // Buy Me a Coffee sync endpoint
+  app.post('/api/sync-bmac', async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey) {
+        return res.status(400).json({
+          success: false,
+          error: 'Buy Me a Coffee API key is required'
+        });
+      }
+
+      console.log('Starting Buy Me a Coffee sync...');
+      
+      // Fetch supporters from BMAC API
+      const response = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`BMAC API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const supporters = data.data || [];
+      
+      let totalSupporters = supporters.length;
+      let newUsers = 0;
+      let updatedUsers = 0;
+
+      // Process supporters
+      for (const supporter of supporters) {
+        try {
+          const supporterData = {
+            id: `bmac_${supporter.supporter_name.replace(/\s+/g, '_').toLowerCase()}`,
+            email: supporter.supporter_email || `${supporter.supporter_name.replace(/\s+/g, '_').toLowerCase()}@buymeacoffee.com`,
+            username: supporter.supporter_name,
+            subscriptionTier: mapBmacTier(supporter.total_amount),
+            subscriptionStatus: 'active',
+            subscriptionSource: 'buymeacoffee',
+            subscriptionStartDate: supporter.coffee_bought_on ? new Date(supporter.coffee_bought_on) : null,
+            patreonTier: null,
+            preferences: {},
+            lastLoginAt: null
+          };
+
+          // Check if user exists
+          const existingUser = await storage.getUser(supporterData.id);
+          
+          if (existingUser) {
+            await storage.updateUser(supporterData.id, supporterData);
+            updatedUsers++;
+          } else {
+            await storage.createUser(supporterData);
+            newUsers++;
+          }
+        } catch (supporterError) {
+          console.error('Error processing supporter:', supporterError);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Buy Me a Coffee sync completed successfully`,
+        totalSupporters,
+        newUsers,
+        updatedUsers
+      });
+
+    } catch (error) {
+      console.error('BMAC sync error:', error);
+      res.status(500).json({
+        success: false,
+        error: (error as Error).message
+      });
+    }
+  });
+
+  // Test storage connection endpoint
+  app.post('/api/test-storage', async (req, res) => {
+    try {
+      const { accessKey, secretKey, bucket, region, endpoint } = req.body;
+      
+      if (!accessKey || !secretKey || !bucket) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required credentials (accessKey, secretKey, bucket)'
+        });
+      }
+
+      // Test connection by attempting to list objects
+      const { testSpacesConnection } = await import('./migration-helper');
+      const testResult = await testSpacesConnection();
+      
+      res.json({
+        success: true,
+        message: 'Storage connection test successful',
+        details: {
+          bucket,
+          region,
+          endpoint,
+          testResult
+        }
+      });
+    } catch (error) {
+      console.error('Storage test error:', error);
+      res.status(500).json({
+        success: false,
+        error: (error as Error).message
+      });
+    }
+  });
+
+  // Admin users endpoint
+  app.get('/api/admin/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch users' 
       });
     }
   });
@@ -881,6 +1321,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Helper functions for tier mapping
+  function mapPatreonTier(amountCents: number): string {
+    if (!amountCents || amountCents < 300) return 'free';
+    if (amountCents < 500) return 'dhr1';
+    if (amountCents < 1000) return 'dhr2';
+    return 'vip';
+  }
+
+  function mapBmacTier(totalAmount: number): string {
+    if (!totalAmount || totalAmount < 3) return 'free';
+    if (totalAmount < 5) return 'dhr1';
+    if (totalAmount < 10) return 'dhr2';
+    return 'vip';
+  }
 
   const httpServer = createServer(app);
   return httpServer;
