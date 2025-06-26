@@ -401,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.createVipMix(validatedData);
           results.success++;
         } catch (error) {
-          results.errors.push(`Mix ${i + 1}: ${error.message}`);
+          results.errors.push(`Mix ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
       
@@ -429,11 +429,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const cacheKey = `demo_downloads_${today}`;
         
         // Use a simple counter (in production this would be in Redis or database)
-        if (!global.demoDownloadCache) {
-          global.demoDownloadCache = {};
+        if (!(global as any).demoDownloadCache) {
+          (global as any).demoDownloadCache = {};
         }
         
-        const currentDownloads = global.demoDownloadCache[cacheKey] || 0;
+        const currentDownloads = (global as any).demoDownloadCache[cacheKey] || 0;
         if (currentDownloads >= 2) {
           return res.status(429).json({ error: "Daily download limit reached (2 downloads per day)" });
         }
@@ -444,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Increment counter
-        global.demoDownloadCache[cacheKey] = currentDownloads + 1;
+        (global as any).demoDownloadCache[cacheKey] = currentDownloads + 1;
         
         // Use file hosting service for demo downloads
         const downloadUrl = await fileHostingService.getDownloadUrl(mix);
@@ -452,7 +452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           success: true,
           downloadUrl,
-          remainingDownloads: 2 - global.demoDownloadCache[cacheKey],
+          remainingDownloads: 2 - (global as any).demoDownloadCache[cacheKey],
           mix: {
             title: mix.title,
             artist: mix.artist,
@@ -535,11 +535,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const today = new Date().toISOString().split('T')[0];
         const cacheKey = `demo_downloads_${today}`;
         
-        if (!global.demoDownloadCache) {
-          global.demoDownloadCache = {};
+        if (!(global as any).demoDownloadCache) {
+          (global as any).demoDownloadCache = {};
         }
         
-        const used = global.demoDownloadCache[cacheKey] || 0;
+        const used = (global as any).demoDownloadCache[cacheKey] || 0;
         const remaining = Math.max(0, 2 - used);
         
         res.json({
@@ -670,13 +670,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check VIP access and download limits for all users including demo
       if (userId === 'demo_user') {
         // Reset demo cache to allow fresh testing
-        if (!global.demoDownloadCache) {
-          global.demoDownloadCache = {};
+        if (!(global as any).demoDownloadCache) {
+          (global as any).demoDownloadCache = {};
         }
         
         const today = new Date().toISOString().split('T')[0];
         const cacheKey = `demo_downloads_${today}`;
-        const currentDownloads = global.demoDownloadCache[cacheKey] || 0;
+        const currentDownloads = (global as any).demoDownloadCache[cacheKey] || 0;
         
         console.log(`Demo user downloads today: ${currentDownloads}/2`);
         
@@ -685,8 +685,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Increment download counter for demo user BEFORE processing download
-        global.demoDownloadCache[cacheKey] = currentDownloads + 1;
-        console.log(`Demo user download count incremented to: ${global.demoDownloadCache[cacheKey]}/2`);
+        (global as any).demoDownloadCache[cacheKey] = currentDownloads + 1;
+        console.log(`Demo user download count incremented to: ${(global as any).demoDownloadCache[cacheKey]}/2`);
       } else {
         const user = await storage.getUser(userId as string);
         if (!user || user.subscriptionTier !== 'vip') {

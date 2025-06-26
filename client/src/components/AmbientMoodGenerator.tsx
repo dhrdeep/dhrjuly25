@@ -313,7 +313,7 @@ export default function AmbientMoodGenerator({ currentTrack, isPlaying, classNam
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 0.6; transform: scale(1.05); }

@@ -34,7 +34,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   // Check for casting capabilities
   useEffect(() => {
     // Check for native Web Share API or native device casting
-    if (navigator.share || 'mediaSession' in navigator) {
+    if (navigator.share || ('mediaSession' in navigator)) {
       setIsCastAvailable(true);
     }
     

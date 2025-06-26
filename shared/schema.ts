@@ -10,7 +10,9 @@ export const users = pgTable("users", {
   subscriptionStatus: text("subscription_status").notNull().default('active'), // 'active', 'inactive', 'cancelled'
   subscriptionSource: text("subscription_source").default('local'), // 'local', 'patreon', 'stripe'
   subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionExpiry: timestamp("subscription_expiry"),
   patreonTier: text("patreon_tier"),
+  totalDownloads: integer("total_downloads").default(0),
   preferences: jsonb("preferences").default({}),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastLoginAt: timestamp("last_login_at")
