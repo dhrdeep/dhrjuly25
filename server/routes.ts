@@ -1372,52 +1372,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Live metadata endpoint - get REAL track info from DHR stream
   app.get('/api/live-metadata', async (req, res) => {
     try {
+      // Try shell command approach first (works in development)
       const { exec } = await import('child_process');
       
-      // Use a shell command to extract the actual metadata
-      exec('timeout 10s curl -s "https://streaming.shoutcast.com/dhr" --header "Icy-MetaData: 1" | strings | grep -o "StreamTitle=\'[^\']*\'" | head -1', 
-        async (error: any, stdout: any, stderr: any) => {
-          if (stdout && stdout.trim()) {
-            const match = stdout.match(/StreamTitle='([^']+)'/);
-            if (match && match[1]) {
-              const songTitle = match[1].trim();
-              console.log('Real track extracted:', songTitle);
-              
-              if (songTitle.length > 5 && 
-                  !songTitle.toLowerCase().includes('dhr') && 
-                  !songTitle.toLowerCase().includes('deep house radio')) {
-                
-                const metadata = {
-                  artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
-                  title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
-                  timestamp: new Date().toISOString()
-                };
-                
-                console.log('✅ REAL metadata from stream:', metadata);
-                return res.json(metadata);
-              }
-            }
-          }
-          
-          // Shell command failed, try Node.js HTTP approach for production deployment
-          try {
-            console.log('Shell command failed, trying Node.js HTTP approach for production...');
-            const fetch = (await import('node-fetch')).default;
-            
-            const response = await fetch('https://streaming.shoutcast.com/dhr', {
-              headers: {
-                'Icy-MetaData': '1',
-                'User-Agent': 'DHR-Metadata-Extractor/1.0'
-              }
-            });
-            
-            if (response.ok) {
-              const data = await response.text();
-              const streamTitleMatch = data.match(/StreamTitle='([^']+)'/);
-              
-              if (streamTitleMatch && streamTitleMatch[1]) {
-                const songTitle = streamTitleMatch[1].trim();
-                console.log('Real track extracted via Node.js HTTP:', songTitle);
+      const useShellCommand = new Promise((resolve) => {
+        exec('timeout 10s curl -s "https://streaming.shoutcast.com/dhr" --header "Icy-MetaData: 1" | strings | grep -o "StreamTitle=\'[^\']*\'" | head -1', 
+          (error: any, stdout: any, stderr: any) => {
+            if (stdout && stdout.trim()) {
+              const match = stdout.match(/StreamTitle='([^']+)'/);
+              if (match && match[1]) {
+                const songTitle = match[1].trim();
+                console.log('Real track extracted via shell:', songTitle);
                 
                 if (songTitle.length > 5 && 
                     !songTitle.toLowerCase().includes('dhr') && 
@@ -1429,33 +1394,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     timestamp: new Date().toISOString()
                   };
                   
-                  console.log('✅ REAL metadata from Node.js HTTP stream:', metadata);
-                  return res.json(metadata);
+                  console.log('✅ REAL metadata from shell command:', metadata);
+                  return resolve(metadata);
                 }
               }
             }
-          } catch (httpError) {
-            console.log('Node.js HTTP approach also failed:', httpError);
+            
+            console.log('Shell command failed, trying HTTP approach...');
+            resolve(null);
           }
+        );
+      });
+      
+      // Wait for shell command with timeout
+      const shellResult = await Promise.race([
+        useShellCommand,
+        new Promise(resolve => setTimeout(() => resolve(null), 12000))
+      ]);
+      
+      if (shellResult) {
+        return res.json(shellResult);
+      }
+      
+      // Shell command failed or unavailable (production), use HTTP approach
+      console.log('Using HTTP metadata extraction for production...');
+      const fetch = (await import('node-fetch')).default;
+      
+      // Try direct stream connection with ICY metadata
+      try {
+        const response = await fetch('https://streaming.shoutcast.com/dhr', {
+          headers: {
+            'Icy-MetaData': '1',
+            'User-Agent': 'DHR-Metadata-Extractor/1.0'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.text();
           
-          // Both methods failed, return live status
-          console.log('All metadata extraction methods failed - showing live status');
-          res.json({ 
-            artist: 'DHR Live',
-            title: 'Loading Live Track Info...',
-            timestamp: new Date().toISOString(),
-            status: 'live'
-          });
+          // Look for StreamTitle in the response
+          const titleMatch = data.match(/StreamTitle='([^']+)'/);
+          if (titleMatch && titleMatch[1]) {
+            const songTitle = titleMatch[1].trim();
+            console.log('Real track extracted via HTTP:', songTitle);
+            
+            if (songTitle.length > 5 && 
+                !songTitle.toLowerCase().includes('dhr') && 
+                !songTitle.toLowerCase().includes('deep house radio')) {
+              
+              const metadata = {
+                artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
+                title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
+                timestamp: new Date().toISOString()
+              };
+              
+              console.log('✅ REAL metadata from HTTP:', metadata);
+              return res.json(metadata);
+            }
+          }
         }
-      );
+      } catch (httpError) {
+        console.log('HTTP stream extraction failed:', httpError);
+      }
+      
+      // All authentic metadata extraction methods failed
+      console.log('All metadata extraction methods failed - stream may be offline');
+      res.status(503).json({ 
+        error: 'Metadata service unavailable',
+        message: 'Unable to connect to live stream for track information',
+        timestamp: new Date().toISOString()
+      });
       
     } catch (error) {
       console.error('Error extracting metadata:', error);
-      res.json({ 
-        artist: 'DHR Live',
-        title: 'Loading Live Track Info...',
-        timestamp: new Date().toISOString(),
-        status: 'live'
+      res.status(500).json({ 
+        error: 'Internal server error',
+        message: 'Metadata extraction service encountered an error',
+        timestamp: new Date().toISOString()
       });
     }
   });

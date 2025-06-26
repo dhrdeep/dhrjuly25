@@ -71,8 +71,15 @@ const HomePage: React.FC = () => {
           if (data.artist && data.title) {
             setLiveTrackInfo({ artist: data.artist, title: data.title });
           }
+        } else if (response.status === 503) {
+          console.log('Metadata service temporarily unavailable');
+          setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
+        } else if (response.status === 500) {
+          console.error('Metadata API server error:', response.status);
+          setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         } else {
           console.error('Metadata API response not ok:', response.status);
+          setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         }
       } catch (error) {
         console.error('Failed to fetch live metadata:', error);
