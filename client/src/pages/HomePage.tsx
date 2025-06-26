@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Play, 
@@ -38,6 +38,8 @@ const HomePage: React.FC = () => {
     title: 'Loading Live Track Info...'
   });
   const [forceUpdate, setForceUpdate] = useState(0);
+  const artistRef = useRef<HTMLHeadingElement>(null);
+  const titleRef = useRef<HTMLParagraphElement>(null);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -56,6 +58,24 @@ const HomePage: React.FC = () => {
     }, 12000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Initialize metadata display on component mount
+  useEffect(() => {
+    const initializeMetadata = () => {
+      const artistEl = document.getElementById('live-artist');
+      const titleEl = document.getElementById('live-title');
+      
+      if (artistEl && titleEl) {
+        console.log('🔧 Initializing metadata display elements');
+        // Ensure elements are ready for updates
+        artistEl.style.display = 'block';
+        titleEl.style.display = 'block';
+      }
+    };
+    
+    initializeMetadata();
+    setTimeout(initializeMetadata, 1000); // Retry after 1 second
   }, []);
 
   // Force re-render when metadata changes
@@ -83,29 +103,65 @@ const HomePage: React.FC = () => {
           
           if (data.artist && data.title) {
             console.log('🎯 Updating UI with metadata:', data.artist, '-', data.title);
-            // Force state update with timestamp to ensure React re-renders
+            
+            // Force immediate DOM updates with multiple strategies
+            const updateElements = () => {
+              // Strategy 1: React refs with innerHTML
+              if (artistRef.current && titleRef.current) {
+                artistRef.current.innerHTML = data.artist;
+                titleRef.current.innerHTML = `"${data.title}"`;
+                artistRef.current.style.color = '#ffffff';
+                titleRef.current.style.color = '#9ca3af';
+                console.log('🎯 Ref elements updated with innerHTML:', data.artist);
+              }
+              
+              // Strategy 2: getElementById with innerHTML
+              const artistEl = document.getElementById('live-artist');
+              const titleEl = document.getElementById('live-title');
+              if (artistEl && titleEl) {
+                artistEl.innerHTML = data.artist;
+                titleEl.innerHTML = `"${data.title}"`;
+                artistEl.style.color = '#ffffff';
+                titleEl.style.color = '#9ca3af';
+                console.log('🎯 DOM elements updated with innerHTML:', data.artist);
+              }
+              
+              // Strategy 3: querySelector with innerHTML
+              const artistQuery = document.querySelector('#live-artist');
+              const titleQuery = document.querySelector('#live-title');
+              if (artistQuery && titleQuery) {
+                (artistQuery as HTMLElement).innerHTML = data.artist;
+                (titleQuery as HTMLElement).innerHTML = `"${data.title}"`;
+                (artistQuery as HTMLElement).style.color = '#ffffff';
+                (titleQuery as HTMLElement).style.color = '#9ca3af';
+                console.log('🎯 Query elements updated with innerHTML:', data.artist);
+              }
+            };
+            
+            // Execute immediately and with delays
+            try {
+              updateElements();
+              setTimeout(() => {
+                try { updateElements(); } catch (e) { console.log('Update retry failed:', e); }
+              }, 50);
+              setTimeout(() => {
+                try { updateElements(); } catch (e) { console.log('Update retry failed:', e); }
+              }, 100);
+              setTimeout(() => {
+                try { updateElements(); } catch (e) { console.log('Update retry failed:', e); }
+              }, 200);
+            } catch (error) {
+              console.log('DOM update error:', error);
+            }
+            
+            // React state update last
             const newMetadata = { 
               artist: data.artist, 
               title: data.title,
               timestamp: Date.now()
             };
-            console.log('🔄 Setting new metadata state:', newMetadata);
             setLiveTrackInfo(newMetadata);
             setForceUpdate(prev => prev + 1);
-            
-            // Direct DOM manipulation for production deployment
-            setTimeout(() => {
-              const artistElement = document.getElementById('live-artist');
-              const titleElement = document.getElementById('live-title');
-              
-              if (artistElement && titleElement) {
-                artistElement.textContent = data.artist;
-                titleElement.textContent = `"${data.title}"`;
-                console.log('🎯 DOM elements updated directly:', data.artist, '-', data.title);
-              }
-              
-              console.log('🔄 Current state after update:', liveTrackInfo);
-            }, 100);
           } else {
             console.log('⚠️ Metadata missing fields:', data);
             setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
@@ -332,8 +388,8 @@ const HomePage: React.FC = () => {
                     <Waves className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white" id="live-artist">{liveTrackInfo?.artist || 'DHR Live'}</h3>
-                    <p className="text-gray-400" id="live-title">"{liveTrackInfo?.title || 'Loading Live Track Info...'}"</p>
+                    <h3 className="font-bold text-white" id="live-artist" ref={artistRef}>DHR Live</h3>
+                    <p className="text-gray-400" id="live-title" ref={titleRef}>"Loading Live Track Info..."</p>
                     <div className="flex items-center space-x-2 mt-2">
                       <div className="h-1 bg-gray-700 rounded-full flex-1">
                         <div className="h-1 bg-orange-400 rounded-full w-2/3 animate-pulse"></div>
