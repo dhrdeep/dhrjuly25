@@ -59,48 +59,110 @@ const audioToBase64 = (audioBlob: Blob): Promise<string> => {
   });
 };
 
+// Convert AudioBuffer to simplified WAV blob for ACRCloud
+const audioBufferToSimpleWav = (buffer: AudioBuffer): Blob => {
+  const numberOfChannels = 1; // Force mono for ACRCloud compatibility
+  const sampleRate = 44100; // Standard sample rate
+  const format = 1; // PCM
+  const bitDepth = 16;
+  
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numberOfChannels * bytesPerSample;
+  
+  const length = buffer.length;
+  const arrayBuffer = new ArrayBuffer(44 + length * bytesPerSample);
+  const view = new DataView(arrayBuffer);
+  
+  // WAV header
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + length * bytesPerSample, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numberOfChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, 'data');
+  view.setUint32(40, length * bytesPerSample, true);
+  
+  // Audio data - mix all channels to mono
+  let offset = 44;
+  const channelData = buffer.getChannelData(0);
+  for (let i = 0; i < length; i++) {
+    let sample = channelData[i];
+    
+    // Mix additional channels if present
+    for (let channel = 1; channel < buffer.numberOfChannels; channel++) {
+      sample += buffer.getChannelData(channel)[i];
+    }
+    
+    // Normalize if multiple channels were mixed
+    if (buffer.numberOfChannels > 1) {
+      sample /= buffer.numberOfChannels;
+    }
+    
+    // Convert to 16-bit PCM
+    sample = Math.max(-1, Math.min(1, sample));
+    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+    offset += 2;
+  }
+  
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
+};
+
 // Convert audio format for ACRCloud compatibility
 const convertAudioForACRCloud = async (audioBlob: Blob): Promise<Blob> => {
   try {
     console.log('Converting audio format for ACRCloud compatibility');
     
-    // Create audio context for format conversion
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // For ACRCloud, we need to ensure the audio is in a compatible format
+    // Skip conversion if audio is already small or might cause issues
+    if (audioBlob.size < 5000) {
+      console.log('Audio too small for conversion, returning original');
+      return audioBlob;
+    }
+
+    // Try to convert only if it's a complex format
+    if (audioBlob.type.includes('webm') || audioBlob.type.includes('ogg')) {
+      // Create audio context for format conversion
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      try {
+        // Convert blob to array buffer
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        
+        // Decode audio data
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        console.log('Audio decoded successfully, channels:', audioBuffer.numberOfChannels, 'duration:', audioBuffer.duration);
+        
+        // Create simplified WAV blob
+        const wavBlob = audioBufferToWav(audioBuffer);
+        console.log('Audio converted to simplified WAV format, size:', wavBlob.size);
+        
+        return wavBlob;
+      } catch (decodeError) {
+        console.warn('Audio decode failed, using original format:', decodeError);
+        return audioBlob;
+      }
+    }
     
-    // Convert blob to array buffer
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    
-    // Decode audio data
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    console.log('Audio decoded successfully, channels:', audioBuffer.numberOfChannels, 'duration:', audioBuffer.duration);
-    
-    // Create offline context for rendering
-    const offlineContext = new OfflineAudioContext(
-      Math.min(audioBuffer.numberOfChannels, 2), // Max 2 channels for ACRCloud
-      audioBuffer.length,
-      audioBuffer.sampleRate
-    );
-    
-    // Create buffer source
-    const source = offlineContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineContext.destination);
-    source.start(0);
-    
-    // Render audio
-    const renderedBuffer = await offlineContext.startRendering();
-    
-    // Convert to WAV format (PCM)
-    const wavBlob = audioBufferToWav(renderedBuffer);
-    console.log('Audio converted to WAV format, size:', wavBlob.size);
-    
-    return wavBlob;
+    return audioBlob;
   } catch (error) {
     console.warn('Audio conversion failed, using original format:', error);
-    // Return original blob if conversion fails
     return audioBlob;
   }
 };
+
+
 
 // Convert AudioBuffer to WAV blob
 const audioBufferToWav = (buffer: AudioBuffer): Blob => {
