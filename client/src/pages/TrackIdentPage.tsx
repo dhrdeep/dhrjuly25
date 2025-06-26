@@ -24,7 +24,7 @@ const TrackIdentPage: React.FC = () => {
   const [identificationStatus, setIdentificationStatus] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
 
-  // ALL useRef HOOKS MUST BE DECLARED BEFORE ANY EARLY RETURNS
+  // ALL useRef HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL LOGIC
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -34,6 +34,7 @@ const TrackIdentPage: React.FC = () => {
   const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
+  // ALL useEffect HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL LOGIC
   useEffect(() => {
     // Get current user subscription status
     const user = mockSubscriptionService.getCurrentUser();
@@ -46,8 +47,40 @@ const TrackIdentPage: React.FC = () => {
       setHasAccess(true);
     }
   }, []);
+
+  // Auto-identify effect
+  useEffect(() => {
+    if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
+      console.log('Setting Up Auto-Identification Timer');
+      autoIdentifyTimer.current = setInterval(() => {
+        if (!isIdentifying && isPlaying && connectionStatus === 'connected') {
+          console.log('Auto-Identification Triggered');
+          captureStreamAudio();
+        }
+      }, 60000);
+    } else if (autoIdentifyTimer.current) {
+      console.log('Clearing Auto-Identification Timer');
+      clearInterval(autoIdentifyTimer.current);
+      autoIdentifyTimer.current = null;
+    }
+
+    return () => {
+      if (autoIdentifyTimer.current) {
+        clearInterval(autoIdentifyTimer.current);
+      }
+    };
+  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
   
-  // Show access denied screen for free users
+  // Show access denied screen for free users (AFTER ALL HOOKS)
   if (!hasAccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
@@ -251,43 +284,49 @@ const TrackIdentPage: React.FC = () => {
         return null;
       }
 
+      // Create AudioContext if needed
       if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         console.log('Created New AudioContext');
       }
 
       const audioContext = audioContextRef.current;
       
+      // Resume AudioContext if suspended
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
         console.log('Resumed AudioContext');
       }
 
+      // Create source node only once
       if (!sourceNodeRef.current) {
         try {
           sourceNodeRef.current = audioContext.createMediaElementSource(audioRef.current);
           console.log('Created MediaElementSource');
+          
+          // Create gain node for volume control
+          gainNodeRef.current = audioContext.createGain();
+          gainNodeRef.current.gain.value = isMuted ? 0 : volume;
+          
+          // Create destination for capturing
+          destinationRef.current = audioContext.createMediaStreamDestination();
+          
+          // Connect the audio graph
+          sourceNodeRef.current.connect(gainNodeRef.current);
+          gainNodeRef.current.connect(audioContext.destination);
+          gainNodeRef.current.connect(destinationRef.current);
+          
+          console.log('Audio Nodes Connected Successfully');
         } catch (error) {
-          console.error('Error Creating MediaElementSource:', error);
+          console.error('Error Creating Audio Nodes:', error);
           return null;
         }
-        
-        gainNodeRef.current = audioContext.createGain();
-        gainNodeRef.current.gain.value = isMuted ? 0 : volume;
-        
-        destinationRef.current = audioContext.createMediaStreamDestination();
-        
-        sourceNodeRef.current.connect(gainNodeRef.current);
-        gainNodeRef.current.connect(audioContext.destination);
-        gainNodeRef.current.connect(destinationRef.current);
-        
-        console.log('Connected Audio Nodes With Gain Control');
       }
 
-      return destinationRef.current?.stream;
+      return destinationRef.current?.stream || null;
     } catch (error) {
-      console.error('Error Setting Up Audio Capture:', error);
-      setIdentificationStatus('Error Setting Up Audio Capture. Please Try Again.');
+      console.error('Audio Capture Setup Error:', error);
+      setIdentificationStatus('Audio Setup Failed. Check Browser Permissions.');
       setTimeout(() => setIdentificationStatus(''), 3000);
       return null;
     }
@@ -318,13 +357,27 @@ const TrackIdentPage: React.FC = () => {
       console.log('Audio Tracks Found:', audioTracks.length);
       setIdentificationStatus('Capturing Stream Audio...');
       
-      let mimeType = 'audio/webm';
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
-      } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-        mimeType = 'audio/ogg;codecs=opus';
+      // Check for best supported format
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/ogg;codecs=opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = '';
+            }
+          }
+        }
+      }
+
+      if (!mimeType) {
+        console.error('No supported audio format found');
+        setIsIdentifying(false);
+        setIdentificationStatus('Browser Audio Format Not Supported');
+        setTimeout(() => setIdentificationStatus(''), 3000);
+        return;
       }
 
       console.log('Using MIME Type:', mimeType);
@@ -338,9 +391,9 @@ const TrackIdentPage: React.FC = () => {
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        console.log('Data Available:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
+          console.log('Audio chunk captured:', event.data.size, 'bytes');
         }
       };
 
@@ -350,55 +403,49 @@ const TrackIdentPage: React.FC = () => {
         
         if (chunksRef.current.length === 0) {
           console.error('No Audio Data Captured');
-          setIdentificationStatus('No Audio Data Captured. Stream May Be Silent.');
+          setIdentificationStatus('No Audio Data Captured. Check Stream Volume.');
           setIsIdentifying(false);
           setTimeout(() => setIdentificationStatus(''), 3000);
           return;
         }
 
-        const audioBlob = new Blob(chunksRef.current, { 
-          type: mimeType
-        });
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        console.log('Audio Blob Created:', audioBlob.size, 'bytes');
         
-        console.log('Created Audio Blob:', audioBlob.size, 'bytes, type:', audioBlob.type);
-        
-        if (audioBlob.size < 10000) {
-          console.error('Audio Blob Too Small:', audioBlob.size);
-          setIdentificationStatus('Captured Audio Too Small. Stream May Be Silent Or Very Quiet.');
+        if (audioBlob.size < 5000) {
+          console.error('Audio Sample Too Small:', audioBlob.size);
+          setIdentificationStatus('Audio Sample Too Small. Increase Volume Or Check Stream.');
           setIsIdentifying(false);
           setTimeout(() => setIdentificationStatus(''), 3000);
           return;
         }
         
-        setIdentificationStatus('Identifying Track From Stream...');
-        console.log('Sending To Identification Service...');
+        setIdentificationStatus('Analyzing Audio Sample...');
         
         try {
           const track = await identifyTrack(audioBlob);
           
           if (track) {
-            console.log('Track Identified:', track);
+            console.log('Track Successfully Identified:', track);
             
             if (isDuplicateTrack(track, identifiedTracks)) {
-              console.log('Duplicate Track Detected, Skipping:', track.title, 'by', track.artist);
-              setIdentificationStatus('Same Track Detected, Skipping Duplicate.');
+              console.log('Duplicate Track Detected, Skipping');
+              setIdentificationStatus('Same Track Recently Identified, Skipping Duplicate.');
               setIsIdentifying(false);
               setTimeout(() => setIdentificationStatus(''), 3000);
               return;
             }
             
             setCurrentTrack(track);
-            setIdentifiedTracks(prev => {
-              return [track, ...prev].slice(0, 50);
-            });
-            setIdentificationStatus(`New Track Identified With ${track.service}!`);
+            setIdentifiedTracks(prev => [track, ...prev].slice(0, 50));
+            setIdentificationStatus(`Track Identified Successfully With ${track.service}!`);
           } else {
-            console.log('No Track Identified');
-            setIdentificationStatus('No Track Identified. The Song May Not Be In The Database Or Stream May Be Silent.');
+            console.log('No Track Match Found');
+            setIdentificationStatus('No Match Found In Music Database. Try Again In A Few Seconds.');
           }
         } catch (error) {
-          console.error('Identification Error:', error);
-          setIdentificationStatus('Error During Identification. Please Try Again.');
+          console.error('Track Identification Failed:', error);
+          setIdentificationStatus('Identification Service Error. Please Try Again.');
         }
         
         setIsIdentifying(false);
@@ -407,25 +454,26 @@ const TrackIdentPage: React.FC = () => {
 
       mediaRecorder.onerror = (event) => {
         console.error('MediaRecorder Error:', event);
-        setIdentificationStatus('Recording Error Occurred');
+        setIdentificationStatus('Audio Recording Error Occurred');
         setIsIdentifying(false);
         setTimeout(() => setIdentificationStatus(''), 3000);
       };
 
-      console.log('Starting MediaRecorder...');
-      mediaRecorder.start(500);
+      console.log('Starting Audio Recording...');
+      mediaRecorder.start(1000); // Collect data every second
       
+      // Stop recording after 20 seconds
       setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          console.log('Stopping MediaRecorder...');
+          console.log('Stopping Audio Recording...');
           mediaRecorderRef.current.stop();
         }
-      }, 25000);
+      }, 20000);
       
     } catch (error) {
-      console.error('Error Capturing Stream Audio:', error);
+      console.error('Audio Capture Error:', error);
       setIsIdentifying(false);
-      setIdentificationStatus('Error Capturing Stream Audio. Please Try Again.');
+      setIdentificationStatus('Audio Capture Failed. Check Browser Permissions.');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
   };

@@ -76,8 +76,8 @@ const getDublinTimestamp = (): string => {
 // Check if image URL is accessible
 const checkImageUrl = async (url: string): Promise<boolean> => {
   try {
-    const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-    return true; // If no error, assume it's accessible
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
   } catch {
     return false;
   }
@@ -136,25 +136,18 @@ const resolveArtwork = async (primaryArtwork: string | undefined, artist: string
   if (primaryArtwork) {
     try {
       // Test if the primary artwork URL is accessible
-      const response = await fetch(primaryArtwork, { method: 'HEAD', mode: 'no-cors' });
-      console.log(`Primary artwork found: ${primaryArtwork}`);
-      return primaryArtwork;
+      const response = await fetch(primaryArtwork, { method: 'HEAD' });
+      if (response.ok) {
+        console.log(`Primary artwork found: ${primaryArtwork}`);
+        return primaryArtwork;
+      }
     } catch (error) {
-      console.log('Primary artwork not accessible, searching alternatives...');
+      console.log('Primary artwork not accessible, using DHR fallback...');
     }
   }
 
-  // Search for artwork on various platforms
-  console.log(`Searching for artwork on music platforms for: ${artist} - ${title}`);
-  const platformArtwork = await searchArtworkOnPlatforms(artist, title, album);
-  
-  if (platformArtwork) {
-    console.log(`Platform artwork found: ${platformArtwork}`);
-    return platformArtwork;
-  }
-
   // Fallback to DHR logo
-  console.log('No artwork found, using DHR logo as fallback');
+  console.log('Using DHR logo as artwork fallback');
   return DHR_LOGO_URL;
 };
 
