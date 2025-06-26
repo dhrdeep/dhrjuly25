@@ -1,16 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Play, Pause, Volume2, VolumeX, Clock, Zap, Search, Headphones, History, Trash2, ExternalLink, ListMusic, Youtube, AlignJustify as Spotify } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Headphones } from 'lucide-react';
 import { identifyTrack, Track } from '../services/audioRecognition';
-// Mock subscription service for demo - replace with actual service
+
+// Mock subscription service for demo
 const mockSubscriptionService = {
   getCurrentUser: () => ({ subscriptionTier: 'vip', username: 'demo_user' })
 };
 
-const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
-
 const TrackIdentPage: React.FC = () => {
-  // ALL HOOKS MUST BE DECLARED FIRST - React Rules of Hooks
+  // All hooks declared at the top level
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
   const [hasAccess, setHasAccess] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -23,8 +22,8 @@ const TrackIdentPage: React.FC = () => {
   const [streamUrl] = useState('https://streaming.shoutcast.com/dhr');
   const [identificationStatus, setIdentificationStatus] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
+  const [visualizerData, setVisualizerData] = useState<number[]>(new Array(32).fill(0));
 
-  // ALL useRef HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL LOGIC
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -33,107 +32,31 @@ const TrackIdentPage: React.FC = () => {
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const animationRef = useRef<number | null>(null);
 
-  // ALL useEffect HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL LOGIC
   useEffect(() => {
-    // Get current user subscription status
     const user = mockSubscriptionService.getCurrentUser();
     if (user) {
       setSubscriptionTier(user.subscriptionTier);
       setHasAccess(['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier));
     } else {
-      // Demo user for testing
       setSubscriptionTier('vip');
       setHasAccess(true);
     }
   }, []);
 
-  // Auto-identify effect
-  useEffect(() => {
-    if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
-      console.log('Setting Up Auto-Identification Timer');
-      autoIdentifyTimer.current = setInterval(() => {
-        if (!isIdentifying && isPlaying && connectionStatus === 'connected') {
-          console.log('Auto-Identification Triggered');
-          captureStreamAudio();
-        }
-      }, 60000);
-    } else if (autoIdentifyTimer.current) {
-      console.log('Clearing Auto-Identification Timer');
-      clearInterval(autoIdentifyTimer.current);
-      autoIdentifyTimer.current = null;
-    }
-
-    return () => {
-      if (autoIdentifyTimer.current) {
-        clearInterval(autoIdentifyTimer.current);
-      }
-    };
-  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
     };
   }, []);
-  
-  // Show access denied screen for free users (AFTER ALL HOOKS)
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-orange-400/20 text-center">
-          <div className="mb-6">
-            <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Headphones className="h-10 w-10 text-orange-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-4">Track Identifier Access Required</h2>
-            <p className="text-gray-300 mb-6">
-              Track identification is available exclusively to DHR subscribers. 
-              Upgrade to access this premium feature and support deep house music.
-            </p>
-          </div>
-          
-          <div className="space-y-3 mb-6">
-            <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-400/20">
-              <div className="text-blue-400 font-semibold">DHR1 - €3/month</div>
-              <div className="text-sm text-gray-400">Track ID + DHR1 Premium Stream</div>
-            </div>
-            <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-400/20">
-              <div className="text-purple-400 font-semibold">DHR2 - €5/month</div>
-              <div className="text-sm text-gray-400">Track ID + DHR1 + DHR2 Premium</div>
-            </div>
-            <div className="bg-orange-500/10 rounded-lg p-3 border border-orange-400/20">
-              <div className="text-orange-400 font-semibold">VIP - €10/month</div>
-              <div className="text-sm text-gray-400">Track ID + All Streams + VIP Downloads</div>
-            </div>
-          </div>
-          
-          <div className="flex space-x-3">
-            <a 
-              href="https://patreon.com/deephouseradio" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex-1 bg-orange-500 hover:bg-orange-600 px-4 py-3 rounded-lg text-white font-semibold transition-colors"
-            >
-              Subscribe Now
-            </a>
-            <Link 
-              to="/" 
-              className="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-lg text-white font-semibold transition-colors text-center"
-            >
-              Back To Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  // Helper function to check if track is a duplicate
-  const isDuplicateTrack = (newTrack: Track, existingTracks: Track[]) => {
+  const isDuplicateTrack = useCallback((newTrack: Track, existingTracks: Track[]) => {
     const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
     
     return existingTracks.some(track => {
@@ -144,246 +67,87 @@ const TrackIdentPage: React.FC = () => {
         trackTime > twoHoursAgo
       );
     });
-  };
+  }, []);
 
-  // Handle artwork loading errors
-  const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log('Artwork Failed To Load, Using DHR Logo Fallback');
-    e.currentTarget.src = DHR_LOGO_URL;
-  };
+  const setupAudioVisualization = useCallback(async () => {
+    if (!audioRef.current || !audioContextRef.current) return;
 
-  const AudioVisualizer = () => (
-    <div className="flex items-end space-x-1 h-12" role="img" aria-label="Audio Visualizer">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className={`bg-gradient-to-t from-orange-400 to-orange-200 rounded-full transition-all duration-75 ${
-            isPlaying && connectionStatus === 'connected' ? 'animate-pulse' : ''
-          }`}
-          style={{
-            width: '3px',
-            height: isPlaying && connectionStatus === 'connected' ? `${Math.random() * 100 + 20}%` : '20%',
-            animationDelay: `${i * 50}ms`
-          }}
-        />
-      ))}
-    </div>
-  );
+    try {
+      if (!sourceNodeRef.current) {
+        sourceNodeRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
+      }
 
-  // Create YouTube playlist with identified tracks
-  const createYouTubePlaylist = () => {
-    if (identifiedTracks.length === 0) {
-      setIdentificationStatus('No Tracks To Add To Playlist. Identify Some Tracks First!');
-      setTimeout(() => setIdentificationStatus(''), 3000);
-      return;
+      const analyser = audioContextRef.current.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.8;
+      
+      sourceNodeRef.current.connect(analyser);
+      analyser.connect(audioContextRef.current.destination);
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      
+      const animate = () => {
+        analyser.getByteFrequencyData(dataArray);
+        setVisualizerData(Array.from(dataArray));
+        animationRef.current = requestAnimationFrame(animate);
+      };
+      
+      animate();
+    } catch (error) {
+      console.error('Visualization setup error:', error);
     }
+  }, []);
 
-    const trackList = identifiedTracks.slice(0, 20).map((track, index) => 
-      `${index + 1}. ${track.artist} - ${track.title}`
-    ).join('\n');
-    
-    const firstTrack = identifiedTracks[0];
-    const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${firstTrack.artist} ${firstTrack.title}`)}`;
-    
-    navigator.clipboard.writeText(trackList).then(() => {
-      setIdentificationStatus('Track List Copied To Clipboard! Opening YouTube...');
-      setTimeout(() => {
-        setIdentificationStatus('Create A New Playlist On YouTube And Search For Each Track Manually.');
-      }, 2000);
-      setTimeout(() => setIdentificationStatus(''), 8000);
-    }).catch(() => {
-      setIdentificationStatus('Opening YouTube With First Track...');
-      setTimeout(() => setIdentificationStatus(''), 3000);
-    });
-    
-    window.open(youtubeSearchUrl, '_blank');
-  };
-
-  // Create Spotify playlist
-  const createSpotifyPlaylist = () => {
-    if (identifiedTracks.length === 0) {
-      setIdentificationStatus('No Tracks To Add To Playlist. Identify Some Tracks First!');
-      setTimeout(() => setIdentificationStatus(''), 3000);
-      return;
-    }
-
-    const trackList = identifiedTracks.slice(0, 20).map((track, index) => 
-      `${index + 1}. ${track.artist} - ${track.title}`
-    ).join('\n');
-    
-    const firstTrack = identifiedTracks[0];
-    const spotifySearchUrl = `https://open.spotify.com/search/${encodeURIComponent(`${firstTrack.artist} ${firstTrack.title}`)}`;
-    
-    navigator.clipboard.writeText(trackList).then(() => {
-      setIdentificationStatus('Track List Copied To Clipboard! Opening Spotify...');
-      setTimeout(() => {
-        setIdentificationStatus('Create A New Playlist On Spotify And Search For Each Track Manually.');
-      }, 2000);
-      setTimeout(() => setIdentificationStatus(''), 8000);
-    }).catch(() => {
-      setIdentificationStatus('Opening Spotify With First Track...');
-      setTimeout(() => setIdentificationStatus(''), 3000);
-    });
-    
-    window.open(spotifySearchUrl, '_blank');
-  };
-
-  // Export tracks as text file
-  const exportTracksAsText = () => {
-    if (identifiedTracks.length === 0) {
-      setIdentificationStatus('No Tracks To Export. Identify Some Tracks First!');
-      setTimeout(() => setIdentificationStatus(''), 3000);
-      return;
-    }
-
-    const playlistContent = [
-      `DHR Radio Track List - ${new Date().toLocaleDateString('en-IE', { 
-        timeZone: 'Europe/Dublin',
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      })}`,
-      '',
-      'Identified Tracks:',
-      '================',
-      '',
-      ...identifiedTracks.map((track, index) => {
-        const time = new Date(track.timestamp).toLocaleString('en-IE', {
-          timeZone: 'Europe/Dublin',
-          hour: '2-digit',
-          minute: '2-digit',
-          day: 'numeric',
-          month: 'short'
-        });
-        return `${index + 1}. ${track.artist} - ${track.title}${track.album !== 'Unknown Album' ? ` (${track.album})` : ''} [${time}]`;
-      }),
-      '',
-      `Total Tracks: ${identifiedTracks.length}`,
-      'Generated By DHR Track Identifier'
-    ].join('\n');
-
-    const blob = new Blob([playlistContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DHR-Radio-Tracks-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    setIdentificationStatus('Track List Exported As Text File!');
-    setTimeout(() => setIdentificationStatus(''), 3000);
-  };
-
-  const setupAudioCapture = async () => {
+  const setupAudioCapture = useCallback(async () => {
     try {
       if (!audioRef.current) {
-        console.error('Audio Element Not Available');
+        console.error('Audio element not available');
         return null;
       }
 
-      // Create AudioContext if needed
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        console.log('Created New AudioContext');
       }
 
       const audioContext = audioContextRef.current;
       
-      // Resume AudioContext if suspended
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
-        console.log('Resumed AudioContext');
       }
 
-      // Create source node only once
       if (!sourceNodeRef.current) {
-        try {
-          sourceNodeRef.current = audioContext.createMediaElementSource(audioRef.current);
-          console.log('Created MediaElementSource');
-          
-          // Create gain node for volume control
-          gainNodeRef.current = audioContext.createGain();
-          gainNodeRef.current.gain.value = isMuted ? 0 : volume;
-          
-          // Create destination for capturing
-          destinationRef.current = audioContext.createMediaStreamDestination();
-          
-          // Connect the audio graph
-          sourceNodeRef.current.connect(gainNodeRef.current);
-          gainNodeRef.current.connect(audioContext.destination);
-          gainNodeRef.current.connect(destinationRef.current);
-          
-          console.log('Audio Nodes Connected Successfully');
-        } catch (error) {
-          console.error('Error Creating Audio Nodes:', error);
-          return null;
-        }
+        sourceNodeRef.current = audioContext.createMediaElementSource(audioRef.current);
+        gainNodeRef.current = audioContext.createGain();
+        gainNodeRef.current.gain.value = isMuted ? 0 : volume;
+        destinationRef.current = audioContext.createMediaStreamDestination();
+        
+        sourceNodeRef.current.connect(gainNodeRef.current);
+        gainNodeRef.current.connect(audioContext.destination);
+        gainNodeRef.current.connect(destinationRef.current);
       }
 
       return destinationRef.current?.stream || null;
     } catch (error) {
-      console.error('Audio Capture Setup Error:', error);
+      console.error('Audio capture setup error:', error);
       setIdentificationStatus('Audio Setup Failed. Check Browser Permissions.');
       setTimeout(() => setIdentificationStatus(''), 3000);
       return null;
     }
-  };
+  }, [isMuted, volume]);
 
-  const captureStreamAudio = async () => {
+  const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
-      setIdentificationStatus('Setting Up Audio Capture...');
+      setIdentificationStatus('Identifying...');
       
       const stream = await setupAudioCapture();
       if (!stream) {
         setIsIdentifying(false);
-        setIdentificationStatus('Failed To Setup Audio Capture');
-        setTimeout(() => setIdentificationStatus(''), 3000);
         return;
       }
-
-      const audioTracks = stream.getAudioTracks();
-      if (audioTracks.length === 0) {
-        console.error('No Audio Tracks In Stream');
-        setIsIdentifying(false);
-        setIdentificationStatus('No Audio Detected In Stream');
-        setTimeout(() => setIdentificationStatus(''), 3000);
-        return;
-      }
-
-      console.log('Audio Tracks Found:', audioTracks.length);
-      setIdentificationStatus('Capturing Stream Audio...');
-      
-      // Check for best supported format
-      let mimeType = 'audio/webm;codecs=opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4';
-          if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = 'audio/ogg;codecs=opus';
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-              mimeType = '';
-            }
-          }
-        }
-      }
-
-      if (!mimeType) {
-        console.error('No supported audio format found');
-        setIsIdentifying(false);
-        setIdentificationStatus('Browser Audio Format Not Supported');
-        setTimeout(() => setIdentificationStatus(''), 3000);
-        return;
-      }
-
-      console.log('Using MIME Type:', mimeType);
 
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: mimeType,
+        mimeType: 'audio/webm;codecs=opus',
         audioBitsPerSecond: 128000
       });
       
@@ -393,44 +157,34 @@ const TrackIdentPage: React.FC = () => {
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
-          console.log('Audio chunk captured:', event.data.size, 'bytes');
         }
       };
 
       mediaRecorder.onstop = async () => {
-        console.log('Recording Stopped, Processing Audio...');
-        setIdentificationStatus('Processing Captured Audio...');
+        setIdentificationStatus('Processing...');
         
         if (chunksRef.current.length === 0) {
-          console.error('No Audio Data Captured');
-          setIdentificationStatus('No Audio Data Captured. Check Stream Volume.');
+          setIdentificationStatus('No Audio Data Captured');
           setIsIdentifying(false);
           setTimeout(() => setIdentificationStatus(''), 3000);
           return;
         }
 
-        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
-        console.log('Audio Blob Created:', audioBlob.size, 'bytes');
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         
         if (audioBlob.size < 5000) {
-          console.error('Audio Sample Too Small:', audioBlob.size);
-          setIdentificationStatus('Audio Sample Too Small. Increase Volume Or Check Stream.');
+          setIdentificationStatus('Audio Sample Too Small');
           setIsIdentifying(false);
           setTimeout(() => setIdentificationStatus(''), 3000);
           return;
         }
-        
-        setIdentificationStatus('Analyzing Audio Sample...');
         
         try {
           const track = await identifyTrack(audioBlob);
           
           if (track) {
-            console.log('Track Successfully Identified:', track);
-            
             if (isDuplicateTrack(track, identifiedTracks)) {
-              console.log('Duplicate Track Detected, Skipping');
-              setIdentificationStatus('Same Track Recently Identified, Skipping Duplicate.');
+              setIdentificationStatus('Track Already Identified Recently');
               setIsIdentifying(false);
               setTimeout(() => setIdentificationStatus(''), 3000);
               return;
@@ -438,47 +192,36 @@ const TrackIdentPage: React.FC = () => {
             
             setCurrentTrack(track);
             setIdentifiedTracks(prev => [track, ...prev].slice(0, 50));
-            setIdentificationStatus(`Track Identified Successfully With ${track.service}!`);
+            setIdentificationStatus(`Found: ${track.title} - ${track.artist}`);
           } else {
-            console.log('No Track Match Found');
-            setIdentificationStatus('No Match Found In Music Database. Try Again In A Few Seconds.');
+            setIdentificationStatus('No Match Found');
           }
         } catch (error) {
-          console.error('Track Identification Failed:', error);
-          setIdentificationStatus('Identification Service Error. Please Try Again.');
+          console.error('Track identification failed:', error);
+          setIdentificationStatus('Identification Failed');
         }
         
         setIsIdentifying(false);
         setTimeout(() => setIdentificationStatus(''), 5000);
       };
 
-      mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder Error:', event);
-        setIdentificationStatus('Audio Recording Error Occurred');
-        setIsIdentifying(false);
-        setTimeout(() => setIdentificationStatus(''), 3000);
-      };
-
-      console.log('Starting Audio Recording...');
-      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorder.start(1000);
       
-      // Stop recording after 20 seconds
       setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          console.log('Stopping Audio Recording...');
           mediaRecorderRef.current.stop();
         }
-      }, 20000);
+      }, 15000);
       
     } catch (error) {
-      console.error('Audio Capture Error:', error);
+      console.error('Audio capture error:', error);
       setIsIdentifying(false);
-      setIdentificationStatus('Audio Capture Failed. Check Browser Permissions.');
+      setIdentificationStatus('Audio Capture Failed');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
-  };
+  }, [setupAudioCapture, isDuplicateTrack, identifiedTracks]);
 
-  const handlePlay = async () => {
+  const handlePlay = useCallback(async () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
@@ -487,31 +230,29 @@ const TrackIdentPage: React.FC = () => {
       } else {
         try {
           setConnectionStatus('connecting');
-          setIdentificationStatus('Starting Stream...');
+          setIdentificationStatus('Connecting...');
           
           await audioRef.current.play();
           setIsPlaying(true);
           setConnectionStatus('connected');
-          setIdentificationStatus('Stream Connected Successfully!');
+          setIdentificationStatus('Ready To Identify Tracks...');
           setTimeout(() => setIdentificationStatus(''), 3000);
-          console.log('Audio Started Playing');
           
           setTimeout(async () => {
-            await setupAudioCapture();
-            console.log('Audio Capture Setup Completed');
-          }, 3000);
+            await setupAudioVisualization();
+          }, 1000);
           
         } catch (error) {
-          console.error('Error Playing Audio:', error);
+          console.error('Play error:', error);
           setConnectionStatus('error');
-          setIdentificationStatus('Error Starting Stream. Please Try Again.');
+          setIdentificationStatus('Connection Failed');
           setTimeout(() => setIdentificationStatus(''), 3000);
         }
       }
     }
-  };
+  }, [isPlaying, setupAudioVisualization]);
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     if (audioRef.current) {
@@ -520,9 +261,9 @@ const TrackIdentPage: React.FC = () => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = isMuted ? 0 : newVolume;
     }
-  };
+  }, [isMuted]);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     const newMuted = !isMuted;
     setIsMuted(newMuted);
     if (audioRef.current) {
@@ -531,56 +272,36 @@ const TrackIdentPage: React.FC = () => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = newMuted ? 0 : volume;
     }
-  };
+  }, [isMuted, volume]);
 
-  const handleIdentifyTrack = () => {
+  const handleIdentifyTrack = useCallback(() => {
     if (!isPlaying) {
-      setIdentificationStatus('Please Start Playing The Stream First.');
+      setIdentificationStatus('Please Start Playing First');
       setTimeout(() => setIdentificationStatus(''), 3000);
       return;
     }
     
     if (connectionStatus !== 'connected') {
-      setIdentificationStatus('Stream Not Connected. Please Wait For Connection.');
+      setIdentificationStatus('Stream Not Connected');
       setTimeout(() => setIdentificationStatus(''), 3000);
       return;
     }
     
     if (!isIdentifying) {
-      console.log('Manual Identification Triggered');
       captureStreamAudio();
     }
-  };
-
-  const clearHistory = () => {
-    setIdentifiedTracks([]);
-    setCurrentTrack(null);
-  };
-
-  const removeTrack = (trackId: string) => {
-    setIdentifiedTracks(prev => prev.filter(track => track.id !== trackId));
-    if (currentTrack?.id === trackId) {
-      setCurrentTrack(null);
-    }
-  };
-
-  const searchTrack = (track: Track) => {
-    const query = encodeURIComponent(`${track.artist} ${track.title}`);
-    window.open(`https://www.google.com/search?q=${query}`, '_blank');
-  };
+  }, [isPlaying, connectionStatus, isIdentifying, captureStreamAudio]);
 
   // Auto-identify effect
   useEffect(() => {
     if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
-      console.log('Setting Up Auto-Identification Timer');
-      autoIdentifyTimer.current = setInterval(() => {
+      const interval = setInterval(() => {
         if (!isIdentifying && isPlaying && connectionStatus === 'connected') {
-          console.log('Auto-Identification Triggered');
           captureStreamAudio();
         }
       }, 60000);
+      autoIdentifyTimer.current = interval;
     } else if (autoIdentifyTimer.current) {
-      console.log('Clearing Auto-Identification Timer');
       clearInterval(autoIdentifyTimer.current);
       autoIdentifyTimer.current = null;
     }
@@ -590,261 +311,141 @@ const TrackIdentPage: React.FC = () => {
         clearInterval(autoIdentifyTimer.current);
       }
     };
-  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
+  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus, captureStreamAudio]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
-
-  // Format timestamp for Dublin, Ireland timezone
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    
-    if (isNaN(date.getTime())) {
-      return 'Just Now';
-    }
-    
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return 'Just Now';
-    if (diffMins < 60) return `${diffMins}m Ago`;
-    if (diffHours < 24) return `${diffHours}h Ago`;
-    if (diffDays < 7) return `${diffDays}d Ago`;
-    
-    return date.toLocaleDateString('en-IE', {
-      timeZone: 'Europe/Dublin',
-      day: 'numeric',
-      month: 'short',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
-  };
-
-  const formatDublinTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    
-    if (isNaN(date.getTime())) {
-      return new Date().toLocaleString('en-IE', {
-        timeZone: 'Europe/Dublin',
-        hour: '2-digit',
-        minute: '2-digit',
-        day: 'numeric',
-        month: 'short'
-      });
-    }
-    
-    return date.toLocaleString('en-IE', {
-      timeZone: 'Europe/Dublin',
-      hour: '2-digit',
-      minute: '2-digit',
-      day: 'numeric',
-      month: 'short'
-    });
-  };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'text-orange-400';
-      case 'connecting': return 'text-orange-300';
-      case 'error': return 'text-orange-600';
-      case 'idle': return 'text-gray-400';
-      default: return 'text-gray-400';
-    }
-  };
-
-  const getConnectionStatusText = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'Connected';
-      case 'connecting': return 'Connecting...';
-      case 'error': return 'Connection Error';
-      case 'idle': return 'Press Play To Connect';
-      default: return 'Unknown';
-    }
-  };
-
-  return (
-    <div className="min-h-screen text-white py-8 px-4">
-      <div className="container mx-auto">
-        {/* Header */}
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <div className="relative">
-              <img 
-                src={DHR_LOGO_URL} 
-                alt="DHR Logo"
-                className="h-16 w-16 rounded-xl shadow-2xl border-2 border-orange-400/30 bg-gray-800/50 backdrop-blur-sm"
-                onError={handleArtworkError}
-              />
-              <div className="absolute inset-0 rounded-xl bg-orange-400/10 blur-md -z-10"></div>
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-800 rounded-lg p-8 border border-slate-700 text-center">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Headphones className="h-10 w-10 text-white" />
             </div>
-            <div>
-              <h1 className="text-4xl font-black elegant-text bg-gradient-to-r from-orange-300 via-orange-400 to-orange-500 bg-clip-text text-transparent">
-                DHR Track Identifier
-              </h1>
-              <p className="text-gray-300 mt-1">Live Radio With Intelligent Track Identification</p>
-            </div>
+            <h2 className="text-2xl font-bold text-white mb-4">Track Identifier Access</h2>
+            <p className="text-slate-300 mb-6">
+              Track identification requires a DHR subscription. Upgrade to access AI-powered music recognition.
+            </p>
           </div>
           
-          {/* Connection Status */}
-          <div className="flex items-center justify-center space-x-2 mt-2">
-            <div className={`w-2 h-2 rounded-full ${
-              connectionStatus === 'connected' ? 'bg-orange-400 shadow-lg shadow-orange-400/50' :
-              connectionStatus === 'connecting' ? 'bg-orange-400 animate-pulse shadow-lg shadow-orange-400/50' :
-              connectionStatus === 'error' ? 'bg-orange-600 shadow-lg shadow-orange-600/50' :
-              'bg-gray-400 shadow-lg shadow-gray-400/50'
-            }`}></div>
-            <span className={`text-sm ${getConnectionStatusColor()}`}>
-              {getConnectionStatusText()}
-            </span>
+          <div className="flex space-x-3">
+            <a 
+              href="https://patreon.com/deephouseradio" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex-1 bg-orange-500 hover:bg-orange-600 px-6 py-3 rounded-lg text-white font-bold transition-colors"
+            >
+              Subscribe Now
+            </a>
+            <Link 
+              to="/" 
+              className="flex-1 bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-lg text-white font-bold transition-colors text-center"
+            >
+              Back Home
+            </Link>
           </div>
-        </header>
+        </div>
+      </div>
+    );
+  }
 
-        {/* Main Player */}
-        <main className="max-w-4xl mx-auto">
-          <div className="bg-gray-900/60 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-orange-400/10 mb-8">
-            {/* Audio Element */}
-            <audio
-              ref={audioRef}
-              src={streamUrl}
-              onPlay={() => {
-                console.log('Audio Playing');
-                setIsPlaying(true);
-                setConnectionStatus('connected');
-              }}
-              onPause={() => {
-                console.log('Audio Paused');
-                if (!isPlaying) {
-                  setConnectionStatus('idle');
-                }
-              }}
-              onError={(e) => {
-                console.error('Audio Error:', e);
-                setConnectionStatus('error');
-                setIdentificationStatus('Stream Connection Error. Please Try Again.');
-                setTimeout(() => setIdentificationStatus(''), 3000);
-              }}
-              crossOrigin="anonymous"
-              preload="none"
-              className="hidden"
-              aria-label="DHR Radio Stream"
-            />
+  return (
+    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-lg">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mr-4">
+              <span className="text-white font-bold text-lg">DHR</span>
+            </div>
+            <h1 className="text-3xl font-bold text-orange-400">DHR Track Identifier</h1>
+          </div>
+          <p className="text-slate-300 text-lg">Live Radio With Intelligent Track Identification</p>
+          
+          {/* Connection Status */}
+          <div className="mt-4">
+            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+              connectionStatus === 'connected' ? 'bg-green-500/20 text-green-400' :
+              connectionStatus === 'connecting' ? 'bg-yellow-500/20 text-yellow-400' :
+              connectionStatus === 'error' ? 'bg-red-500/20 text-red-400' :
+              'bg-slate-600/20 text-slate-400'
+            }`}>
+              <div className={`w-2 h-2 rounded-full mr-2 ${
+                connectionStatus === 'connected' ? 'bg-green-400' :
+                connectionStatus === 'connecting' ? 'bg-yellow-400' :
+                connectionStatus === 'error' ? 'bg-red-400' :
+                'bg-slate-400'
+              }`}></div>
+              {connectionStatus === 'connected' ? 'Connected' :
+               connectionStatus === 'connecting' ? 'Connecting' :
+               connectionStatus === 'error' ? 'Error' : 'Ready'}
+            </div>
+          </div>
+        </div>
 
-            {/* Current Track Display */}
-            {currentTrack && (
-              <section className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-2xl p-6 mb-6 border border-orange-400/20 backdrop-blur-sm">
-                <h2 className="sr-only">Currently Playing Track</h2>
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <img 
-                      src={currentTrack.artwork || DHR_LOGO_URL} 
-                      alt={`Album Artwork For ${currentTrack.title} By ${currentTrack.artist}`}
-                      className="w-20 h-20 rounded-lg object-cover shadow-lg border border-orange-400/20"
-                      onError={handleArtworkError}
-                    />
-                    <div className="absolute inset-0 rounded-lg bg-orange-400/5 blur-sm -z-10"></div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-white">{currentTrack.title}</h3>
-                    <p className="text-orange-200">{currentTrack.artist}</p>
-                    <p className="text-sm text-gray-300">{currentTrack.album}</p>
-                    <div className="flex items-center space-x-4 mt-2">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4 text-orange-400" />
-                        <span className="text-sm text-orange-300" title={formatDublinTime(currentTrack.timestamp)}>
-                          {formatTimestamp(currentTrack.timestamp)}
-                        </span>
-                      </div>
-                      {currentTrack.confidence && (
-                        <span className="text-sm text-orange-400">
-                          {currentTrack.confidence}% Match
-                        </span>
-                      )}
-                      <div className="flex items-center space-x-1">
-                        {currentTrack.service === 'ACRCloud' ? (
-                          <Zap className="h-4 w-4 text-orange-400" />
-                        ) : (
-                          <Search className="h-4 w-4 text-orange-500" />
-                        )}
-                        <span className="text-sm text-gray-300">{currentTrack.service}</span>
-                      </div>
-                      {currentTrack.duration && (
-                        <span className="text-sm text-gray-300">
-                          {formatDuration(currentTrack.duration)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => searchTrack(currentTrack)}
-                    className="p-2 rounded-full bg-orange-500/20 hover:bg-orange-500/30 transition-all duration-200 border border-orange-400/20 hover:scale-105"
-                    title="Search For This Track"
-                  >
-                    <ExternalLink className="h-5 w-5 text-orange-300" />
-                  </button>
+        {/* Main Interface */}
+        <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
+          {/* Visualizer */}
+          <div className="flex items-end justify-center space-x-1 h-24 mb-8">
+            {visualizerData.slice(0, 16).map((value, index) => (
+              <div
+                key={index}
+                className="bg-orange-500 rounded-full transition-all duration-150"
+                style={{
+                  height: `${Math.max(4, (value / 255) * 80)}px`,
+                  width: '8px',
+                  opacity: isPlaying ? 0.8 : 0.3
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Control Buttons */}
+          <div className="flex items-center justify-center space-x-6 mb-8">
+            {/* Play/Pause Button */}
+            <button
+              onClick={handlePlay}
+              className="w-16 h-16 rounded-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center transition-colors shadow-lg"
+            >
+              {isPlaying ? (
+                <div className="flex space-x-1">
+                  <div className="w-1.5 h-6 bg-white rounded"></div>
+                  <div className="w-1.5 h-6 bg-white rounded"></div>
                 </div>
-              </section>
-            )}
+              ) : (
+                <Play className="h-8 w-8 text-white ml-1" />
+              )}
+            </button>
 
-            {/* Audio Visualizer */}
-            <div className="flex justify-center mb-6">
-              <AudioVisualizer />
-            </div>
+            {/* Identify Button */}
+            <button
+              onClick={handleIdentifyTrack}
+              disabled={!isPlaying || connectionStatus !== 'connected' || isIdentifying}
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors shadow-lg ${
+                isIdentifying 
+                  ? 'bg-slate-600 cursor-not-allowed' 
+                  : !isPlaying || connectionStatus !== 'connected'
+                  ? 'bg-slate-600 cursor-not-allowed'
+                  : 'bg-slate-700 hover:bg-slate-600'
+              }`}
+            >
+              {isIdentifying ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Headphones className="h-8 w-8 text-white" />
+              )}
+            </button>
 
-            {/* Main Controls */}
-            <div className="relative flex items-center justify-center space-x-6 mb-6">
+            {/* Volume Controls */}
+            <div className="flex items-center space-x-3">
               <button
-                onClick={handlePlay}
-                className={`w-20 h-20 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200 border-2 flex items-center justify-center ${
-                  connectionStatus === 'error'
-                    ? 'bg-orange-600 hover:bg-orange-700 border-orange-500 shadow-orange-600/50'
-                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-orange-400 shadow-orange-500/50'
-                }`}
+                onClick={toggleMute}
+                className="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors"
               >
-                {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
-              </button>
-              
-              <button
-                onClick={handleIdentifyTrack}
-                disabled={isIdentifying || !isPlaying || connectionStatus !== 'connected'}
-                className={`w-20 h-20 rounded-full shadow-2xl transform hover:scale-105 transition-all duration-200 border-2 flex items-center justify-center ${
-                  isIdentifying 
-                    ? 'bg-orange-600 animate-pulse border-orange-500 shadow-orange-600/50' 
-                    : !isPlaying || connectionStatus !== 'connected'
-                    ? 'bg-gray-600 cursor-not-allowed border-gray-500 shadow-gray-600/50'
-                    : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-orange-400 shadow-orange-500/50'
-                }`}
-                title={
-                  isIdentifying ? 'Identifying...' : 
-                  !isPlaying ? 'Start Playing First' : 
-                  connectionStatus !== 'connected' ? 'Stream Not Connected' :
-                  'Identify Current Track From Stream'
-                }
-              >
-                <Headphones className="h-8 w-8" />
-              </button>
-            </div>
-
-            {/* Volume Control */}
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              <button 
-                onClick={toggleMute} 
-                className="text-orange-300 hover:text-orange-100 transition-colors hover:scale-110 transform duration-200"
-              >
-                {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+                {isMuted ? (
+                  <VolumeX className="h-5 w-5 text-white" />
+                ) : (
+                  <Volume2 className="h-5 w-5 text-white" />
+                )}
               </button>
               <input
                 type="range"
@@ -853,187 +454,88 @@ const TrackIdentPage: React.FC = () => {
                 step="0.1"
                 value={volume}
                 onChange={handleVolumeChange}
-                className="w-32 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                className="w-20 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
               />
-              <span className="text-sm text-orange-300 w-10">{Math.round(volume * 100)}%</span>
             </div>
-
-            {/* Auto-Identify Toggle */}
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <label className="text-sm text-orange-200">Auto-Identify Tracks (Every Minute)</label>
-              <button
-                onClick={() => setAutoIdentify(!autoIdentify)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  autoIdentify ? 'bg-orange-500 shadow-lg shadow-orange-500/50' : 'bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-lg ${
-                    autoIdentify ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Status */}
-            {(isIdentifying || identificationStatus || connectionStatus === 'idle' || connectionStatus === 'connecting' || connectionStatus === 'error') && (
-              <div className="text-center">
-                <div className="inline-flex items-center space-x-3 text-sm text-orange-200 bg-gray-800/50 rounded-lg px-4 py-2 backdrop-blur-sm">
-                  {(isIdentifying || connectionStatus === 'connecting') && (
-                    <div className="relative w-5 h-5">
-                      <img 
-                        src={DHR_LOGO_URL} 
-                        alt=""
-                        className="w-5 h-5 rounded-sm"
-                        style={{
-                          animation: 'spin 2s linear infinite'
-                        }}
-                        onError={handleArtworkError}
-                      />
-                    </div>
-                  )}
-                  <span>
-                    {connectionStatus === 'idle' ? 'Press Play To Connect' :
-                     connectionStatus === 'connecting' ? 'Connecting To Stream...' : 
-                     connectionStatus === 'error' ? 'Connection Failed. Please Try Again.' :
-                     identificationStatus || 'Ready To Identify Tracks...'}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Recently Played Section */}
-          {identifiedTracks.length > 0 && (
-            <section className="bg-gray-900/60 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-orange-400/10">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <History className="h-6 w-6 text-orange-400" />
-                  <h2 className="text-2xl font-bold text-white">Recently Played</h2>
-                  <span className="text-sm text-orange-300 bg-orange-500/20 px-2 py-1 rounded-full">
-                    {identifiedTracks.length} Tracks
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={createYouTubePlaylist}
-                    className="flex items-center space-x-2 px-3 py-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 border border-orange-400/20 hover:scale-105 transform"
-                    title="Create YouTube Playlist"
-                  >
-                    <Youtube className="h-4 w-4" />
-                    <span className="text-sm hidden sm:inline">YouTube</span>
-                  </button>
-                  
-                  <button
-                    onClick={createSpotifyPlaylist}
-                    className="flex items-center space-x-2 px-3 py-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 border border-orange-400/20 hover:scale-105 transform"
-                    title="Create Spotify Playlist"
-                  >
-                    <Spotify className="h-4 w-4" />
-                    <span className="text-sm hidden sm:inline">Spotify</span>
-                  </button>
-                  
-                  <button
-                    onClick={exportTracksAsText}
-                    className="flex items-center space-x-2 px-3 py-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 border border-orange-400/20 hover:scale-105 transform"
-                    title="Export As Text File"
-                  >
-                    <ListMusic className="h-4 w-4" />
-                    <span className="text-sm hidden sm:inline">Export</span>
-                  </button>
-                  
-                  <button
-                    onClick={clearHistory}
-                    className="flex items-center space-x-2 px-3 py-2 bg-orange-600/20 hover:bg-orange-600/30 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 border border-orange-500/20 hover:scale-105 transform"
-                    title="Clear All History"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="text-sm hidden sm:inline">Clear</span>
-                  </button>
-                </div>
+          {/* Auto-Identify Toggle */}
+          <div className="flex items-center justify-center mb-6">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <span className="text-slate-300">Auto-Identify</span>
+              <div
+                onClick={() => setAutoIdentify(!autoIdentify)}
+                className={`relative w-12 h-6 rounded-full transition-colors ${
+                  autoIdentify ? 'bg-orange-500' : 'bg-slate-600'
+                }`}
+              >
+                <div
+                  className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-transform ${
+                    autoIdentify ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}
+                />
               </div>
-              
-              <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                {identifiedTracks.map((track) => (
-                  <div
-                    key={track.id}
-                    className="bg-gray-700/20 border border-orange-400/10 rounded-xl p-4 hover:bg-gray-700/30 transition-all duration-200 group backdrop-blur-sm"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0 relative">
-                        <img 
-                          src={track.artwork || DHR_LOGO_URL} 
-                          alt={`Album Artwork For ${track.title} By ${track.artist}`}
-                          className="w-16 h-16 rounded-lg object-cover group-hover:scale-105 transition-transform border border-orange-400/10"
-                          onError={handleArtworkError}
-                        />
-                        <div className="absolute inset-0 rounded-lg bg-orange-400/5 blur-sm -z-10 group-hover:bg-orange-400/10"></div>
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-semibold text-lg truncate text-white">{track.title}</h3>
-                            <p className="text-orange-200 truncate">{track.artist}</p>
-                            <p className="text-sm text-gray-300 truncate">{track.album}</p>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2 ml-4">
-                            <button
-                              onClick={() => searchTrack(track)}
-                              className="p-2 rounded-full bg-orange-500/20 hover:bg-orange-500/30 transition-all duration-200 opacity-0 group-hover:opacity-100 border border-orange-400/20 hover:scale-105 transform"
-                              title="Search For This Track"
-                            >
-                              <ExternalLink className="h-4 w-4 text-orange-300" />
-                            </button>
-                            <button
-                              onClick={() => removeTrack(track.id)}
-                              className="p-2 rounded-full bg-orange-600/20 hover:bg-orange-600/30 transition-all duration-200 opacity-0 group-hover:opacity-100 border border-orange-500/20 hover:scale-105 transform"
-                              title="Remove From History"
-                            >
-                              <Trash2 className="h-4 w-4 text-orange-300" />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4 mt-2">
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-3 w-3 text-orange-400" />
-                            <span className="text-xs text-orange-300" title={formatDublinTime(track.timestamp)}>
-                              {formatTimestamp(track.timestamp)}
-                            </span>
-                          </div>
-                          
-                          {track.confidence && (
-                            <span className="text-xs text-orange-400 bg-orange-500/20 px-2 py-1 rounded-full">
-                              {track.confidence}% Match
-                            </span>
-                          )}
-                          
-                          <div className="flex items-center space-x-1">
-                            {track.service === 'ACRCloud' ? (
-                              <Zap className="h-3 w-3 text-orange-400" />
-                            ) : (
-                              <Search className="h-3 w-3 text-orange-500" />
-                            )}
-                            <span className="text-xs text-gray-300">{track.service}</span>
-                          </div>
-                          
-                          {track.duration && (
-                            <span className="text-xs text-gray-300 bg-gray-600/30 px-2 py-1 rounded-full">
-                              {formatDuration(track.duration)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+            </label>
+          </div>
+
+          {/* Status */}
+          {identificationStatus && (
+            <div className="text-center mb-6">
+              <p className="text-slate-300">{identificationStatus}</p>
+            </div>
+          )}
+
+          {/* Current Track */}
+          {currentTrack && (
+            <div className="bg-slate-700 rounded-lg p-4 mb-6">
+              <h3 className="text-lg font-bold text-orange-400 mb-2">Now Playing</h3>
+              <p className="text-white font-medium">{currentTrack.title}</p>
+              <p className="text-slate-300">{currentTrack.artist}</p>
+              {currentTrack.album && currentTrack.album !== 'Unknown Album' && (
+                <p className="text-slate-400 text-sm">{currentTrack.album}</p>
+              )}
+            </div>
+          )}
+
+          {/* Track History */}
+          {identifiedTracks.length > 0 && (
+            <div className="bg-slate-700 rounded-lg p-4">
+              <h3 className="text-lg font-bold text-orange-400 mb-4">Recent Tracks</h3>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {identifiedTracks.slice(0, 10).map((track) => (
+                  <div key={track.id} className="flex items-center space-x-3 p-3 bg-slate-800 rounded-lg">
+                    {track.artwork && (
+                      <img
+                        src={track.artwork}
+                        alt="Album Art"
+                        className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{track.title}</p>
+                      <p className="text-slate-300 text-sm truncate">{track.artist}</p>
+                      <p className="text-slate-400 text-xs">
+                        {new Date(track.timestamp).toLocaleTimeString()}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
           )}
-        </main>
+        </div>
+
+        {/* Hidden Audio Element */}
+        <audio
+          ref={audioRef}
+          src={streamUrl}
+          preload="none"
+          crossOrigin="anonymous"
+          style={{ display: 'none' }}
+        />
       </div>
     </div>
   );
