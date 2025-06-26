@@ -33,7 +33,10 @@ const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436
 
 const HomePage: React.FC = () => {
   const [currentSloganIndex, setCurrentSloganIndex] = useState(0);
-  const [liveTrackInfo, setLiveTrackInfo] = useState<{artist: string, title: string} | null>(null);
+  const [liveTrackInfo, setLiveTrackInfo] = useState<{artist: string, title: string}>({
+    artist: 'DHR Live',
+    title: 'Loading Live Track Info...'
+  });
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -58,42 +61,58 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchLiveMetadata = async () => {
       try {
+        console.log('🎵 Fetching live metadata from /api/live-metadata');
         const response = await fetch('/api/live-metadata', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         });
+        
+        console.log('📡 Response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          console.log('Live metadata fetched:', data);
+          console.log('✅ Live metadata received:', data);
+          
           if (data.artist && data.title) {
-            setLiveTrackInfo({ artist: data.artist, title: data.title });
+            console.log('🎯 Updating UI with metadata:', data.artist, '-', data.title);
+            setLiveTrackInfo({ 
+              artist: data.artist, 
+              title: data.title 
+            });
+          } else {
+            console.log('⚠️ Metadata missing fields:', data);
+            setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
           }
         } else if (response.status === 503) {
-          console.log('Metadata service temporarily unavailable');
+          console.log('⏳ Metadata service temporarily unavailable');
           setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         } else if (response.status === 500) {
-          console.error('Metadata API server error:', response.status);
+          console.error('❌ Metadata API server error:', response.status);
           setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         } else if (response.status === 502) {
-          console.log('Network gateway error - retrying...');
+          console.log('🔄 Network gateway error - retrying...');
           setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         } else {
-          console.error('Metadata API response not ok:', response.status);
+          console.error('❌ Metadata API response not ok:', response.status);
           setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         }
       } catch (error) {
-        console.error('Failed to fetch live metadata:', error);
+        console.error('💥 Failed to fetch live metadata:', error);
         setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
       }
     };
 
     // Fetch immediately and then every 30 seconds
+    console.log('🚀 Starting live metadata fetching...');
     fetchLiveMetadata();
     const metadataInterval = setInterval(fetchLiveMetadata, 30000);
 
-    return () => clearInterval(metadataInterval);
+    return () => {
+      console.log('🛑 Stopping metadata fetching interval');
+      clearInterval(metadataInterval);
+    };
   }, []);
 
   const shareContent = (platform: string) => {
@@ -288,17 +307,8 @@ const HomePage: React.FC = () => {
                     <Waves className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    {liveTrackInfo ? (
-                      <>
-                        <h3 className="font-bold text-white">{liveTrackInfo.artist}</h3>
-                        <p className="text-gray-400">"{liveTrackInfo.title}"</p>
-                      </>
-                    ) : (
-                      <>
-                        <h3 className="font-bold text-white">DHR Live</h3>
-                        <p className="text-gray-400">"Loading Live Track Info..."</p>
-                      </>
-                    )}
+                    <h3 className="font-bold text-white">{liveTrackInfo.artist}</h3>
+                    <p className="text-gray-400">"{liveTrackInfo.title}"</p>
                     <div className="flex items-center space-x-2 mt-2">
                       <div className="h-1 bg-gray-700 rounded-full flex-1">
                         <div className="h-1 bg-orange-400 rounded-full w-2/3 animate-pulse"></div>
