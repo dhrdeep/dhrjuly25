@@ -36,8 +36,7 @@ const HomePage: React.FC = () => {
   const [currentSloganIndex, setCurrentSloganIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:2750/api/v2/current', true);
-  const artistRef = useRef<HTMLHeadingElement>(null);
-  const titleRef = useRef<HTMLParagraphElement>(null);
+
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -76,24 +75,7 @@ const HomePage: React.FC = () => {
     setTimeout(initializeMetadata, 1000); // Retry after 1 second
   }, []);
 
-  // Update display when currentTrack changes
-  useEffect(() => {
-    if (currentTrack && artistRef.current && titleRef.current) {
-      console.log('🎯 Updating homepage metadata with currentTrack:', currentTrack);
-      
-      // Update using the same approach as DHR1 page
-      artistRef.current.textContent = currentTrack.artist || 'DHR Live';
-      titleRef.current.textContent = `"${currentTrack.title || 'Loading Live Track Info...'}"`;
-      
-      // Also update data attributes for production compatibility
-      const artistSpan = document.querySelector('[data-metadata="artist"]');
-      const titleSpan = document.querySelector('[data-metadata="title"]');
-      if (artistSpan && titleSpan) {
-        artistSpan.textContent = currentTrack.artist || 'DHR Live';
-        titleSpan.textContent = currentTrack.title || 'Loading Live Track Info...';
-      }
-    }
-  }, [currentTrack]);
+
 
   // Fetch live track metadata
   useEffect(() => {
@@ -545,12 +527,12 @@ const HomePage: React.FC = () => {
                   </div>
                   
                   {/* Live Track Info */}
-                  {liveTrackInfo && (
+                  {currentTrack && (
                     <div className="mt-3 p-3 bg-orange-500/10 rounded-lg border border-orange-400/20">
                       <div className="text-center">
                         <div className="text-sm text-orange-400 font-semibold mb-1">Now Playing:</div>
-                        <div className="text-white font-medium">{liveTrackInfo.artist}</div>
-                        <div className="text-gray-300 text-sm">"{liveTrackInfo.title}"</div>
+                        <div className="text-white font-medium">{currentTrack.artist}</div>
+                        <div className="text-gray-300 text-sm">"{currentTrack.title}"</div>
                       </div>
                     </div>
                   )}
