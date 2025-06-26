@@ -106,35 +106,60 @@ const HomePage: React.FC = () => {
             
             // Force immediate DOM updates with multiple strategies
             const updateElements = () => {
-              // Strategy 1: React refs with innerHTML
+              // Strategy 1: React refs with innerHTML and forced styling
               if (artistRef.current && titleRef.current) {
                 artistRef.current.innerHTML = data.artist;
                 titleRef.current.innerHTML = `"${data.title}"`;
-                artistRef.current.style.color = '#ffffff';
-                titleRef.current.style.color = '#9ca3af';
+                artistRef.current.style.cssText = 'color: #ffffff !important; font-weight: bold !important; display: block !important;';
+                titleRef.current.style.cssText = 'color: #9ca3af !important; display: block !important;';
                 console.log('🎯 Ref elements updated with innerHTML:', data.artist);
               }
               
-              // Strategy 2: getElementById with innerHTML
+              // Strategy 2: getElementById with innerHTML and forced styling
               const artistEl = document.getElementById('live-artist');
               const titleEl = document.getElementById('live-title');
               if (artistEl && titleEl) {
                 artistEl.innerHTML = data.artist;
                 titleEl.innerHTML = `"${data.title}"`;
-                artistEl.style.color = '#ffffff';
-                titleEl.style.color = '#9ca3af';
+                artistEl.style.cssText = 'color: #ffffff !important; font-weight: bold !important; display: block !important;';
+                titleEl.style.cssText = 'color: #9ca3af !important; display: block !important;';
                 console.log('🎯 DOM elements updated with innerHTML:', data.artist);
               }
               
-              // Strategy 3: querySelector with innerHTML
+              // Strategy 3: querySelector with innerHTML and forced styling
               const artistQuery = document.querySelector('#live-artist');
               const titleQuery = document.querySelector('#live-title');
               if (artistQuery && titleQuery) {
                 (artistQuery as HTMLElement).innerHTML = data.artist;
                 (titleQuery as HTMLElement).innerHTML = `"${data.title}"`;
-                (artistQuery as HTMLElement).style.color = '#ffffff';
-                (titleQuery as HTMLElement).style.color = '#9ca3af';
+                (artistQuery as HTMLElement).style.cssText = 'color: #ffffff !important; font-weight: bold !important; display: block !important;';
+                (titleQuery as HTMLElement).style.cssText = 'color: #9ca3af !important; display: block !important;';
                 console.log('🎯 Query elements updated with innerHTML:', data.artist);
+              }
+              
+              // Strategy 4: Data attribute targeting for production deployments
+              const artistSpan = document.querySelector('[data-metadata="artist"]');
+              const titleSpan = document.querySelector('[data-metadata="title"]');
+              if (artistSpan && titleSpan) {
+                artistSpan.textContent = data.artist;
+                titleSpan.textContent = data.title;
+                console.log('🎯 Data attribute elements updated:', data.artist);
+              }
+              
+              // Strategy 5: Force complete element rebuild for production
+              const container = document.querySelector('.bg-gray-900\\/80');
+              if (container) {
+                const artistHeader = container.querySelector('#live-artist');
+                const titlePara = container.querySelector('#live-title');
+                
+                if (artistHeader && titlePara) {
+                  // Complete innerHTML replacement for production compatibility
+                  artistHeader.innerHTML = `<span data-metadata="artist">${data.artist}</span>`;
+                  titlePara.innerHTML = `"<span data-metadata="title">${data.title}</span>"`;
+                  artistHeader.setAttribute('style', 'color: #ffffff !important; font-weight: bold !important;');
+                  titlePara.setAttribute('style', 'color: #9ca3af !important;');
+                  console.log('🎯 Complete rebuild elements updated:', data.artist);
+                }
               }
             };
             
@@ -388,8 +413,12 @@ const HomePage: React.FC = () => {
                     <Waves className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white" id="live-artist" ref={artistRef}>DHR Live</h3>
-                    <p className="text-gray-400" id="live-title" ref={titleRef}>"Loading Live Track Info..."</p>
+                    <h3 className="font-bold text-white" id="live-artist" ref={artistRef}>
+                      <span data-metadata="artist">DHR Live</span>
+                    </h3>
+                    <p className="text-gray-400" id="live-title" ref={titleRef}>
+                      "<span data-metadata="title">Loading Live Track Info...</span>"
+                    </p>
                     <div className="flex items-center space-x-2 mt-2">
                       <div className="h-1 bg-gray-700 rounded-full flex-1">
                         <div className="h-1 bg-orange-400 rounded-full w-2/3 animate-pulse"></div>
