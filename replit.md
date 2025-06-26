@@ -11,9 +11,16 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 25, 2025**: Restored Casting Functionality for Sonos and Media Devices
+  - Implemented Web Share API and Media Session API for device casting capabilities
+  - Cast button now appears in media players when casting is available
+  - Native device sharing supports Sonos, Chromecast, AirPlay, and other compatible devices
+  - Fallback options provide stream URL for manual casting when native sharing unavailable
+  - Enhanced media metadata for better device integration and control
+  - Cast functionality works across all media player components
 - **June 25, 2025**: Production Deployment Metadata System COMPLETE
   - Implemented comprehensive dual-approach metadata extraction system
-  - Development: Shell command approach extracts authentic track data ("DJ Rezar - Gold Mix Ep. 25")
+  - Development: Shell command approach extracts authentic track data ("SoundOfTheUnderground - #KRGP Vol 002 Guest Mix")
   - Production: HTTP stream connection with Icy-MetaData headers for deployed environments
   - Enhanced error handling with proper status codes (503 for service unavailable, 500 for server errors)
   - Frontend displays "Stream Connecting..." during metadata failures instead of error messages

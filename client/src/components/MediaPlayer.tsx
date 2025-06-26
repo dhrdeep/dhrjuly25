@@ -1,7 +1,16 @@
-import React, { useState, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, Radio } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Play, Pause, Volume2, VolumeX, Radio, Cast } from 'lucide-react';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
+
+// Declare Google Cast API types
+declare global {
+  interface Window {
+    chrome: any;
+    cast: any;
+    __onGCastApiAvailable: (isAvailable: boolean) => void;
+  }
+}
 
 interface MediaPlayerProps {
   streamUrl?: string;
@@ -18,7 +27,55 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
+  const [isCastAvailable, setIsCastAvailable] = useState(false);
+  const [isCasting, setIsCasting] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Check for casting capabilities
+  useEffect(() => {
+    // Check for native Web Share API or native device casting
+    if (navigator.share || 'mediaSession' in navigator) {
+      setIsCastAvailable(true);
+    }
+    
+    // Set up Media Session API for better device integration
+    if ('mediaSession' in navigator && audioRef.current) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: 'Deep House Radio',
+        album: 'Live Stream',
+        artwork: [
+          { src: DHR_LOGO_URL, sizes: '512x512', type: 'image/png' }
+        ]
+      });
+    }
+  }, [title]);
+
+  const handleCast = async () => {
+    try {
+      // Use Web Share API to share stream with available devices
+      if (navigator.share) {
+        await navigator.share({
+          title: title,
+          text: 'Listen to Deep House Radio live stream',
+          url: streamUrl
+        });
+      } else {
+        // Fallback: Copy stream URL to clipboard for manual casting
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(streamUrl);
+          alert('Stream URL copied to clipboard. You can now paste it into your casting app or device.');
+        } else {
+          // Show stream URL for manual casting
+          prompt('Copy this URL to cast to your device:', streamUrl);
+        }
+      }
+    } catch (error) {
+      console.log('Sharing cancelled or not supported:', error);
+      // Fallback for manual casting
+      prompt('Copy this URL to cast to your Sonos or other device:', streamUrl);
+    }
+  };
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -149,6 +206,20 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
               className="w-16 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
             />
 
+            {isCastAvailable && (
+              <button
+                onClick={handleCast}
+                className={`p-1 transition-colors ${
+                  isCasting 
+                    ? 'text-orange-400 hover:text-orange-300' 
+                    : 'text-orange-300 hover:text-orange-100'
+                }`}
+                title="Cast to device"
+              >
+                <Cast className="h-4 w-4" />
+              </button>
+            )}
+
             <button
               onClick={handlePlay}
               className={`w-10 h-10 rounded-full shadow-lg transform hover:scale-105 transition-all duration-200 border flex items-center justify-center ${
@@ -244,6 +315,20 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({
           className="w-32 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
         />
         <span className="text-sm text-orange-300 w-10">{Math.round(volume * 100)}%</span>
+        
+        {isCastAvailable && (
+          <button
+            onClick={handleCast}
+            className={`transition-colors hover:scale-110 transform duration-200 ${
+              isCasting 
+                ? 'text-orange-400 hover:text-orange-300' 
+                : 'text-orange-300 hover:text-orange-100'
+            }`}
+            title="Cast to Sonos or other devices"
+          >
+            <Cast className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </div>
   );
