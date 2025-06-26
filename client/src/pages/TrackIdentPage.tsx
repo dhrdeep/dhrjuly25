@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Pause, Volume2, VolumeX, Headphones } from 'lucide-react';
 import { identifyTrack, Track } from '../services/audioRecognition';
@@ -9,7 +9,6 @@ const mockSubscriptionService = {
 };
 
 const TrackIdentPage: React.FC = () => {
-  // All hooks declared at the top level
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
   const [hasAccess, setHasAccess] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -22,7 +21,6 @@ const TrackIdentPage: React.FC = () => {
   const [streamUrl] = useState('https://streaming.shoutcast.com/dhr');
   const [identificationStatus, setIdentificationStatus] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
-  const [visualizerData, setVisualizerData] = useState<number[]>(new Array(32).fill(0));
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -32,7 +30,6 @@ const TrackIdentPage: React.FC = () => {
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
-  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     const user = mockSubscriptionService.getCurrentUser();
@@ -50,13 +47,10 @@ const TrackIdentPage: React.FC = () => {
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
     };
   }, []);
 
-  const isDuplicateTrack = useCallback((newTrack: Track, existingTracks: Track[]) => {
+  const isDuplicateTrack = (newTrack: Track, existingTracks: Track[]) => {
     const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
     
     return existingTracks.some(track => {
@@ -67,38 +61,9 @@ const TrackIdentPage: React.FC = () => {
         trackTime > twoHoursAgo
       );
     });
-  }, []);
+  };
 
-  const setupAudioVisualization = useCallback(async () => {
-    if (!audioRef.current || !audioContextRef.current) return;
-
-    try {
-      if (!sourceNodeRef.current) {
-        sourceNodeRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
-      }
-
-      const analyser = audioContextRef.current.createAnalyser();
-      analyser.fftSize = 64;
-      analyser.smoothingTimeConstant = 0.8;
-      
-      sourceNodeRef.current.connect(analyser);
-      analyser.connect(audioContextRef.current.destination);
-      
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      
-      const animate = () => {
-        analyser.getByteFrequencyData(dataArray);
-        setVisualizerData(Array.from(dataArray));
-        animationRef.current = requestAnimationFrame(animate);
-      };
-      
-      animate();
-    } catch (error) {
-      console.error('Visualization setup error:', error);
-    }
-  }, []);
-
-  const setupAudioCapture = useCallback(async () => {
+  const setupAudioCapture = async () => {
     try {
       if (!audioRef.current) {
         console.error('Audio element not available');
@@ -133,9 +98,9 @@ const TrackIdentPage: React.FC = () => {
       setTimeout(() => setIdentificationStatus(''), 3000);
       return null;
     }
-  }, [isMuted, volume]);
+  };
 
-  const captureStreamAudio = useCallback(async () => {
+  const captureStreamAudio = async () => {
     try {
       setIsIdentifying(true);
       setIdentificationStatus('Identifying...');
@@ -219,9 +184,14 @@ const TrackIdentPage: React.FC = () => {
       setIdentificationStatus('Audio Capture Failed');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
-  }, [setupAudioCapture, isDuplicateTrack, identifiedTracks]);
+  };
 
-  const handlePlay = useCallback(async () => {
+  const searchTrack = (track: Track) => {
+    const query = encodeURIComponent(`${track.artist} ${track.title}`);
+    window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+  };
+
+  const handlePlay = async () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
@@ -238,10 +208,6 @@ const TrackIdentPage: React.FC = () => {
           setIdentificationStatus('Ready To Identify Tracks...');
           setTimeout(() => setIdentificationStatus(''), 3000);
           
-          setTimeout(async () => {
-            await setupAudioVisualization();
-          }, 1000);
-          
         } catch (error) {
           console.error('Play error:', error);
           setConnectionStatus('error');
@@ -250,9 +216,9 @@ const TrackIdentPage: React.FC = () => {
         }
       }
     }
-  }, [isPlaying, setupAudioVisualization]);
+  };
 
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     if (audioRef.current) {
@@ -261,9 +227,9 @@ const TrackIdentPage: React.FC = () => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = isMuted ? 0 : newVolume;
     }
-  }, [isMuted]);
+  };
 
-  const toggleMute = useCallback(() => {
+  const toggleMute = () => {
     const newMuted = !isMuted;
     setIsMuted(newMuted);
     if (audioRef.current) {
@@ -272,9 +238,9 @@ const TrackIdentPage: React.FC = () => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = newMuted ? 0 : volume;
     }
-  }, [isMuted, volume]);
+  };
 
-  const handleIdentifyTrack = useCallback(() => {
+  const handleIdentifyTrack = () => {
     if (!isPlaying) {
       setIdentificationStatus('Please Start Playing First');
       setTimeout(() => setIdentificationStatus(''), 3000);
@@ -290,7 +256,7 @@ const TrackIdentPage: React.FC = () => {
     if (!isIdentifying) {
       captureStreamAudio();
     }
-  }, [isPlaying, connectionStatus, isIdentifying, captureStreamAudio]);
+  };
 
   // Auto-identify effect
   useEffect(() => {
@@ -311,7 +277,7 @@ const TrackIdentPage: React.FC = () => {
         clearInterval(autoIdentifyTimer.current);
       }
     };
-  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus, captureStreamAudio]);
+  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
 
   if (!hasAccess) {
     return (
@@ -349,20 +315,22 @@ const TrackIdentPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-slate-900 text-white">
+      <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mr-4">
-              <span className="text-white font-bold text-lg">DHR</span>
+            <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mr-4">
+              <span className="text-white font-bold text-xl">DHR</span>
             </div>
-            <h1 className="text-3xl font-bold text-orange-400">DHR Track Identifier</h1>
+            <div>
+              <h1 className="text-4xl font-bold text-orange-400">Track Identifier</h1>
+              <p className="text-slate-300 text-lg mt-2">AI-Powered Music Recognition</p>
+            </div>
           </div>
-          <p className="text-slate-300 text-lg">Live Radio With Intelligent Track Identification</p>
           
           {/* Connection Status */}
-          <div className="mt-4">
+          <div className="mt-6">
             <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
               connectionStatus === 'connected' ? 'bg-green-500/20 text-green-400' :
               connectionStatus === 'connecting' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -375,44 +343,26 @@ const TrackIdentPage: React.FC = () => {
                 connectionStatus === 'error' ? 'bg-red-400' :
                 'bg-slate-400'
               }`}></div>
-              {connectionStatus === 'connected' ? 'Connected' :
-               connectionStatus === 'connecting' ? 'Connecting' :
-               connectionStatus === 'error' ? 'Error' : 'Ready'}
+              {connectionStatus === 'connected' ? 'Stream Connected' :
+               connectionStatus === 'connecting' ? 'Connecting...' :
+               connectionStatus === 'error' ? 'Connection Error' : 'Ready to Connect'}
             </div>
           </div>
         </div>
 
-        {/* Main Interface */}
-        <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
-          {/* Visualizer */}
-          <div className="flex items-end justify-center space-x-1 h-24 mb-8">
-            {visualizerData.slice(0, 16).map((value, index) => (
-              <div
-                key={index}
-                className="bg-orange-500 rounded-full transition-all duration-150"
-                style={{
-                  height: `${Math.max(4, (value / 255) * 80)}px`,
-                  width: '8px',
-                  opacity: isPlaying ? 0.8 : 0.3
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Control Buttons */}
-          <div className="flex items-center justify-center space-x-6 mb-8">
-            {/* Play/Pause Button */}
+        {/* Main Player */}
+        <div className="bg-slate-800 rounded-2xl p-8 mb-6">
+          {/* Controls */}
+          <div className="flex items-center justify-center space-x-8 mb-8">
+            {/* Play/Pause */}
             <button
               onClick={handlePlay}
-              className="w-16 h-16 rounded-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center transition-colors shadow-lg"
+              className="w-20 h-20 rounded-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center transition-colors shadow-lg"
             >
               {isPlaying ? (
-                <div className="flex space-x-1">
-                  <div className="w-1.5 h-6 bg-white rounded"></div>
-                  <div className="w-1.5 h-6 bg-white rounded"></div>
-                </div>
+                <Pause className="h-10 w-10 text-white" />
               ) : (
-                <Play className="h-8 w-8 text-white ml-1" />
+                <Play className="h-10 w-10 text-white ml-1" />
               )}
             </button>
 
@@ -420,49 +370,49 @@ const TrackIdentPage: React.FC = () => {
             <button
               onClick={handleIdentifyTrack}
               disabled={!isPlaying || connectionStatus !== 'connected' || isIdentifying}
-              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors shadow-lg ${
+              className={`w-20 h-20 rounded-full flex items-center justify-center transition-colors shadow-lg ${
                 isIdentifying 
                   ? 'bg-slate-600 cursor-not-allowed' 
                   : !isPlaying || connectionStatus !== 'connected'
                   ? 'bg-slate-600 cursor-not-allowed'
-                  : 'bg-slate-700 hover:bg-slate-600'
+                  : 'bg-blue-500 hover:bg-blue-600'
               }`}
             >
               {isIdentifying ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                <Headphones className="h-8 w-8 text-white" />
+                <Headphones className="h-10 w-10 text-white" />
               )}
             </button>
+          </div>
 
-            {/* Volume Controls */}
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={toggleMute}
-                className="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-5 w-5 text-white" />
-                ) : (
-                  <Volume2 className="h-5 w-5 text-white" />
-                )}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="w-20 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
-              />
-            </div>
+          {/* Volume Controls */}
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <button
+              onClick={toggleMute}
+              className="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors"
+            >
+              {isMuted ? (
+                <VolumeX className="h-6 w-6 text-white" />
+              ) : (
+                <Volume2 className="h-6 w-6 text-white" />
+              )}
+            </button>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="w-32 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            />
           </div>
 
           {/* Auto-Identify Toggle */}
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center">
             <label className="flex items-center space-x-3 cursor-pointer">
-              <span className="text-slate-300">Auto-Identify</span>
+              <span className="text-slate-300">Auto-Identify Every Minute</span>
               <div
                 onClick={() => setAutoIdentify(!autoIdentify)}
                 className={`relative w-12 h-6 rounded-full transition-colors ${
@@ -477,56 +427,78 @@ const TrackIdentPage: React.FC = () => {
               </div>
             </label>
           </div>
-
-          {/* Status */}
-          {identificationStatus && (
-            <div className="text-center mb-6">
-              <p className="text-slate-300">{identificationStatus}</p>
-            </div>
-          )}
-
-          {/* Current Track */}
-          {currentTrack && (
-            <div className="bg-slate-700 rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-bold text-orange-400 mb-2">Now Playing</h3>
-              <p className="text-white font-medium">{currentTrack.title}</p>
-              <p className="text-slate-300">{currentTrack.artist}</p>
-              {currentTrack.album && currentTrack.album !== 'Unknown Album' && (
-                <p className="text-slate-400 text-sm">{currentTrack.album}</p>
-              )}
-            </div>
-          )}
-
-          {/* Track History */}
-          {identifiedTracks.length > 0 && (
-            <div className="bg-slate-700 rounded-lg p-4">
-              <h3 className="text-lg font-bold text-orange-400 mb-4">Recent Tracks</h3>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {identifiedTracks.slice(0, 10).map((track) => (
-                  <div key={track.id} className="flex items-center space-x-3 p-3 bg-slate-800 rounded-lg">
-                    {track.artwork && (
-                      <img
-                        src={track.artwork}
-                        alt="Album Art"
-                        className="w-12 h-12 rounded-lg object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">{track.title}</p>
-                      <p className="text-slate-300 text-sm truncate">{track.artist}</p>
-                      <p className="text-slate-400 text-xs">
-                        {new Date(track.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Status */}
+        {identificationStatus && (
+          <div className="text-center mb-6">
+            <div className="bg-slate-800 rounded-lg p-4">
+              <p className="text-slate-300 text-lg">{identificationStatus}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Current Track */}
+        {currentTrack && (
+          <div className="bg-slate-800 rounded-lg p-6 mb-6">
+            <h3 className="text-xl font-bold text-orange-400 mb-4">Now Playing</h3>
+            <div className="flex items-center space-x-4">
+              {currentTrack.artwork && (
+                <img
+                  src={currentTrack.artwork}
+                  alt="Album Art"
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+              )}
+              <div className="flex-1">
+                <p className="text-white font-bold text-lg">{currentTrack.title}</p>
+                <p className="text-slate-300">{currentTrack.artist}</p>
+                {currentTrack.album && currentTrack.album !== 'Unknown Album' && (
+                  <p className="text-slate-400 text-sm">{currentTrack.album}</p>
+                )}
+              </div>
+              <button
+                onClick={() => searchTrack(currentTrack)}
+                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-white font-medium transition-colors"
+              >
+                Search on YouTube
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Track History */}
+        {identifiedTracks.length > 0 && (
+          <div className="bg-slate-800 rounded-lg p-6">
+            <h3 className="text-xl font-bold text-orange-400 mb-4">Recent Tracks</h3>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {identifiedTracks.slice(0, 20).map((track) => (
+                <div key={track.id} className="flex items-center space-x-4 p-4 bg-slate-700 rounded-lg">
+                  {track.artwork && (
+                    <img
+                      src={track.artwork}
+                      alt="Album Art"
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium truncate">{track.title}</p>
+                    <p className="text-slate-300 text-sm truncate">{track.artist}</p>
+                    <p className="text-slate-400 text-xs">
+                      {new Date(track.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => searchTrack(track)}
+                    className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-white text-sm transition-colors"
+                  >
+                    YouTube
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Hidden Audio Element */}
         <audio
