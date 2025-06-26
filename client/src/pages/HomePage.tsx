@@ -37,6 +37,7 @@ const HomePage: React.FC = () => {
     artist: 'DHR Live',
     title: 'Loading Live Track Info...'
   });
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -56,6 +57,11 @@ const HomePage: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Force re-render when metadata changes
+  useEffect(() => {
+    console.log('🔄 Metadata state changed:', liveTrackInfo);
+  }, [liveTrackInfo]);
 
   // Fetch live track metadata
   useEffect(() => {
@@ -78,11 +84,28 @@ const HomePage: React.FC = () => {
           if (data.artist && data.title) {
             console.log('🎯 Updating UI with metadata:', data.artist, '-', data.title);
             // Force state update with timestamp to ensure React re-renders
-            setLiveTrackInfo({ 
+            const newMetadata = { 
               artist: data.artist, 
               title: data.title,
               timestamp: Date.now()
-            });
+            };
+            console.log('🔄 Setting new metadata state:', newMetadata);
+            setLiveTrackInfo(newMetadata);
+            setForceUpdate(prev => prev + 1);
+            
+            // Direct DOM manipulation for production deployment
+            setTimeout(() => {
+              const artistElement = document.getElementById('live-artist');
+              const titleElement = document.getElementById('live-title');
+              
+              if (artistElement && titleElement) {
+                artistElement.textContent = data.artist;
+                titleElement.textContent = `"${data.title}"`;
+                console.log('🎯 DOM elements updated directly:', data.artist, '-', data.title);
+              }
+              
+              console.log('🔄 Current state after update:', liveTrackInfo);
+            }, 100);
           } else {
             console.log('⚠️ Metadata missing fields:', data);
             setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
@@ -303,14 +326,14 @@ const HomePage: React.FC = () => {
               </div>
 
               {/* Current Track Display - Real Live Metadata */}
-              <div className="bg-gray-900/80 rounded-2xl p-6 mb-6" key={liveTrackInfo.timestamp || 'default'}>
+              <div className="bg-gray-900/80 rounded-2xl p-6 mb-6">
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                     <Waves className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white" key={`artist-${liveTrackInfo.timestamp}`}>{liveTrackInfo.artist}</h3>
-                    <p className="text-gray-400" key={`title-${liveTrackInfo.timestamp}`}>"{liveTrackInfo.title}"</p>
+                    <h3 className="font-bold text-white" id="live-artist">{liveTrackInfo?.artist || 'DHR Live'}</h3>
+                    <p className="text-gray-400" id="live-title">"{liveTrackInfo?.title || 'Loading Live Track Info...'}"</p>
                     <div className="flex items-center space-x-2 mt-2">
                       <div className="h-1 bg-gray-700 rounded-full flex-1">
                         <div className="h-1 bg-orange-400 rounded-full w-2/3 animate-pulse"></div>
