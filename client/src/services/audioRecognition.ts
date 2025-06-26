@@ -59,6 +59,97 @@ const audioToBase64 = (audioBlob: Blob): Promise<string> => {
   });
 };
 
+// Convert audio format for ACRCloud compatibility
+const convertAudioForACRCloud = async (audioBlob: Blob): Promise<Blob> => {
+  try {
+    console.log('Converting audio format for ACRCloud compatibility');
+    
+    // Create audio context for format conversion
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Convert blob to array buffer
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    
+    // Decode audio data
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    console.log('Audio decoded successfully, channels:', audioBuffer.numberOfChannels, 'duration:', audioBuffer.duration);
+    
+    // Create offline context for rendering
+    const offlineContext = new OfflineAudioContext(
+      Math.min(audioBuffer.numberOfChannels, 2), // Max 2 channels for ACRCloud
+      audioBuffer.length,
+      audioBuffer.sampleRate
+    );
+    
+    // Create buffer source
+    const source = offlineContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineContext.destination);
+    source.start(0);
+    
+    // Render audio
+    const renderedBuffer = await offlineContext.startRendering();
+    
+    // Convert to WAV format (PCM)
+    const wavBlob = audioBufferToWav(renderedBuffer);
+    console.log('Audio converted to WAV format, size:', wavBlob.size);
+    
+    return wavBlob;
+  } catch (error) {
+    console.warn('Audio conversion failed, using original format:', error);
+    // Return original blob if conversion fails
+    return audioBlob;
+  }
+};
+
+// Convert AudioBuffer to WAV blob
+const audioBufferToWav = (buffer: AudioBuffer): Blob => {
+  const numberOfChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+  
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numberOfChannels * bytesPerSample;
+  
+  const length = buffer.length;
+  const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * bytesPerSample);
+  const view = new DataView(arrayBuffer);
+  
+  // WAV header
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + length * numberOfChannels * bytesPerSample, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numberOfChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, 'data');
+  view.setUint32(40, length * numberOfChannels * bytesPerSample, true);
+  
+  // Audio data
+  let offset = 44;
+  for (let i = 0; i < length; i++) {
+    for (let channel = 0; channel < numberOfChannels; channel++) {
+      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+  
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
+};
+
 // Generate ACRCloud signature
 const generateACRCloudSignature = (method: string, uri: string, accessKey: string, dataType: string, signatureVersion: string, timestamp: number): string => {
   const stringToSign = [method, uri, accessKey, dataType, signatureVersion, timestamp].join('\n');
@@ -151,14 +242,30 @@ const resolveArtwork = async (primaryArtwork: string | undefined, artist: string
   return DHR_LOGO_URL;
 };
 
-// ACRCloud identification
+// ACRCloud identification with improved audio format handling
 export const identifyWithACRCloud = async (audioBlob: Blob): Promise<Track | null> => {
   try {
-    console.log('Starting ACRCloud identification with blob size:', audioBlob.size);
+    console.log('Starting ACRCloud identification with blob size:', audioBlob.size, 'type:', audioBlob.type);
     
-    // Convert to ArrayBuffer for ACRCloud
-    const audioBuffer = await audioToArrayBuffer(audioBlob);
-    console.log('Converted to ArrayBuffer, length:', audioBuffer.byteLength);
+    // Ensure minimum audio sample size for ACRCloud
+    if (audioBlob.size < 10000) {
+      console.error('Audio sample too small for ACRCloud:', audioBlob.size);
+      throw new Error('Audio sample too small for fingerprint generation');
+    }
+
+    // Convert audio to compatible format for ACRCloud
+    let processedBlob: Blob;
+    
+    // ACRCloud prefers PCM WAV format - convert if needed
+    if (audioBlob.type.includes('webm') || audioBlob.type.includes('ogg')) {
+      console.log('Converting audio format for ACRCloud compatibility');
+      processedBlob = await convertAudioForACRCloud(audioBlob);
+    } else {
+      processedBlob = audioBlob;
+    }
+    
+    const audioBuffer = await audioToArrayBuffer(processedBlob);
+    console.log('Processed audio buffer length:', audioBuffer.byteLength);
     
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = generateACRCloudSignature(
@@ -170,12 +277,14 @@ export const identifyWithACRCloud = async (audioBlob: Blob): Promise<Track | nul
       timestamp
     );
 
-    // Create FormData with binary audio data
+    // Create FormData with optimized audio data
     const formData = new FormData();
     
-    // Create a new Blob from the ArrayBuffer with proper MIME type
-    const audioFile = new Blob([audioBuffer], { type: 'audio/wav' });
-    formData.append('sample', audioFile, 'sample.wav');
+    // Use original blob type or default to audio/wav for better compatibility
+    const mimeType = processedBlob.type || 'audio/wav';
+    const fileName = mimeType.includes('wav') ? 'sample.wav' : 'sample.webm';
+    
+    formData.append('sample', processedBlob, fileName);
     formData.append('sample_bytes', audioBuffer.byteLength.toString());
     formData.append('access_key', ACRCLOUD_CONFIG.access_key);
     formData.append('data_type', ACRCLOUD_CONFIG.data_type);
