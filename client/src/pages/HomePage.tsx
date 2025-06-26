@@ -33,7 +33,7 @@ const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436
 
 const HomePage: React.FC = () => {
   const [currentSloganIndex, setCurrentSloganIndex] = useState(0);
-  const [liveTrackInfo, setLiveTrackInfo] = useState<{artist: string, title: string}>({
+  const [liveTrackInfo, setLiveTrackInfo] = useState<{artist: string, title: string, timestamp?: number}>({
     artist: 'DHR Live',
     title: 'Loading Live Track Info...'
   });
@@ -77,9 +77,11 @@ const HomePage: React.FC = () => {
           
           if (data.artist && data.title) {
             console.log('🎯 Updating UI with metadata:', data.artist, '-', data.title);
+            // Force state update with timestamp to ensure React re-renders
             setLiveTrackInfo({ 
               artist: data.artist, 
-              title: data.title 
+              title: data.title,
+              timestamp: Date.now()
             });
           } else {
             console.log('⚠️ Metadata missing fields:', data);
@@ -301,14 +303,14 @@ const HomePage: React.FC = () => {
               </div>
 
               {/* Current Track Display - Real Live Metadata */}
-              <div className="bg-gray-900/80 rounded-2xl p-6 mb-6">
+              <div className="bg-gray-900/80 rounded-2xl p-6 mb-6" key={liveTrackInfo.timestamp || 'default'}>
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                     <Waves className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white">{liveTrackInfo.artist}</h3>
-                    <p className="text-gray-400">"{liveTrackInfo.title}"</p>
+                    <h3 className="font-bold text-white" key={`artist-${liveTrackInfo.timestamp}`}>{liveTrackInfo.artist}</h3>
+                    <p className="text-gray-400" key={`title-${liveTrackInfo.timestamp}`}>"{liveTrackInfo.title}"</p>
                     <div className="flex items-center space-x-2 mt-2">
                       <div className="h-1 bg-gray-700 rounded-full flex-1">
                         <div className="h-1 bg-orange-400 rounded-full w-2/3 animate-pulse"></div>
