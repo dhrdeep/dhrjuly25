@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Pause, Volume2, VolumeX, Clock, Zap, Search, Headphones, History, Trash2, ExternalLink, ListMusic, Youtube, AlignJustify as Spotify } from 'lucide-react';
 import { identifyTrack, Track } from '../services/audioRecognition';
+
 // Mock subscription service for demo - replace with actual service
 const mockSubscriptionService = {
   getCurrentUser: () => ({ subscriptionTier: 'vip', username: 'demo_user' })
@@ -24,6 +25,16 @@ const TrackIdentPage: React.FC = () => {
   const [identificationStatus, setIdentificationStatus] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
 
+  // ALL useRef hooks must be declared at the top level
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const autoIdentifyTimer = useRef<NodeJS.Timeout | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+
   useEffect(() => {
     // Get current user subscription status
     const user = mockSubscriptionService.getCurrentUser();
@@ -36,6 +47,26 @@ const TrackIdentPage: React.FC = () => {
       setHasAccess(true);
     }
   }, []);
+
+  // Helper function to check if track is a duplicate
+  const isDuplicateTrack = (newTrack: Track, existingTracks: Track[]) => {
+    const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
+    
+    return existingTracks.some(track => {
+      const trackTime = new Date(track.timestamp).getTime();
+      return (
+        track.title.toLowerCase() === newTrack.title.toLowerCase() &&
+        track.artist.toLowerCase() === newTrack.artist.toLowerCase() &&
+        trackTime > twoHoursAgo
+      );
+    });
+  };
+
+  // Handle artwork loading errors
+  const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log('Artwork Failed To Load, Using DHR Logo Fallback');
+    e.currentTarget.src = DHR_LOGO_URL;
+  };
   
   // Show access denied screen for free users
   if (!hasAccess) {
@@ -88,35 +119,6 @@ const TrackIdentPage: React.FC = () => {
       </div>
     );
   }
-  
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const autoIdentifyTimer = useRef<NodeJS.Timeout | null>(null);
-  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-
-  // Helper function to check if track is a duplicate
-  const isDuplicateTrack = (newTrack: Track, existingTracks: Track[]) => {
-    const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
-    
-    return existingTracks.some(track => {
-      const trackTime = new Date(track.timestamp).getTime();
-      return (
-        track.title.toLowerCase() === newTrack.title.toLowerCase() &&
-        track.artist.toLowerCase() === newTrack.artist.toLowerCase() &&
-        trackTime > twoHoursAgo
-      );
-    });
-  };
-
-  // Handle artwork loading errors
-  const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log('Artwork Failed To Load, Using DHR Logo Fallback');
-    e.currentTarget.src = DHR_LOGO_URL;
-  };
 
   const AudioVisualizer = () => (
     <div className="flex items-end space-x-1 h-12" role="img" aria-label="Audio Visualizer">
