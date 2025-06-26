@@ -24,6 +24,16 @@ const TrackIdentPage: React.FC = () => {
   const [identificationStatus, setIdentificationStatus] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
 
+  // ALL useRef HOOKS MUST BE DECLARED BEFORE ANY EARLY RETURNS
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const autoIdentifyTimer = useRef<NodeJS.Timeout | null>(null);
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+
   useEffect(() => {
     // Get current user subscription status
     const user = mockSubscriptionService.getCurrentUser();
@@ -88,15 +98,6 @@ const TrackIdentPage: React.FC = () => {
       </div>
     );
   }
-  
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const autoIdentifyTimer = useRef<NodeJS.Timeout | null>(null);
-  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
 
   // Helper function to check if track is a duplicate
   const isDuplicateTrack = (newTrack: Track, existingTracks: Track[]) => {
