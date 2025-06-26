@@ -26,8 +26,7 @@ import {
   Eye,
   ExternalLink,
   Clock,
-  Maximize2,
-  Cast
+  Maximize2
 } from 'lucide-react';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
@@ -439,61 +438,14 @@ const HomePage: React.FC = () => {
                 </div>
 
                 {/* Player Controls */}
-                <div className="flex justify-center space-x-3 mb-6">
+                <div className="flex justify-center space-x-4 mb-6">
                   <button 
                     onClick={() => window.open('/player', '_blank', 'width=400,height=600,scrollbars=no,resizable=yes')}
-                    className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 px-3 py-2 rounded-lg text-orange-400 hover:text-orange-300 transition-colors"
+                    className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 px-4 py-2 rounded-lg text-orange-400 hover:text-orange-300 transition-colors"
                     title="Pop Out Player"
                   >
                     <ExternalLink className="h-4 w-4" />
                     <span className="text-sm">Pop Out</span>
-                  </button>
-                  
-                  <button 
-                    onClick={() => {
-                      // Check if Web Share API is available
-                      if (navigator.share) {
-                        navigator.share({
-                          title: 'DHR Live Stream',
-                          text: 'Listen to Deep House Radio live!',
-                          url: window.location.origin
-                        }).catch((error) => {
-                          console.log('Share failed:', error);
-                        });
-                      } else if ('mediaDevices' in navigator && 'getDisplayMedia' in navigator.mediaDevices) {
-                        // Try to trigger casting/screen sharing for the audio
-                        const audio = document.querySelector('audio');
-                        if (audio) {
-                          // For Chrome Cast support
-                          if ('webkitRequestFullscreen' in audio) {
-                            (audio as any).webkitRequestFullscreen();
-                          } else if ('requestFullscreen' in audio) {
-                            audio.requestFullscreen();
-                          } else {
-                            // Fallback: Copy stream URL
-                            const streamUrl = 'https://streaming.shoutcast.com/dhr';
-                            navigator.clipboard.writeText(streamUrl).then(() => {
-                              alert('Stream URL copied! You can paste this into any media player that supports internet radio.');
-                            }).catch(() => {
-                              alert(`Stream URL: ${streamUrl}\n\nCopy this URL into any media player or casting app.`);
-                            });
-                          }
-                        }
-                      } else {
-                        // Fallback for browsers without casting support
-                        const streamUrl = 'https://streaming.shoutcast.com/dhr';
-                        navigator.clipboard.writeText(streamUrl).then(() => {
-                          alert('Stream URL copied! You can paste this into any media player that supports internet radio.');
-                        }).catch(() => {
-                          alert(`Stream URL: ${streamUrl}\n\nCopy this URL into any media player or casting app.`);
-                        });
-                      }
-                    }}
-                    className="flex items-center space-x-2 bg-green-500/20 hover:bg-green-500/30 px-3 py-2 rounded-lg text-green-400 hover:text-green-300 transition-colors"
-                    title="Cast to Device / Share Stream"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    <span className="text-sm">Cast</span>
                   </button>
                   
                   <button 
@@ -508,7 +460,7 @@ const HomePage: React.FC = () => {
                         alert(`Sleep timer set for ${minutes} minutes`);
                       }
                     }}
-                    className="flex items-center space-x-2 bg-blue-500/20 hover:bg-blue-500/30 px-3 py-2 rounded-lg text-blue-400 hover:text-blue-300 transition-colors"
+                    className="flex items-center space-x-2 bg-blue-500/20 hover:bg-blue-500/30 px-4 py-2 rounded-lg text-blue-400 hover:text-blue-300 transition-colors"
                     title="Sleep Timer"
                   >
                     <Clock className="h-4 w-4" />
