@@ -11,20 +11,13 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 26, 2025**: Homepage Metadata System MIGRATED TO PRODUCTION-COMPATIBLE APPROACH
-  - Identified root cause: DHR1 page works in production using external Everestcast API, homepage failed using internal shell commands
-  - Migrated homepage from /api/live-metadata (shell-based) to useCurrentTrack hook with external API
-  - Replaced custom DOM manipulation with same successful approach as DHR1 page
-  - Homepage now uses https://ec1.everestcast.host:2750/api/v2/current (production-compatible)
-  - Both homepage and DHR1 page now display live metadata using identical, proven method
-  - Production deployments should now show real track information consistently across all pages
-- **June 26, 2025**: Casting Functionality for Sonos and Media Devices FULLY OPERATIONAL
-  - Successfully restored Web Share API and Media Session API for device casting
-  - Cast button now functional in media players showing native device selection menu
-  - Confirmed working with Sonos devices, Chromecast, AirPlay, LG webOS TV, and MacBook Pro
-  - Native device sharing menu displays available casting targets automatically
-  - Enhanced media metadata integration for better device control and track information
-  - Cast functionality verified working across all media player components
+- **June 25, 2025**: Restored Casting Functionality for Sonos and Media Devices
+  - Implemented Web Share API and Media Session API for device casting capabilities
+  - Cast button now appears in media players when casting is available
+  - Native device sharing supports Sonos, Chromecast, AirPlay, and other compatible devices
+  - Fallback options provide stream URL for manual casting when native sharing unavailable
+  - Enhanced media metadata for better device integration and control
+  - Cast functionality works across all media player components
 - **June 25, 2025**: Production Deployment Metadata System COMPLETE
   - Implemented comprehensive dual-approach metadata extraction system
   - Development: Shell command approach extracts authentic track data ("SoundOfTheUnderground - #KRGP Vol 002 Guest Mix")
