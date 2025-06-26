@@ -54,11 +54,10 @@ const HomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch live track metadata from Everestcast API
+  // Fetch live track metadata
   useEffect(() => {
     const fetchLiveMetadata = async () => {
       try {
-        // Scrape metadata from Everestcast stream 1 (premium player)
         const response = await fetch('/api/live-metadata', {
           method: 'GET',
           headers: {
@@ -77,12 +76,16 @@ const HomePage: React.FC = () => {
         } else if (response.status === 500) {
           console.error('Metadata API server error:', response.status);
           setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
+        } else if (response.status === 502) {
+          console.log('Network gateway error - retrying...');
+          setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         } else {
           console.error('Metadata API response not ok:', response.status);
           setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
         }
       } catch (error) {
         console.error('Failed to fetch live metadata:', error);
+        setLiveTrackInfo({ artist: 'DHR Live', title: 'Stream Connecting...' });
       }
     };
 
