@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
-import TrackIdentPage from './pages/TrackIdentPageWorking';
+import TrackIdentPage from './pages/TrackIdentPageRestored';
 import DHR1Page from './pages/DHR1Page';
 import DHR2Page from './pages/DHR2Page';
 import VIPPage from './pages/VIPPage';
