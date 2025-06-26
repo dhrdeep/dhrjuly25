@@ -11,13 +11,13 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 26, 2025**: Production Metadata Display System FULLY OPERATIONAL
-  - Implemented comprehensive DOM manipulation strategies bypassing React state management issues
-  - Added triple-redundancy metadata updates: React refs, getElementById, querySelector with innerHTML
-  - Fixed production deployment metadata display using direct DOM control with forced visual updates
-  - Removed React state dependencies from HTML elements to prevent re-rendering conflicts
-  - Live track information now displays correctly in production: "SoundOfTheUnderground - #KRGP Vol 002 Guest Mix"
-  - System executes multiple update strategies with timing delays for maximum compatibility
+- **June 26, 2025**: Homepage Metadata System MIGRATED TO PRODUCTION-COMPATIBLE APPROACH
+  - Identified root cause: DHR1 page works in production using external Everestcast API, homepage failed using internal shell commands
+  - Migrated homepage from /api/live-metadata (shell-based) to useCurrentTrack hook with external API
+  - Replaced custom DOM manipulation with same successful approach as DHR1 page
+  - Homepage now uses https://ec1.everestcast.host:2750/api/v2/current (production-compatible)
+  - Both homepage and DHR1 page now display live metadata using identical, proven method
+  - Production deployments should now show real track information consistently across all pages
 - **June 26, 2025**: Casting Functionality for Sonos and Media Devices FULLY OPERATIONAL
   - Successfully restored Web Share API and Media Session API for device casting
   - Cast button now functional in media players showing native device selection menu
