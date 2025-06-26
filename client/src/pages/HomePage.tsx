@@ -438,14 +438,39 @@ const HomePage: React.FC = () => {
                 </div>
 
                 {/* Player Controls */}
-                <div className="flex justify-center space-x-4 mb-6">
+                <div className="flex justify-center space-x-3 mb-6">
                   <button 
                     onClick={() => window.open('/player', '_blank', 'width=400,height=600,scrollbars=no,resizable=yes')}
-                    className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 px-4 py-2 rounded-lg text-orange-400 hover:text-orange-300 transition-colors"
+                    className="flex items-center space-x-2 bg-orange-500/20 hover:bg-orange-500/30 px-3 py-2 rounded-lg text-orange-400 hover:text-orange-300 transition-colors"
                     title="Pop Out Player"
                   >
                     <ExternalLink className="h-4 w-4" />
                     <span className="text-sm">Pop Out</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: 'DHR Live Stream',
+                          text: 'Listen to Deep House Radio live!',
+                          url: 'https://streaming.shoutcast.com/dhr'
+                        });
+                      } else {
+                        // Fallback for browsers without native share API
+                        const url = 'https://streaming.shoutcast.com/dhr';
+                        navigator.clipboard.writeText(url).then(() => {
+                          alert('Stream URL copied to clipboard!');
+                        }).catch(() => {
+                          alert('Stream URL: https://streaming.shoutcast.com/dhr');
+                        });
+                      }
+                    }}
+                    className="flex items-center space-x-2 bg-green-500/20 hover:bg-green-500/30 px-3 py-2 rounded-lg text-green-400 hover:text-green-300 transition-colors"
+                    title="Cast/Share Stream"
+                  >
+                    <Cast className="h-4 w-4" />
+                    <span className="text-sm">Cast</span>
                   </button>
                   
                   <button 
@@ -460,7 +485,7 @@ const HomePage: React.FC = () => {
                         alert(`Sleep timer set for ${minutes} minutes`);
                       }
                     }}
-                    className="flex items-center space-x-2 bg-blue-500/20 hover:bg-blue-500/30 px-4 py-2 rounded-lg text-blue-400 hover:text-blue-300 transition-colors"
+                    className="flex items-center space-x-2 bg-blue-500/20 hover:bg-blue-500/30 px-3 py-2 rounded-lg text-blue-400 hover:text-blue-300 transition-colors"
                     title="Sleep Timer"
                   >
                     <Clock className="h-4 w-4" />
