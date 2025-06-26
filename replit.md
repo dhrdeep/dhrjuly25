@@ -11,7 +11,7 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 25, 2025**: Production Deployment Metadata System COMPLETE
+- **June 25, 2025**: Production Deployment Metadata System COMPLETE + Casting Button Restored
   - Implemented comprehensive dual-approach metadata extraction system
   - Development: Shell command approach extracts authentic track data ("DJ Rezar - Gold Mix Ep. 25")
   - Production: HTTP stream connection with Icy-MetaData headers for deployed environments
@@ -20,6 +20,8 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - System automatically falls back from shell to HTTP when deployment environment restricts commands
   - Updated Google Play Store URL to correct app ID: com.ni.deephouseradio
   - Metadata API now production-ready with comprehensive error handling and fallback mechanisms
+  - RESTORED: Casting button functionality in free player with enhanced multi-device support
+  - Casting supports native share API, fullscreen audio casting, and stream URL copying fallback
 - **June 25, 2025**: Homepage Branding and Layout Updates
   - Added "DEEP HOUSE RADIO" subtitle under main DHR title in hero section
   - Removed "DEEP HOUSE RADIO" from navigation header for cleaner layout
