@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Headphones } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface SimpleStreamPlayerProps {
   channel: 'dhr1' | 'dhr2';
@@ -15,12 +16,12 @@ export default function SimpleStreamPlayer({ channel, className = '' }: SimpleSt
   // Configuration based on channel
   const config = {
     dhr1: {
-      streamUrl: 'https://ec1.everestcast.host:2750/stream/1',
+      streamUrl: 'https://ec1.everestcast.host:2775/stream',
       name: 'DHR1 Premium',
       color: '#f79e02'
     },
     dhr2: {
-      streamUrl: 'https://ec1.everestcast.host:1480/stream/1',
+      streamUrl: 'https://ec1.everestcast.host:2775/stream',
       name: 'DHR2 Exclusive', 
       color: '#fa9200'
     }
@@ -28,15 +29,40 @@ export default function SimpleStreamPlayer({ channel, className = '' }: SimpleSt
 
   const currentConfig = config[channel];
 
-  const togglePlayPause = () => {
+  // Fetch live metadata for current mix set and DJ info
+  const { data: liveMetadata } = useQuery({
+    queryKey: ['live-metadata'],
+    queryFn: async () => {
+      const response = await fetch('/api/live-metadata');
+      if (!response.ok) throw new Error('Failed to fetch metadata');
+      return response.json();
+    },
+    refetchInterval: 30000, // Update every 30 seconds
+  });
+
+  // Set up audio element properties
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+      audioRef.current.crossOrigin = 'anonymous';
+      audioRef.current.preload = 'none';
+    }
+  }, [volume]);
+
+  const togglePlayPause = async () => {
     if (!audioRef.current) return;
     
-    if (isPlaying) {
-      audioRef.current.pause();
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Audio playback error:', error);
       setIsPlaying(false);
-    } else {
-      audioRef.current.play();
-      setIsPlaying(true);
     }
   };
 
@@ -89,7 +115,7 @@ export default function SimpleStreamPlayer({ channel, className = '' }: SimpleSt
         </div>
       </div>
 
-      {/* Current Track Display */}
+      {/* Current Mix Set Display */}
       <div className="p-6 bg-gray-800">
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -107,11 +133,33 @@ export default function SimpleStreamPlayer({ channel, className = '' }: SimpleSt
           </div>
           
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-white text-lg truncate">Deep House Radio</h4>
-            <p className="text-gray-300 text-sm truncate">{currentConfig.name}</p>
-            <p className="text-gray-400 text-xs truncate">Live Streaming</p>
+            <h4 className="font-semibold text-white text-lg truncate">
+              {liveMetadata?.title || 'Deep House Radio'}
+            </h4>
+            <p className="text-gray-300 text-sm truncate">
+              {liveMetadata?.artist || currentConfig.name}
+            </p>
+            <p className="text-gray-400 text-xs truncate">
+              {isPlaying ? 'Live Now' : 'Ready to Stream'}
+            </p>
           </div>
         </div>
+        
+        {/* Mix Set Info Banner */}
+        {liveMetadata?.title && (
+          <div className="mt-4 p-3 bg-gray-700 rounded-lg border-l-4" style={{ borderLeftColor: currentConfig.color }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white text-sm font-medium">Now Playing</p>
+                <p className="text-gray-300 text-xs">{liveMetadata.title}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-orange-400 text-xs font-medium">LIVE</p>
+                <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-gray-500'} mx-auto mt-1`}></div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Controls */}
