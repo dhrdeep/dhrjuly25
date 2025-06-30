@@ -54,14 +54,16 @@
 
 .floating-dhr-logo {
   position: absolute;
-  font-family: 'Arial Black', Arial, sans-serif;
-  font-weight: 900;
-  font-size: 300px;
-  color: rgba(247, 158, 2, 0.04);
+  width: 300px;
+  height: 300px;
+  background-image: url('https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.04;
   animation: ghostlyOrbitSlow 60s linear infinite;
   user-select: none;
-  text-shadow: 0 0 80px rgba(247, 158, 2, 0.08);
-  filter: blur(1px);
+  filter: blur(1px) brightness(1.2);
   transform-origin: center center;
 }
 
@@ -75,8 +77,9 @@
 .floating-dhr-logo:nth-child(2) {
   top: 50%;
   left: 50%;
-  font-size: 250px;
-  color: rgba(247, 158, 2, 0.03);
+  width: 250px;
+  height: 250px;
+  opacity: 0.03;
   transform: translate(-50%, -50%);
   animation: spreadToTopLeft 3s ease-out forwards, ghostlyOrbitSlow 80s linear infinite 3s, ghostlyPulse60bpm 1s ease-in-out infinite 3s;
 }
@@ -84,8 +87,9 @@
 .floating-dhr-logo:nth-child(3) {
   top: 50%;
   left: 50%;
-  font-size: 350px;
-  color: rgba(247, 158, 2, 0.035);
+  width: 350px;
+  height: 350px;
+  opacity: 0.035;
   transform: translate(-50%, -50%);
   animation: spreadToBottomRight 3s ease-out forwards, ghostlyOrbitSlow 100s linear infinite 3s, ghostlyPulse30bpm 2s ease-in-out infinite 3s;
 }
