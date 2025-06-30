@@ -382,7 +382,7 @@ export default function DragonPage() {
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
         mimeType: mimeType,
-        audioBitsPerSecond: 384000 // Specific bitrate to match 402KB target
+        audioBitsPerSecond: 128000 // Match input stream bitrate exactly
       });
       
       console.log('Starting MediaRecorder...');
