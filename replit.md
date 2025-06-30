@@ -11,14 +11,14 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 30, 2025**: Dragon Page Track Identification - COMPLETE Implementation Using Direct Client-Side API Calls
-  - Implemented direct client-side ACRCloud and Shazam API calls (matches working system exactly)
-  - Audio settings match working system: 320kbps bitrate, 14-second duration, 1000ms chunks
-  - Added comprehensive debugging for API credential verification
-  - Environment variables configured: VITE_ACRCLOUD_ACCESS_KEY, VITE_ACRCLOUD_ACCESS_SECRET, VITE_SHAZAM_API_KEY
-  - Should now generate 402KB audio files like working system that identifies "Jones Meadow - Guybrush"
-  - Dragon page now bypasses server-side processing for direct API communication
-  - Audio capture: WebM 402KB → Direct ACRCloud API → Shazam fallback → Track identification
+- **June 30, 2025**: Dragon Page Auto-Identification & Enhanced Audio Capture System
+  - Implemented automatic track identification: first run after 30 seconds, then every minute
+  - Enhanced audio capture with maximum quality settings: 4MB/s bitrate, 48kHz sample rate
+  - Prioritized uncompressed formats (WAV, PCM) over compressed Opus for larger file generation
+  - Removed non-working Shazam API integration, focusing solely on ACRCloud
+  - Audio timeslice increased to 2 seconds generating 7KB chunks (was 3.6KB)
+  - System targets 402KB audio files to match working track identification specifications
+  - Auto-identification timer properly handles first 30-second delay then 60-second intervals
 - **June 30, 2025**: Dragon Page Track Identification - Implementing Working System Specifications
   - Implemented direct client-side ACRCloud and Shazam API calls in Dragon page
   - Applied exact specifications from working system documentation:

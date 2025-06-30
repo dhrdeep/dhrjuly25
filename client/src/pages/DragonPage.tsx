@@ -372,8 +372,10 @@ export default function DragonPage() {
       console.log('Manual Identification Triggered');
       console.log('Created New AudioContext');
       
-      // Create AudioContext exactly like working system
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Create AudioContext with high sample rate for maximum quality like working system
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+        sampleRate: 48000 // High sample rate for better quality and larger files
+      });
       const source = audioContext.createMediaElementSource(audioRef.current);
       const destination = audioContext.createMediaStreamDestination();
       const gainNode = audioContext.createGain();
@@ -389,33 +391,46 @@ export default function DragonPage() {
       console.log('Clearing Auto-Identification Timer');
       console.log('Audio Tracks Found:', destination.stream.getAudioTracks().length);
       
-      // Try different MIME type to see if we can get larger files
-      let mimeType = 'audio/webm';
-      let options = {};
+      // Try to match working system's 402KB target - use highest quality uncompressed format
+      let mimeType = 'audio/webm;codecs=pcm';
       
-      // Test what MIME types are supported
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=pcm')) {
-        mimeType = 'audio/webm;codecs=pcm';
-        console.log('Using PCM codec for larger files');
-      } else if (MediaRecorder.isTypeSupported('audio/wav')) {
-        mimeType = 'audio/wav';
-        console.log('Using WAV format for larger files');
-      } else {
-        mimeType = 'audio/webm;codecs=opus';
-        console.log('Fallback to Opus codec');
+      // Test what MIME types are supported - prioritize uncompressed formats
+      const preferredFormats = [
+        'audio/wav',           // Uncompressed WAV - should be largest
+        'audio/webm;codecs=pcm',  // Uncompressed PCM
+        'audio/ogg;codecs=flac',  // Lossless FLAC
+        'audio/webm;codecs=opus', // Compressed Opus (fallback)
+        'audio/webm'           // Generic WebM
+      ];
+      
+      for (const format of preferredFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          mimeType = format;
+          console.log(`Using highest quality format: ${format}`);
+          break;
+        }
+      }
+      
+      if (mimeType === 'audio/webm;codecs=opus') {
+        console.log('Fallback to Opus codec - will use maximum bitrate');
       }
       
       console.log(`Using MIME Type: ${mimeType}`);
       
-      // Match working system settings exactly - use detected MIME type with maximum bitrate
+      // Match working system settings exactly - use detected MIME type with maximum quality
       const recorderOptions: MediaRecorderOptions = {
         mimeType: mimeType
       };
       
-      // Only add bitrate for compressed formats
-      if (mimeType.includes('opus') || mimeType.includes('webm')) {
-        recorderOptions.audioBitsPerSecond = 2048000; // Maximum bitrate to generate 402KB files
+      // Set maximum bitrate for compressed formats to reach 402KB target
+      if (mimeType.includes('opus')) {
+        // Opus can handle very high bitrates - try extreme quality
+        recorderOptions.audioBitsPerSecond = 4096000; // 4MB/s bitrate for 402KB target over 25s
+      } else if (mimeType.includes('webm') && !mimeType.includes('pcm')) {
+        recorderOptions.audioBitsPerSecond = 2048000; // 2MB/s for other WebM formats
       }
+      
+      console.log('Recorder options:', recorderOptions);
       
       const mediaRecorder = new MediaRecorder(destination.stream, recorderOptions);
       
