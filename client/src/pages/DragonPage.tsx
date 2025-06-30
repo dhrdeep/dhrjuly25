@@ -84,21 +84,17 @@ export default function DragonPage() {
     }
   };
 
-  // ACRCloud identification (direct client implementation)
+  // ACRCloud identification (direct client implementation - matching working system)
   const identifyWithACRCloud = async (audioBlob: Blob): Promise<Track | null> => {
     try {
-      console.log(`Starting ACRCloud identification with blob size: ${audioBlob.size}, type: ${audioBlob.type}`);
+      console.log(`Starting ACRCloud identification with blob size: ${audioBlob.size}`);
       
-      // Always convert to WAV format for better ACRCloud compatibility
-      console.log('Converting audio to WAV format for ACRCloud...');
-      const wavBlob = await convertAudioForACRCloud(audioBlob);
-      console.log(`Converted to WAV, size: ${wavBlob.size}`);
-      
-      const arrayBuffer = await wavBlob.arrayBuffer();
-      console.log(`WAV ArrayBuffer length: ${arrayBuffer.byteLength}`);
+      // Use original WebM blob directly (like working system)
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      console.log(`Converted to ArrayBuffer, length: ${arrayBuffer.byteLength}`);
       
       const formData = new FormData();
-      formData.append('sample', wavBlob, 'sample.wav');
+      formData.append('sample', audioBlob);
       formData.append('sample_bytes', arrayBuffer.byteLength.toString());
       formData.append('access_key', import.meta.env.VITE_ACRCLOUD_ACCESS_KEY || '');
       
@@ -112,17 +108,11 @@ export default function DragonPage() {
       formData.append('timestamp', timestamp.toString());
       formData.append('data_type', 'audio');
       
-      console.log('Sending WAV audio to ACRCloud...');
-      console.log('Access Key:', import.meta.env.VITE_ACRCLOUD_ACCESS_KEY?.substring(0, 8) + '...');
-      
+      console.log('Sending request to ACRCloud...');
       const response = await fetch('https://identify-eu-west-1.acrcloud.com/v1/identify', {
         method: 'POST',
         body: formData
       });
-      
-      if (!response.ok) {
-        throw new Error(`ACRCloud API response: ${response.status} ${response.statusText}`);
-      }
       
       const result = await response.json();
       console.log('ACRCloud response:', result);
@@ -337,7 +327,7 @@ export default function DragonPage() {
   const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
-      setIdentificationStatus('Recording 15 Seconds For Identification...');
+      setIdentificationStatus('Recording 30 Seconds For Better Identification...');
       
       const stream = await setupAudioCapture();
       if (!stream) {
@@ -364,7 +354,7 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${selectedFormat}`);
       mediaRecorder = new MediaRecorder(stream, {
         mimeType: selectedFormat,
-        audioBitsPerSecond: 320000 // Higher quality for better fingerprinting
+        audioBitsPerSecond: 128000 // Match working system bitrate
       });
       
       const chunks: Blob[] = [];
@@ -409,12 +399,12 @@ export default function DragonPage() {
       };
 
       console.log('Starting audio recording...');
-      mediaRecorder.start(500); // Capture in 500ms chunks
+      mediaRecorder.start(1000); // Capture in 1000ms chunks for larger data
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 15000); // 15 second capture as recommended
+      }, 30000); // 30 second capture to match working system blob size
       
     } catch (error) {
       console.error('Audio capture error:', error);
@@ -624,7 +614,7 @@ export default function DragonPage() {
         <div className="bg-slate-800 rounded-2xl p-6 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-2">Track Identification System</h2>
-            <p className="text-slate-400">15-Second Audio Capture • ACRCloud API</p>
+            <p className="text-slate-400">30-Second Audio Capture • ACRCloud API</p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
@@ -722,7 +712,7 @@ export default function DragonPage() {
         {/* Footer */}
         <div className="text-center mt-8 text-slate-500">
           <p className="text-sm">
-            Powered By ACRCloud API • 15-Second Audio Capture • Dublin Timezone
+            Powered By ACRCloud API • 30-Second Audio Capture • Dublin Timezone
           </p>
         </div>
       </div>
