@@ -445,6 +445,93 @@ export default function DragonPage() {
     return buffer;
   };
 
+  // Convert WAV to format optimized for ACRCloud recognition
+  const convertWAVForACRCloud = useCallback(async (wavBlob: Blob): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+          sampleRate: 44100 // ACRCloud standard sample rate
+        });
+        
+        const fileReader = new FileReader();
+        fileReader.onload = async (e) => {
+          try {
+            const arrayBuffer = e.target?.result as ArrayBuffer;
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            
+            // Create a shorter, more focused clip (ACRCloud works better with 15-20 seconds)
+            const duration = Math.min(audioBuffer.duration, 15);
+            const sampleRate = 44100;
+            const samples = duration * sampleRate;
+            
+            const offlineContext = new OfflineAudioContext(1, samples, sampleRate);
+            const source = offlineContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(offlineContext.destination);
+            source.start(0);
+            
+            const renderedBuffer = await offlineContext.startRendering();
+            
+            // Convert to 16-bit PCM data optimized for ACRCloud
+            const pcmData = renderedBuffer.getChannelData(0);
+            const int16Array = new Int16Array(pcmData.length);
+            
+            for (let i = 0; i < pcmData.length; i++) {
+              int16Array[i] = Math.max(-32768, Math.min(32767, pcmData[i] * 32767));
+            }
+            
+            // Create optimized WAV with ACRCloud-preferred settings
+            const wavBuffer = createOptimizedWAVBuffer(int16Array, sampleRate);
+            const optimizedBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+            
+            console.log(`WAV optimization complete: ${optimizedBlob.size} bytes (was ${wavBlob.size})`);
+            resolve(optimizedBlob);
+            
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        fileReader.onerror = () => reject(new Error('Failed to read WAV file'));
+        fileReader.readAsArrayBuffer(wavBlob);
+        
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }, []);
+
+  const createOptimizedWAVBuffer = (pcmData: Int16Array, sampleRate: number): ArrayBuffer => {
+    const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+    const view = new DataView(buffer);
+    
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    // Optimized WAV header for ACRCloud (44.1kHz, 16-bit, mono)
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + pcmData.length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);  // PCM format
+    view.setUint16(22, 1, true);  // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true); // 16-bit
+    writeString(36, 'data');
+    view.setUint32(40, pcmData.length * 2, true);
+    
+    const pcmView = new Int16Array(buffer, 44);
+    pcmView.set(pcmData);
+    
+    return buffer;
+  };
+
   // Standalone audio identification processing function
   const processAudioForIdentification = useCallback(async (audioBlob: Blob) => {
     try {
