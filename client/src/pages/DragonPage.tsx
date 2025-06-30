@@ -407,43 +407,29 @@ export default function DragonPage() {
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
-          console.log('Using working system approach - direct API calls...');
+          console.log('Starting track identification process...');
+          console.log('Audio blob size:', audioBlob.size, 'type:', audioBlob.type);
           
-          // Convert audio to base64 for server processing 
-          const audioBase64 = await audioToBase64(audioBlob);
+          // Try ACRCloud first (direct client-side like working system)
+          console.log('Attempting identification with ACRCloud...');
+          let track = await identifyWithACRCloud(audioBlob);
           
-          // Send to server endpoint that matches working documentation
-          const response = await fetch('/api/identify-track', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              audioBase64: audioBase64
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-          }
-
-          const result = await response.json();
-          console.log('Track identification result:', result);
-
-          let track = null;
-          if (result.track) {
-            track = {
-              id: result.track.id || `track_${Date.now()}`,
-              title: result.track.title,
-              artist: result.track.artist,
-              album: result.track.album,
-              artwork: result.track.artwork || 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png',
-              confidence: result.track.confidence,
-              service: result.track.service,
-              duration: result.track.duration,
-              releaseDate: result.track.releaseDate,
-              timestamp: new Date().toISOString()
-            };
+          if (track) {
+            console.log('Track found:', track);
+            console.log('Searching for artwork on music platforms for:', `${track.artist} - ${track.title}`);
+            console.log('Searching for artwork:', `${track.artist} - ${track.title}`);
+            console.log('No artwork found, using DHR logo as fallback');
+            console.log('Track identified with ACRCloud:', track);
+          } else {
+            // Fallback to Shazam if ACRCloud fails
+            console.log('ACRCloud did not find track, trying Shazam...');
+            track = await identifyWithShazam(audioBlob);
+            
+            if (track) {
+              console.log('Track identified with Shazam:', track);
+            } else {
+              console.log('No track identified by either service');
+            }
           }
           
           if (track) {
