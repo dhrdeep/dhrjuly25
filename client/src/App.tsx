@@ -20,6 +20,7 @@ import UserManagementPage from './pages/UserManagementPage';
 import PlayerPopoutPage from './pages/PlayerPopoutPage';
 
 import TrackHistoryPage from './pages/TrackHistoryPage';
+import LiveMonitorPage from './pages/LiveMonitorPage';
 
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
@@ -47,6 +48,7 @@ function App() {
             <Route path="/player" element={<PlayerPopoutPage />} />
 
             <Route path="/track-history" element={<TrackHistoryPage />} />
+            <Route path="/live-monitor" element={<LiveMonitorPage />} />
 
             <Route path="/sync" element={<SyncPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />

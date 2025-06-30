@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Headphones, Radio } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Headphones, Radio, Cast, Timer, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 interface ReliableStreamPlayerProps {
@@ -12,7 +12,10 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
   const [volume, setVolume] = useState(75);
   const [isMuted, setIsMuted] = useState(false);
   const [streamStatus, setStreamStatus] = useState<'loading' | 'ready' | 'error'>('ready');
+  const [sleepTimer, setSleepTimer] = useState<number | null>(null);
+  const [showSleepMenu, setShowSleepMenu] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const sleepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stream configuration based on channel
   const channelConfig = {
@@ -108,6 +111,56 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
     }
   };
 
+  const setSleepTimerMinutes = (minutes: number) => {
+    if (sleepTimeoutRef.current) {
+      clearTimeout(sleepTimeoutRef.current);
+    }
+    
+    setSleepTimer(minutes);
+    setShowSleepMenu(false);
+    
+    sleepTimeoutRef.current = setTimeout(() => {
+      if (audioRef.current && isPlaying) {
+        audioRef.current.pause();
+      }
+      setSleepTimer(null);
+    }, minutes * 60 * 1000);
+  };
+
+  const clearSleepTimer = () => {
+    if (sleepTimeoutRef.current) {
+      clearTimeout(sleepTimeoutRef.current);
+      sleepTimeoutRef.current = null;
+    }
+    setSleepTimer(null);
+  };
+
+  const handleCast = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: `${config.name} - Deep House Radio`,
+        text: `Listen to ${config.name} live stream`,
+        url: config.streamUrl,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(config.streamUrl);
+      alert('Stream URL copied to clipboard for casting');
+    }
+  };
+
+  const openLiveMonitor = () => {
+    window.open('/live-monitor', '_blank');
+  };
+
+  // Cleanup sleep timer on unmount
+  useEffect(() => {
+    return () => {
+      if (sleepTimeoutRef.current) {
+        clearTimeout(sleepTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const getStatusText = () => {
     if (streamStatus === 'loading') return 'Connecting...';
     if (streamStatus === 'error') return 'Connection Error';
@@ -196,7 +249,7 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
         </div>
 
         {/* Volume Control */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <button onClick={toggleMute} className="text-gray-400 hover:text-white">
             {isMuted || volume === 0 ? (
               <VolumeX className="h-5 w-5" />
@@ -218,6 +271,63 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
             />
           </div>
           <span className="text-xs text-gray-400 w-8">{isMuted ? 0 : volume}</span>
+        </div>
+
+        {/* Additional Controls */}
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={handleCast}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-sm text-white transition-colors"
+            title="Cast to Device"
+          >
+            <Cast className="h-4 w-4" />
+            <span>Cast</span>
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowSleepMenu(!showSleepMenu)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white transition-colors ${
+                sleepTimer ? 'bg-orange-600 hover:bg-orange-500' : 'bg-gray-600 hover:bg-gray-500'
+              }`}
+              title={sleepTimer ? `Sleep timer: ${sleepTimer}min` : 'Set sleep timer'}
+            >
+              <Timer className="h-4 w-4" />
+              <span>{sleepTimer ? `${sleepTimer}m` : 'Sleep'}</span>
+            </button>
+
+            {showSleepMenu && (
+              <div className="absolute bottom-full mb-2 right-0 bg-gray-800 rounded-lg border border-gray-600 shadow-xl p-2 min-w-32 z-50">
+                <div className="text-xs text-gray-400 mb-2">Sleep Timer</div>
+                {[15, 30, 60, 90].map((minutes) => (
+                  <button
+                    key={minutes}
+                    onClick={() => setSleepTimerMinutes(minutes)}
+                    className="block w-full text-left px-3 py-1 text-sm text-white hover:bg-gray-700 rounded"
+                  >
+                    {minutes} min
+                  </button>
+                ))}
+                {sleepTimer && (
+                  <button
+                    onClick={clearSleepTimer}
+                    className="block w-full text-left px-3 py-1 text-sm text-red-400 hover:bg-gray-700 rounded mt-1 border-t border-gray-600 pt-2"
+                  >
+                    Clear Timer
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={openLiveMonitor}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-sm text-white transition-colors"
+            title="View Track History"
+          >
+            <ExternalLink className="h-4 w-4" />
+            <span>Tracks</span>
+          </button>
         </div>
       </div>
     </div>
