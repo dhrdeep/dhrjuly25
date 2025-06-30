@@ -57,7 +57,7 @@ class StreamMonitor {
   private monitorInterval: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.streamUrl = 'https://stream.deep-house-radio.com:8443/dhrmixed';
+    this.streamUrl = 'https://ec1.everestcast.host:2775/stream';
     this.accessKey = process.env.VITE_ACRCLOUD_ACCESS_KEY || process.env.ACRCLOUD_ACCESS_KEY || '';
     this.accessSecret = process.env.VITE_ACRCLOUD_ACCESS_SECRET || process.env.ACRCLOUD_ACCESS_SECRET || '';
     this.host = 'identify-eu-west-1.acrcloud.com';
