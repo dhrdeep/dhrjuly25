@@ -354,7 +354,7 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${selectedFormat}`);
       mediaRecorder = new MediaRecorder(stream, {
         mimeType: selectedFormat,
-        audioBitsPerSecond: 128000 // Match working system bitrate
+        audioBitsPerSecond: 256000 // Higher bitrate for larger blob size
       });
       
       const chunks: Blob[] = [];
@@ -369,6 +369,7 @@ export default function DragonPage() {
       mediaRecorder.onstop = async () => {
         console.log('Recording stopped, processing audio...');
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        console.log(`Created Audio Blob: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
@@ -399,7 +400,7 @@ export default function DragonPage() {
       };
 
       console.log('Starting audio recording...');
-      mediaRecorder.start(1000); // Capture in 1000ms chunks for larger data
+      mediaRecorder.start(); // Start recording without chunks to get larger blob
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
