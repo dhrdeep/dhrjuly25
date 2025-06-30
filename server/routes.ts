@@ -2015,9 +2015,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Conversion completed');
       
       // Use official ACRCloud extraction tool with -cli flag for recognition
-      const command = `cd server && ./acrcloud_extr -cli -l 12 -i ${tempWav} -o ${tempOutput}`;
+      const command = `cd ${process.cwd()}/server && ./acrcloud_extr --debug -cli -l 12 -i ${tempWav} -o ${tempOutput}`;
       
       console.log('Running ACRCloud extraction tool on converted WAV...');
+      console.log('Command:', command);
+      console.log('WAV file exists:', fs.existsSync(tempWav));
+      if (fs.existsSync(tempWav)) {
+        const stats = fs.statSync(tempWav);
+        console.log('WAV file size:', stats.size, 'bytes');
+      }
       const result = execSync(command, { encoding: 'utf8' });
       console.log('ACRCloud extraction tool output:', result);
       
