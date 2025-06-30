@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Mic, MicOff, RotateCcw, Music, Headphones, Radio, Search } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Mic, MicOff, RotateCcw, Music, Headphones, Radio } from 'lucide-react';
 
 interface Track {
   id: string;
@@ -14,7 +14,7 @@ interface Track {
   timestamp: string;
 }
 
-export default function DragonPage() {
+export default function NewTrackIdentPage() {
   // Audio player state
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
@@ -26,14 +26,13 @@ export default function DragonPage() {
   const [identificationStatus, setIdentificationStatus] = useState('');
   const [identifiedTracks, setIdentifiedTracks] = useState<Track[]>([]);
   const [autoIdentify, setAutoIdentify] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   
   // Refs
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
-  const destinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const autoIdentifyTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Stream URL - using DHR stream
@@ -50,56 +49,14 @@ export default function DragonPage() {
     };
   }, []);
 
-  // Convert audio blob to base64
-  const audioToBase64 = (audioBlob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const arrayBuffer = reader.result as ArrayBuffer;
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('');
-        resolve(btoa(binaryString));
-      };
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(audioBlob);
-    });
-  };
-
-  // Main identification function - calls server endpoint
-  const identifyTrack = async (audioBlob: Blob): Promise<Track | null> => {
-    try {
-      const audioBase64 = await audioToBase64(audioBlob);
-
-      const response = await fetch('/api/identify-track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audioBase64 })
-      });
-
-      const result = await response.json();
-      
-      if (result.track) {
-        return {
-          id: `${result.track.service?.toLowerCase() || 'track'}_${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          ...result.track
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Track identification error:', error);
-      return null;
-    }
-  };
-
   // Auto-identification timer
   useEffect(() => {
     if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
       const interval = setInterval(() => {
         if (!isIdentifying && isPlaying && connectionStatus === 'connected') {
-          captureStreamAudio();
+          handleIdentifyTrack();
         }
-      }, 60000); // Every 60 seconds as per documentation
+      }, 30000); // Every 30 seconds
       autoIdentifyTimer.current = interval;
     } else if (autoIdentifyTimer.current) {
       clearInterval(autoIdentifyTimer.current);
@@ -113,7 +70,6 @@ export default function DragonPage() {
     };
   }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
 
-  // Prevent duplicate tracks within 2 hours
   const isDuplicateTrack = useCallback((newTrack: Track, existingTracks: Track[]) => {
     const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
     
@@ -127,85 +83,174 @@ export default function DragonPage() {
     });
   }, []);
 
-  // Setup audio capture from live stream
   const setupAudioCapture = async () => {
     try {
-      if (!audioRef.current) return null;
-
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
+      if (!audioRef.current) {
+        console.error('Audio element not available');
+        return null;
       }
 
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+
+      const audioElement = audioRef.current;
       const audioContext = audioContextRef.current;
-      
+
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
 
-      if (!sourceNodeRef.current) {
-        sourceNodeRef.current = audioContext.createMediaElementSource(audioRef.current);
+      const source = audioContext.createMediaElementSource(audioElement);
+      const destination = audioContext.createMediaStreamDestination();
+      
+      if (!gainNodeRef.current) {
         gainNodeRef.current = audioContext.createGain();
-        destinationRef.current = audioContext.createMediaStreamDestination();
-        
-        sourceNodeRef.current.connect(gainNodeRef.current);
-        gainNodeRef.current.connect(audioContext.destination);
-        gainNodeRef.current.connect(destinationRef.current);
+        gainNodeRef.current.gain.value = isMuted ? 0 : volume;
       }
 
-      return destinationRef.current.stream;
+      source.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContext.destination);
+      gainNodeRef.current.connect(destination);
+
+      return destination.stream;
     } catch (error) {
       console.error('Audio capture setup error:', error);
       return null;
     }
   };
 
-  // Capture 25 seconds of audio for identification
-  const captureStreamAudio = useCallback(async () => {
+  const handleIdentifyTrack = useCallback(async () => {
+    if (!isPlaying) {
+      setIdentificationStatus('Please Start Playing Audio First');
+      setTimeout(() => setIdentificationStatus(''), 3000);
+      return;
+    }
+
+    if (connectionStatus !== 'connected') {
+      setIdentificationStatus('Audio Stream Not Connected');
+      setTimeout(() => setIdentificationStatus(''), 3000);
+      return;
+    }
+
+    setIsIdentifying(true);
+    setIdentificationStatus('Recording 14 Seconds For Track Identification...');
+
     try {
-      setIsIdentifying(true);
-      setIdentificationStatus('Recording 25 Seconds For Identification...');
-      
       const stream = await setupAudioCapture();
       if (!stream) {
-        throw new Error('Failed to setup audio capture');
+        throw new Error('Failed to capture audio');
       }
+
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        throw new Error('No audio tracks available');
+      }
+
+      console.log('Audio Tracks Found:', audioTracks.length);
       
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/ogg;codecs=opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = '';
+            }
+          }
+        }
+      }
+
+      if (!mimeType) {
+        throw new Error('No supported audio format found');
+      }
+
+      console.log('Using MIME Type:', mimeType);
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 128000 // As per documentation
+        mimeType: mimeType,
+        audioBitsPerSecond: 320000 // High quality for better fingerprinting
       });
       
-      const chunks: Blob[] = [];
-      
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunks.push(event.data);
+          chunksRef.current.push(event.data);
           console.log('Audio chunk captured:', event.data.size, 'bytes');
         }
       };
 
       mediaRecorder.onstop = async () => {
-        console.log('Recording stopped, processing audio...');
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('Recording Stopped, Processing Audio...');
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        console.log('Audio Blob Created:', audioBlob.size, 'bytes');
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
-          const track = await identifyTrack(audioBlob);
           
-          if (track) {
-            if (!isDuplicateTrack(track, identifiedTracks)) {
-              setCurrentTrack(track);
-              setIdentifiedTracks(prev => [track, ...prev].slice(0, 50));
-              setIdentificationStatus(`Track Identified: ${track.title} by ${track.artist} (${track.service})`);
-            } else {
-              setIdentificationStatus('Track Already Identified Recently');
+          const reader = new FileReader();
+          reader.onload = async () => {
+            try {
+              const arrayBuffer = reader.result as ArrayBuffer;
+              const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+              
+              console.log('Starting track identification process...');
+              console.log('Audio blob size:', audioBlob.size, 'type:', audioBlob.type);
+              console.log('Converted to base64, length:', base64Audio.length);
+
+              const response = await fetch('/api/identify-track', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  audioBase64: base64Audio
+                }),
+              });
+
+              const result = await response.json();
+              console.log('Server identification result:', result);
+
+              if (result.track) {
+                const track: Track = {
+                  id: result.track.id || `track_${Date.now()}`,
+                  title: result.track.title,
+                  artist: result.track.artist,
+                  album: result.track.album,
+                  artwork: result.track.artwork,
+                  confidence: result.track.confidence,
+                  service: result.track.service,
+                  duration: result.track.duration,
+                  releaseDate: result.track.releaseDate,
+                  timestamp: new Date().toISOString()
+                };
+
+                if (!isDuplicateTrack(track, identifiedTracks)) {
+                  setIdentifiedTracks(prev => [track, ...prev]);
+                  setIdentificationStatus(`Track Identified: ${track.title} by ${track.artist}`);
+                  console.log('Track identified and added:', track);
+                } else {
+                  setIdentificationStatus('Track Already Identified Recently');
+                  console.log('Duplicate track detected, not adding');
+                }
+              } else {
+                console.log('No track identified by server');
+                setIdentificationStatus('No Track Match Found');
+              }
+            } catch (error) {
+              console.error('Identification error:', error);
+              setIdentificationStatus('Identification Failed');
             }
-          } else {
-            setIdentificationStatus('No Track Match Found - Song May Not Be In Database');
-          }
+          };
+          
+          reader.readAsArrayBuffer(audioBlob);
         } catch (error) {
-          console.error('Identification error:', error);
-          setIdentificationStatus('Identification Error - Please Try Again');
+          console.error('Audio processing error:', error);
+          setIdentificationStatus('Audio Processing Failed');
         }
         
         setIsIdentifying(false);
@@ -216,13 +261,15 @@ export default function DragonPage() {
         }, 5000);
       };
 
-      console.log('Starting audio recording...');
-      mediaRecorder.start(500); // Capture in 500ms chunks
+      console.log('Starting Audio Recording...');
+      mediaRecorder.start(1000); // Capture in 1-second chunks
+      
+      // Stop recording after 14 seconds
       setTimeout(() => {
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
         }
-      }, 25000); // 25 second capture as per documentation
+      }, 14000);
       
     } catch (error) {
       console.error('Audio capture error:', error);
@@ -230,7 +277,7 @@ export default function DragonPage() {
       setIdentificationStatus('Audio Capture Failed');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
-  }, [setupAudioCapture, isDuplicateTrack, identifiedTracks, autoIdentify]);
+  }, [isPlaying, connectionStatus, setupAudioCapture, isDuplicateTrack, identifiedTracks, autoIdentify]);
 
   const handlePlay = async () => {
     if (audioRef.current) {
@@ -284,7 +331,6 @@ export default function DragonPage() {
 
   const clearHistory = () => {
     setIdentifiedTracks([]);
-    setCurrentTrack(null);
     setIdentificationStatus('History Cleared');
     setTimeout(() => setIdentificationStatus(''), 2000);
   };
@@ -294,17 +340,7 @@ export default function DragonPage() {
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
   };
 
-  const getDublinTimestamp = () => {
-    return new Date().toLocaleString('en-IE', {
-      timeZone: 'Europe/Dublin',
-      hour: '2-digit',
-      minute: '2-digit',
-      day: 'numeric',
-      month: 'short'
-    });
-  };
-
-  const formatTimestamp = (timestamp: string) => {
+  const formatDublinTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString('en-IE', {
       timeZone: 'Europe/Dublin',
@@ -317,7 +353,7 @@ export default function DragonPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
@@ -325,8 +361,8 @@ export default function DragonPage() {
               <Music className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-orange-400">DHR Track Identifier</h1>
-              <p className="text-slate-300 text-lg mt-2">Dual-Service AI Music Recognition</p>
+              <h1 className="text-4xl font-bold text-orange-400">Advanced Track Identifier</h1>
+              <p className="text-slate-300 text-lg mt-2">AI-Powered Music Recognition System</p>
             </div>
           </div>
           
@@ -346,42 +382,6 @@ export default function DragonPage() {
             </div>
           </div>
         </div>
-
-        {/* Current Track Display */}
-        {currentTrack && (
-          <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 backdrop-blur-sm border border-orange-500/20 rounded-2xl p-6 mb-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {currentTrack.artwork && (
-                  <img 
-                    src={currentTrack.artwork} 
-                    alt="Album artwork"
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
-                )}
-                <div>
-                  <h3 className="text-xl font-bold text-white">{currentTrack.title}</h3>
-                  <p className="text-orange-300">{currentTrack.artist}</p>
-                  {currentTrack.album && (
-                    <p className="text-slate-400 text-sm">{currentTrack.album}</p>
-                  )}
-                  <div className="flex items-center space-x-3 text-xs text-slate-500 mt-1">
-                    <span>via {currentTrack.service}</span>
-                    {currentTrack.confidence && <span>{currentTrack.confidence}% match</span>}
-                    <span>{formatTimestamp(currentTrack.timestamp)}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => searchTrack(currentTrack)}
-                className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white flex items-center space-x-2"
-              >
-                <Search className="w-4 h-4" />
-                <span>Search</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Audio Player */}
         <div className="bg-slate-800 rounded-2xl p-6 mb-8">
@@ -431,13 +431,13 @@ export default function DragonPage() {
         {/* Track Identification Controls */}
         <div className="bg-slate-800 rounded-2xl p-6 mb-8">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-orange-400 mb-2">Track Identification System</h2>
-            <p className="text-slate-400">25-Second Audio Capture • ACRCloud + Shazam APIs</p>
+            <h2 className="text-2xl font-bold text-orange-400 mb-2">Track Identification</h2>
+            <p className="text-slate-400">14-Second Audio Capture For Optimal Recognition</p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
             <button
-              onClick={captureStreamAudio}
+              onClick={handleIdentifyTrack}
               disabled={!isPlaying || isIdentifying}
               className={`px-6 py-3 rounded-xl flex items-center space-x-2 font-medium transition-colors ${
                 !isPlaying || isIdentifying
@@ -445,7 +445,7 @@ export default function DragonPage() {
                   : 'bg-orange-500 hover:bg-orange-600 text-white'
               }`}
             >
-              {isIdentifying ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              <Mic className="w-5 h-5" />
               <span>{isIdentifying ? 'Identifying...' : 'Identify Track'}</span>
             </button>
 
@@ -457,7 +457,7 @@ export default function DragonPage() {
                 disabled={!isPlaying}
                 className="rounded border-slate-600 text-orange-500 focus:ring-orange-500"
               />
-              <span className="text-slate-300">Auto-Identify (60s intervals)</span>
+              <span className="text-slate-300">Auto-Identify (30s intervals)</span>
             </label>
 
             <button
@@ -476,11 +476,10 @@ export default function DragonPage() {
           )}
         </div>
 
-        {/* Identified Tracks History */}
+        {/* Identified Tracks */}
         {identifiedTracks.length > 0 && (
           <div className="bg-slate-800 rounded-2xl p-6">
-            <h3 className="text-xl font-bold text-orange-400 mb-4 flex items-center">
-              <Music className="w-5 h-5 mr-2" />
+            <h3 className="text-xl font-bold text-orange-400 mb-4">
               Identified Tracks ({identifiedTracks.length})
             </h3>
             
@@ -491,32 +490,22 @@ export default function DragonPage() {
                   className="bg-slate-700/50 rounded-xl p-4 hover:bg-slate-700 transition-colors"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      {track.artwork && (
-                        <img 
-                          src={track.artwork} 
-                          alt="Album artwork"
-                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                        />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white text-lg">{track.title}</h4>
+                      <p className="text-slate-300">{track.artist}</p>
+                      {track.album && (
+                        <p className="text-slate-400 text-sm">{track.album}</p>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-white text-lg truncate">{track.title}</h4>
-                        <p className="text-slate-300 truncate">{track.artist}</p>
-                        {track.album && (
-                          <p className="text-slate-400 text-sm truncate">{track.album}</p>
-                        )}
-                        <div className="flex items-center space-x-4 text-xs text-slate-500 mt-2">
-                          <span>{formatTimestamp(track.timestamp)}</span>
-                          {track.service && <span>via {track.service}</span>}
-                          {track.confidence && <span>{track.confidence}% match</span>}
-                          {track.duration && <span>{Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}</span>}
-                        </div>
+                      <div className="flex items-center space-x-4 text-xs text-slate-500 mt-2">
+                        <span>{formatDublinTime(track.timestamp)}</span>
+                        {track.service && <span>via {track.service}</span>}
+                        {track.confidence && <span>{track.confidence}% match</span>}
                       </div>
                     </div>
                     
                     <button
                       onClick={() => searchTrack(track)}
-                      className="px-3 py-1 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-sm flex-shrink-0 ml-4"
+                      className="px-3 py-1 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-sm"
                     >
                       Search
                     </button>
@@ -526,13 +515,6 @@ export default function DragonPage() {
             </div>
           </div>
         )}
-
-        {/* Footer */}
-        <div className="text-center mt-8 text-slate-500">
-          <p className="text-sm">
-            Powered By ACRCloud & Shazam APIs • 25-Second Audio Capture • Dublin Timezone
-          </p>
-        </div>
       </div>
     </div>
   );
