@@ -58,7 +58,7 @@
   font-weight: 900;
   font-size: 300px;
   color: rgba(247, 158, 2, 0.04);
-  animation: ghostlyOrbitSlow 60s linear infinite, ghostlyPulse 2s ease-in-out infinite;
+  animation: ghostlyOrbitSlow 60s linear infinite;
   user-select: none;
   text-shadow: 0 0 80px rgba(247, 158, 2, 0.08);
   filter: blur(1px);
@@ -69,6 +69,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  animation: ghostlyOrbitSlow 60s linear infinite, ghostlyPulse30bpm 2s ease-in-out infinite;
   animation-delay: 0s;
 }
 
@@ -77,8 +78,8 @@
   left: 20%;
   font-size: 250px;
   color: rgba(247, 158, 2, 0.03);
-  animation-delay: -20s;
-  animation-duration: 80s;
+  animation: ghostlyOrbitSlow 80s linear infinite, ghostlyPulse60bpm 1s ease-in-out infinite;
+  animation-delay: -20s, 0s;
 }
 
 .floating-dhr-logo:nth-child(3) {
@@ -86,8 +87,8 @@
   right: 10%;
   font-size: 350px;
   color: rgba(247, 158, 2, 0.035);
-  animation-delay: -40s;
-  animation-duration: 100s;
+  animation: ghostlyOrbitSlow 100s linear infinite, ghostlyPulse30bpm 2s ease-in-out infinite;
+  animation-delay: -40s, -1s;
 }
 
 @keyframes ghostlyOrbitSlow {
