@@ -332,7 +332,7 @@ export default function DragonPage() {
   const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
-      setIdentificationStatus('Recording 15 Seconds For Identification...');
+      setIdentificationStatus('Recording 25 Seconds For Identification...');
       
       if (!audioRef.current) {
         throw new Error('Audio element not available');
@@ -392,10 +392,10 @@ export default function DragonPage() {
       
       console.log(`Using MIME Type: ${mimeType}`);
       
-      // Match working system settings exactly
+      // Match working system settings exactly - higher bitrate to reach 402KB target
       const mediaRecorder = new MediaRecorder(destination.stream, {
         mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 320000 // High quality for better fingerprinting
+        audioBitsPerSecond: 1024000 // Very high quality to generate 402KB files like working system
       });
       
       console.log('Starting MediaRecorder...');
@@ -433,15 +433,7 @@ export default function DragonPage() {
             console.log('No artwork found, using DHR logo as fallback');
             console.log('Track identified with ACRCloud:', track);
           } else {
-            // Fallback to Shazam if ACRCloud fails
-            console.log('ACRCloud did not find track, trying Shazam...');
-            track = await identifyWithShazam(audioBlob);
-            
-            if (track) {
-              console.log('Track identified with Shazam:', track);
-            } else {
-              console.log('No track identified by either service');
-            }
+            console.log('No track identified by ACRCloud');
           }
           
           if (track) {
@@ -481,12 +473,12 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 14000); // 14 second capture exactly like working system
+      }, 25000); // 25 second capture to generate larger files like working system
       
     } catch (error) {
       console.error('Audio capture error:', error);
       setIsIdentifying(false);
-      setIdentificationStatus('Audio Capture Failed');
+      setIdentificationStatus('Audio Capture Failed - Please Wait Before Trying Again');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
   }, [isDuplicateTrack, identifiedTracks, autoIdentify]);
