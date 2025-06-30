@@ -3,6 +3,7 @@ import { Crown, Play, Download, Star, Clock, Users } from 'lucide-react';
 import SubscriptionGate from '../components/SubscriptionGate';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
+import LiveTrackWidget from '../components/LiveTrackWidget';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
