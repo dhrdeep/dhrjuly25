@@ -65,29 +65,185 @@ export default function DragonPage() {
     });
   };
 
-  // Main identification function - calls server endpoint
+  // Direct client-side identification - replicating working system
   const identifyTrack = async (audioBlob: Blob): Promise<Track | null> => {
+    console.log('Starting track identification process...');
+    
     try {
-      const audioBase64 = await audioToBase64(audioBlob);
-
-      const response = await fetch('/api/identify-track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audioBase64 })
-      });
-
-      const result = await response.json();
-      
-      if (result.track) {
-        return {
-          id: `${result.track.service?.toLowerCase() || 'track'}_${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          ...result.track
-        };
+      // Try ACRCloud first (primary service)
+      console.log('Attempting identification with ACRCloud...');
+      const acrResult = await identifyWithACRCloud(audioBlob);
+      if (acrResult) {
+        console.log('Track identified with ACRCloud:', acrResult);
+        return acrResult;
       }
+      
+      // Fallback to Shazam
+      console.log('ACRCloud failed, trying Shazam...');
+      const shazamResult = await identifyWithShazam(audioBlob);
+      if (shazamResult) {
+        console.log('Track identified with Shazam:', shazamResult);
+        return shazamResult;
+      }
+      
+      console.log('No track identified by either service');
       return null;
     } catch (error) {
       console.error('Track identification error:', error);
+      return null;
+    }
+  };
+
+  // ACRCloud identification (direct client implementation)
+  const identifyWithACRCloud = async (audioBlob: Blob): Promise<Track | null> => {
+    try {
+      console.log(`Starting ACRCloud identification with blob size: ${audioBlob.size}`);
+      
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      console.log(`Converted to ArrayBuffer, length: ${arrayBuffer.byteLength}`);
+      
+      const formData = new FormData();
+      formData.append('sample', audioBlob);
+      formData.append('sample_bytes', arrayBuffer.byteLength.toString());
+      formData.append('access_key', import.meta.env.VITE_ACRCLOUD_ACCESS_KEY || '');
+      
+      // Generate signature for ACRCloud
+      const timestamp = Math.floor(Date.now() / 1000);
+      const stringToSign = `POST\n/v1/identify\n${import.meta.env.VITE_ACRCLOUD_ACCESS_KEY}\naudio\n1\n${timestamp}`;
+      const signature = await generateHmacSha1(stringToSign, import.meta.env.VITE_ACRCLOUD_ACCESS_SECRET || '');
+      
+      formData.append('signature_version', '1');
+      formData.append('signature', signature);
+      formData.append('timestamp', timestamp.toString());
+      formData.append('data_type', 'audio');
+      
+      console.log('Sending request to ACRCloud...');
+      const response = await fetch('https://identify-eu-west-1.acrcloud.com/v1/identify', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      console.log('ACRCloud response:', result);
+      
+      if (result.status?.code === 0 && result.metadata?.music?.length > 0) {
+        const track = result.metadata.music[0];
+        console.log('Track found:', track);
+        
+        // Search for artwork
+        console.log(`Searching for artwork on music platforms for: ${track.artists?.[0]?.name} - ${track.title}`);
+        const artwork = await searchForArtwork(track.artists?.[0]?.name, track.title);
+        
+        return {
+          id: `acrcloud_${Date.now()}`,
+          title: track.title,
+          artist: track.artists?.[0]?.name || 'Unknown Artist',
+          album: track.album?.name,
+          artwork: artwork || 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png',
+          confidence: Math.round((track.score || 0) * 100),
+          service: 'ACRCloud',
+          duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : undefined,
+          releaseDate: track.release_date,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        console.log('No music found in ACRCloud response, status:', result.status);
+        console.log('No match found in ACRCloud database');
+        return null;
+      }
+    } catch (error) {
+      console.error('ACRCloud identification error:', error);
+      return null;
+    }
+  };
+
+  // Shazam identification (direct client implementation)
+  const identifyWithShazam = async (audioBlob: Blob): Promise<Track | null> => {
+    try {
+      console.log(`Starting Shazam identification with blob size: ${audioBlob.size}`);
+      
+      const base64Audio = await audioToBase64(audioBlob);
+      console.log(`Converted to base64 for Shazam, length: ${base64Audio.length}`);
+      
+      console.log('Sending request to Shazam...');
+      const response = await fetch('https://shazam.p.rapidapi.com/songs/detect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+          'X-RapidAPI-Key': import.meta.env.VITE_SHAZAM_API_KEY || '',
+          'X-RapidAPI-Host': 'shazam.p.rapidapi.com'
+        },
+        body: base64Audio
+      });
+      
+      const result = await response.json();
+      console.log('Shazam response:', result);
+      
+      if (result.matches && result.matches.length > 0) {
+        const match = result.matches[0];
+        const track = match.track;
+        
+        return {
+          id: `shazam_${Date.now()}`,
+          title: track.title,
+          artist: track.subtitle,
+          album: track.sections?.[0]?.metadata?.find((m: any) => m.title === 'Album')?.text,
+          artwork: track.images?.coverart || track.images?.background,
+          confidence: Math.round((match.frequencyskew || 0) * 100),
+          service: 'Shazam',
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        console.log('No track found in Shazam response');
+        return null;
+      }
+    } catch (error) {
+      console.error('Shazam identification error:', error);
+      return null;
+    }
+  };
+
+  // Generate HMAC-SHA1 signature for ACRCloud
+  const generateHmacSha1 = async (message: string, secret: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const messageData = encoder.encode(message);
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+    const signatureArray = new Uint8Array(signature);
+    return btoa(String.fromCharCode(...signatureArray));
+  };
+
+  // Search for artwork on music platforms
+  const searchForArtwork = async (artist: string, title: string): Promise<string | null> => {
+    try {
+      console.log(`Searching for artwork: ${artist} - ${title}`);
+      
+      // Try iTunes API first
+      const itunesQuery = encodeURIComponent(`${artist} ${title}`);
+      const itunesResponse = await fetch(`https://itunes.apple.com/search?term=${itunesQuery}&media=music&limit=1`);
+      const itunesData = await itunesResponse.json();
+      
+      if (itunesData.results && itunesData.results.length > 0) {
+        const artwork = itunesData.results[0].artworkUrl100?.replace('100x100', '600x600');
+        if (artwork) {
+          console.log('Found artwork on iTunes:', artwork);
+          return artwork;
+        }
+      }
+      
+      console.log('No artwork found, using DHR logo as fallback');
+      return null;
+    } catch (error) {
+      console.error('Artwork search error:', error);
       return null;
     }
   };
