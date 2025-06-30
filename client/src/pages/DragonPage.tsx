@@ -653,7 +653,10 @@ export default function DragonPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
             <button
-              onClick={captureStreamAudio}
+              onClick={() => {
+                console.log('Identify button clicked, isPlaying:', isPlaying, 'isIdentifying:', isIdentifying);
+                captureStreamAudio();
+              }}
               disabled={!isPlaying || isIdentifying}
               className={`px-6 py-3 rounded-xl flex items-center space-x-2 font-medium transition-colors ${
                 !isPlaying || isIdentifying
