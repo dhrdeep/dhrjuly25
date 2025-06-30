@@ -327,7 +327,7 @@ export default function DragonPage() {
   const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
-      setIdentificationStatus('Recording 30 Seconds For Better Identification...');
+      setIdentificationStatus('Recording 15 Seconds For Identification...');
       
       const stream = await setupAudioCapture();
       if (!stream) {
@@ -404,7 +404,7 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 30000); // 30 second capture to match working system blob size
+      }, 15000); // 15 second capture as recommended
       
     } catch (error) {
       console.error('Audio capture error:', error);
@@ -614,7 +614,7 @@ export default function DragonPage() {
         <div className="bg-slate-800 rounded-2xl p-6 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-2">Track Identification System</h2>
-            <p className="text-slate-400">30-Second Audio Capture • ACRCloud API</p>
+            <p className="text-slate-400">15-Second Audio Capture • ACRCloud API</p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
@@ -712,7 +712,7 @@ export default function DragonPage() {
         {/* Footer */}
         <div className="text-center mt-8 text-slate-500">
           <p className="text-sm">
-            Powered By ACRCloud API • 30-Second Audio Capture • Dublin Timezone
+            Powered By ACRCloud API • 15-Second Audio Capture • Dublin Timezone
           </p>
         </div>
       </div>
