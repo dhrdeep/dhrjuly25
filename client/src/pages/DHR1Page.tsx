@@ -4,6 +4,7 @@ import SubscriptionGate from '../components/SubscriptionGate';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import LiveTrackWidget from '../components/LiveTrackWidget';
+import CustomStreamPlayer from '../components/CustomStreamPlayer';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
@@ -103,20 +104,7 @@ const DHR1Page: React.FC = () => {
           {/* Premium Player and Live Track */}
           <section className="mb-12">
             <div className="flex justify-center gap-6">
-              <iframe
-                src="/evercast-player.html"
-                width="600"
-                height="1000"
-                frameBorder="0"
-                style={{
-                  border: 'none',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  maxWidth: '100%'
-                }}
-                title="DHR1 Everestcast Player"
-                onLoad={() => setIsPlaying(true)}
-              />
+              <CustomStreamPlayer channel="dhr1" className="w-full max-w-lg" />
               
               {/* Live Track Identification */}
               <div className="w-80 space-y-4">
