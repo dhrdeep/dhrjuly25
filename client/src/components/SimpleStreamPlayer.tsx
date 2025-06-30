@@ -44,10 +44,42 @@ export default function SimpleStreamPlayer({ channel, className = '' }: SimpleSt
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100;
-      audioRef.current.crossOrigin = 'anonymous';
-      audioRef.current.preload = 'none';
+      // Remove crossOrigin for better stream compatibility
+      audioRef.current.preload = 'metadata';
+      
+      // Add event listeners for better stream handling
+      const audio = audioRef.current;
+      
+      const handleCanPlay = () => {
+        console.log('Stream ready to play');
+      };
+      
+      const handleError = (e: Event) => {
+        console.error('Stream error:', e);
+        setIsPlaying(false);
+      };
+      
+      const handleStalled = () => {
+        console.log('Stream stalled, attempting to recover...');
+        if (isPlaying) {
+          audio.load();
+          audio.play().catch(console.error);
+        }
+      };
+      
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('error', handleError);
+      audio.addEventListener('stalled', handleStalled);
+      audio.addEventListener('waiting', handleStalled);
+      
+      return () => {
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+        audio.removeEventListener('stalled', handleStalled);
+        audio.removeEventListener('waiting', handleStalled);
+      };
     }
-  }, [volume]);
+  }, [volume, isPlaying]);
 
   const togglePlayPause = async () => {
     if (!audioRef.current) return;
@@ -91,10 +123,13 @@ export default function SimpleStreamPlayer({ channel, className = '' }: SimpleSt
       <audio
         ref={audioRef}
         src={currentConfig.streamUrl}
-        preload="none"
+        preload="metadata"
+        controls={false}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onError={() => setIsPlaying(false)}
+        onLoadStart={() => console.log('Stream loading...')}
+        onCanPlay={() => console.log('Stream ready')}
       />
 
       {/* Header */}

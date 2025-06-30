@@ -277,7 +277,7 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-orange-400">
                   <Volume2 className="h-4 w-4" />
-                  <span className="text-sm font-medium">HD Quality</span>
+                  <span className="text-sm font-medium">128kbps • Free</span>
                 </div>
               </div>
 
