@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Mic, MicOff, RotateCcw, Music, Headphones, Radio, Search } from 'lucide-react';
-import { identifyTrack } from '@/services/audioRecognition';
 
 interface Track {
   id: string;
@@ -174,6 +173,145 @@ export default function DragonPage() {
     }
   };
 
+  // Client-side ACRCloud identification (matching working approach)
+  const identifyWithACRCloud = async (audioBlob: Blob) => {
+    console.log('Starting ACRCloud identification with blob size:', audioBlob.size);
+    
+    try {
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      console.log('Converted to ArrayBuffer, length:', arrayBuffer.byteLength);
+      
+      const timestamp = Math.floor(Date.now() / 1000);
+      const accessKey = import.meta.env.VITE_ACRCLOUD_ACCESS_KEY;
+      const accessSecret = import.meta.env.VITE_ACRCLOUD_ACCESS_SECRET;
+      
+      if (!accessKey || !accessSecret) {
+        console.log('ACRCloud credentials not available');
+        return null;
+      }
+      
+      // Generate signature for ACRCloud
+      const signString = `POST\n/v1/identify\n${accessKey}\naudio\n1\n${timestamp}`;
+      const signature = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(accessSecret),
+        { name: 'HMAC', hash: 'SHA-1' },
+        false,
+        ['sign']
+      ).then(key => 
+        crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signString))
+      ).then(signature => 
+        btoa(String.fromCharCode(...new Uint8Array(signature)))
+      );
+      
+      const formData = new FormData();
+      formData.append('sample', new Blob([arrayBuffer], { type: audioBlob.type }), 'sample.webm');
+      formData.append('sample_bytes', arrayBuffer.byteLength.toString());
+      formData.append('access_key', accessKey);
+      formData.append('data_type', 'audio');
+      formData.append('signature_version', '1');
+      formData.append('signature', signature);
+      formData.append('timestamp', timestamp.toString());
+      
+      console.log('Sending request to ACRCloud...');
+      const response = await fetch('https://identify-eu-west-1.acrcloud.com/v1/identify', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        console.error('ACRCloud response not ok:', response.status, response.statusText);
+        return null;
+      }
+      
+      const result = await response.json();
+      console.log('ACRCloud response:', result);
+      
+      if (result.status.code === 0 && result.metadata?.music?.length > 0) {
+        const music = result.metadata.music[0];
+        return {
+          id: `acrcloud_${Date.now()}`,
+          title: music.title || 'Unknown Title',
+          artist: music.artists?.[0]?.name || 'Unknown Artist',
+          album: music.album?.name || 'Unknown Album',
+          artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png',
+          confidence: Math.round(music.score || 0),
+          service: 'ACRCloud',
+          duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
+          releaseDate: music.release_date,
+          timestamp: new Date().toISOString()
+        };
+      } else {
+        console.log('No music found in ACRCloud response, status:', result.status);
+        console.log('No match found in ACRCloud database');
+        return null;
+      }
+    } catch (error) {
+      console.error('ACRCloud identification error:', error);
+      return null;
+    }
+  };
+
+  // Client-side Shazam identification (matching working approach)
+  const identifyWithShazam = async (audioBlob: Blob) => {
+    console.log('Starting Shazam identification with blob size:', audioBlob.size);
+    
+    try {
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      console.log('Converted to base64 for Shazam, length:', base64Audio.length);
+      
+      const shazamKey = import.meta.env.VITE_SHAZAM_API_KEY;
+      
+      if (!shazamKey) {
+        console.log('Shazam API key not available');
+        return null;
+      }
+      
+      console.log('Sending request to Shazam...');
+      const response = await fetch('https://shazam.p.rapidapi.com/songs/v2/detect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+          'X-RapidAPI-Key': shazamKey,
+          'X-RapidAPI-Host': 'shazam.p.rapidapi.com'
+        },
+        body: base64Audio
+      });
+      
+      if (!response.ok) {
+        console.log('Shazam response not ok:', response.status);
+        const errorText = await response.text();
+        console.log('Shazam error response:', JSON.parse(errorText));
+        return null;
+      }
+      
+      const result = await response.json();
+      console.log('Shazam response:', result);
+      
+      if (result.track) {
+        const track = result.track;
+        return {
+          id: `shazam_${Date.now()}`,
+          title: track.title || 'Unknown Title',
+          artist: track.subtitle || 'Unknown Artist',
+          album: track.sections?.[0]?.metadata?.find((m: any) => m.title === 'Album')?.text || 'Unknown Album',
+          artwork: track.images?.coverart || track.images?.coverarthq || 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png',
+          confidence: 85,
+          service: 'Shazam',
+          duration: undefined,
+          releaseDate: undefined,
+          timestamp: new Date().toISOString()
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Shazam identification error:', error);
+      return null;
+    }
+  };
+
   // Capture 15 seconds of audio for identification - EXACT REPLICA of working thedeepbeat.com system
   const captureStreamAudio = useCallback(async () => {
     try {
@@ -225,8 +363,9 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType
-        // No bitrate specified - use browser default like working system
+        mimeType: mimeType,
+        audioBitsPerSecond: 512000, // Higher bitrate to match 402KB files
+        bitsPerSecond: 512000
       });
       
       console.log('Starting MediaRecorder...');
@@ -250,7 +389,22 @@ export default function DragonPage() {
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
-          const track = await identifyTrack(audioBlob);
+          console.log('Attempting identification with ACRCloud...');
+          
+          // Try ACRCloud first
+          let track = await identifyWithACRCloud(audioBlob);
+          if (track) {
+            console.log('ACRCloud identification successful');
+          } else {
+            console.log('ACRCloud failed, trying Shazam...');
+            // Try Shazam as fallback
+            track = await identifyWithShazam(audioBlob);
+            if (track) {
+              console.log('Shazam identification successful');
+            } else {
+              console.log('No track identified by either service');
+            }
+          }
           
           if (track) {
             if (!isDuplicateTrack(track, identifiedTracks)) {
