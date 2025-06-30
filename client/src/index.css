@@ -117,6 +117,21 @@
   }
 }
 
+@keyframes animate-float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(-20px) translateX(-3px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(-10px) translateX(-8px) rotate(270deg);
+  }
+}
+
 @keyframes ghostlyPulse15bpm {
   0%, 100% {
     opacity: 1;

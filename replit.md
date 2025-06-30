@@ -25,6 +25,9 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - **DHR2 Streaming URLs Updated**: Configured authentic DHR2 streaming infrastructure using ports 1560/1565
   - **Multiple Tune-In Formats**: Added support for WindowsMedia, Winamp, iTunes, RealPlayer, and WebPlayer
   - **Direct Stream Access**: Implemented HTTP (1560) and HTTPS (1565) streaming endpoints for DHR2
+  - **Deep House Sunset Video Background**: Integrated cinematic video background with silhouette effects
+  - **Enhanced Visual Experience**: Added floating orbs, ambient particles, and gradient overlays
+  - **Backdrop Blur Effects**: Enhanced content visibility with backdrop-blur-xl for cards and components
   - Integrated on DHR1 and DHR2 premium player pages alongside existing LiveTrackWidget components
 - **June 30, 2025**: Complete Ultra-Ethereal DHR Logo Animation System
   - **Professional Image-Based Logos**: Replaced text with authentic DHR logo images from official branding

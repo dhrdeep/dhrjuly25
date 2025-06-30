@@ -5,6 +5,7 @@ import SubscriptionGate from '../components/SubscriptionGate';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
+import VideoBackground from '../components/VideoBackground';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
@@ -80,9 +81,11 @@ const DHR2Page: React.FC = () => {
 
   return (
     <>
-      <AmbientMoodGenerator 
-        currentTrack={currentTrack || undefined} 
-        isPlaying={isPlaying}
+      <VideoBackground 
+        opacity={0.4}
+        overlay="gradient"
+        silhouette={true}
+        className="fixed inset-0"
       />
       <SubscriptionGate requiredTier="premium" contentType="dhr2">
         <div className="min-h-screen text-white py-8 px-4 relative z-10">
@@ -114,7 +117,7 @@ const DHR2Page: React.FC = () => {
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-amber-500/20 to-orange-600/20 rounded-2xl p-6 border border-orange-400/30 backdrop-blur-sm max-w-2xl mx-auto">
+            <div className="bg-gradient-to-r from-amber-500/30 to-orange-600/30 rounded-2xl p-6 border border-orange-400/40 backdrop-blur-xl max-w-2xl mx-auto shadow-2xl">
               <p className="text-lg text-gray-200 leading-relaxed">
                 Dive deeper into the world of deep house with DHR2. Featuring exclusive DJ sets, 
                 extended mixes, and artist spotlights from the biggest names in electronic music.
@@ -137,7 +140,7 @@ const DHR2Page: React.FC = () => {
 
           {/* Features Grid */}
           <section className="mb-12">
-            <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent drop-shadow-lg">
               Exclusive Features
             </h2>
             
@@ -148,10 +151,10 @@ const DHR2Page: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className={`bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 border transition-all duration-200 group ${
+                    className={`bg-gray-800/60 backdrop-blur-xl rounded-2xl p-6 border transition-all duration-200 group shadow-2xl hover:shadow-3xl ${
                       isDownloadFeature && !canDownload 
-                        ? 'border-gray-600/30 opacity-60' 
-                        : 'border-orange-400/20 hover:border-orange-400/40'
+                        ? 'border-gray-600/50 opacity-60' 
+                        : 'border-orange-400/40 hover:border-orange-400/70 hover:bg-gray-800/80'
                     }`}
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${
