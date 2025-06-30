@@ -343,7 +343,109 @@ export default function DragonPage() {
     }
   };
 
-  // Capture 15 seconds of audio for identification - EXACT REPLICA of working thedeepbeat.com system
+  // Raw PCM capture for 402KB target files
+  const captureRawPCMAudio = useCallback(async (): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!audioRef.current) {
+          throw new Error('Audio element not available');
+        }
+
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+          sampleRate: 48000
+        });
+        
+        const source = audioContext.createMediaElementSource(audioRef.current);
+        const gainNode = audioContext.createGain();
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        const sampleRate = audioContext.sampleRate;
+        const duration = 25;
+        const bufferSize = sampleRate * duration;
+        const pcmBuffer = new Float32Array(bufferSize);
+        let sampleIndex = 0;
+        
+        const scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+        source.connect(scriptNode);
+        scriptNode.connect(audioContext.destination);
+        
+        scriptNode.onaudioprocess = (event) => {
+          const inputBuffer = event.inputBuffer;
+          const channelData = inputBuffer.getChannelData(0);
+          
+          for (let i = 0; i < channelData.length && sampleIndex < bufferSize; i++) {
+            pcmBuffer[sampleIndex++] = channelData[i];
+          }
+          
+          if (sampleIndex >= bufferSize) {
+            scriptNode.disconnect();
+            
+            const pcm16Buffer = new Int16Array(sampleIndex);
+            for (let i = 0; i < sampleIndex; i++) {
+              pcm16Buffer[i] = Math.max(-32768, Math.min(32767, pcmBuffer[i] * 32767));
+            }
+            
+            const wavBuffer = createWAVBuffer(pcm16Buffer, sampleRate);
+            const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+            
+            console.log(`Raw PCM capture complete: ${wavBlob.size} bytes`);
+            resolve(wavBlob);
+          }
+        };
+        
+        setTimeout(() => {
+          if (sampleIndex < bufferSize) {
+            scriptNode.disconnect();
+            const pcm16Buffer = new Int16Array(sampleIndex);
+            for (let i = 0; i < sampleIndex; i++) {
+              pcm16Buffer[i] = Math.max(-32768, Math.min(32767, pcmBuffer[i] * 32767));
+            }
+            const wavBuffer = createWAVBuffer(pcm16Buffer, sampleRate);
+            const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+            console.log(`PCM capture timeout: ${wavBlob.size} bytes`);
+            resolve(wavBlob);
+          }
+        }, 26000);
+        
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }, []);
+
+  const createWAVBuffer = (pcmData: Int16Array, sampleRate: number): ArrayBuffer => {
+    const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+    const view = new DataView(buffer);
+    
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + pcmData.length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, pcmData.length * 2, true);
+    
+    const pcmView = new Int16Array(buffer, 44);
+    pcmView.set(pcmData);
+    
+    return buffer;
+  };
+
+  // Enhanced capture with raw PCM approach for 402KB target files
   const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
@@ -369,6 +471,19 @@ export default function DragonPage() {
         networkState: audioRef.current.networkState
       });
 
+      console.log('Attempting raw PCM capture for 402KB target...');
+      
+      try {
+        // Try raw PCM capture first for largest files
+        const audioBlob = await captureRawPCMAudio();
+        console.log(`Raw PCM Audio Blob: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+        console.log('Sending To Identification Service...');
+        processAudioForIdentification(audioBlob);
+        return;
+      } catch (pcmError) {
+        console.warn('Raw PCM capture failed, falling back to MediaRecorder:', pcmError);
+      }
+      
       console.log('Manual Identification Triggered');
       console.log('Created New AudioContext');
       
@@ -424,10 +539,10 @@ export default function DragonPage() {
       
       // Set maximum bitrate for compressed formats to reach 402KB target
       if (mimeType.includes('opus')) {
-        // Opus can handle very high bitrates - try extreme quality
-        recorderOptions.audioBitsPerSecond = 4096000; // 4MB/s bitrate for 402KB target over 25s
+        // Opus compresses heavily - use maximum possible bitrate to try reaching 402KB
+        recorderOptions.audioBitsPerSecond = 8192000; // 8MB/s - extreme bitrate
       } else if (mimeType.includes('webm') && !mimeType.includes('pcm')) {
-        recorderOptions.audioBitsPerSecond = 2048000; // 2MB/s for other WebM formats
+        recorderOptions.audioBitsPerSecond = 4096000; // 4MB/s for other WebM formats
       }
       
       console.log('Recorder options:', recorderOptions);
