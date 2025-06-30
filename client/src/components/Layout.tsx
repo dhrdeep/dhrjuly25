@@ -47,8 +47,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Track Ident', href: '/track-ident', icon: Headphones },
-    { name: 'Dragon', href: '/dragon', icon: Music },
     { name: 'DHR1 Premium', href: '/dhr1', icon: Radio },
     { name: 'DHR2 Premium', href: '/dhr2', icon: Star },
     { name: 'VIP Access', href: '/vip', icon: Crown },
