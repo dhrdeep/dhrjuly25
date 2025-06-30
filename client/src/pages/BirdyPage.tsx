@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Music, Clock, Play, Users, Zap, RefreshCw, Power, Square } from 'lucide-react';
+import { Music, Clock, Play, Users, Zap, RefreshCw, Power, Square, ExternalLink, Youtube } from 'lucide-react';
+import { SiSoundcloud, SiSpotify } from 'react-icons/si';
 
 interface IdentifiedTrack {
   id: string;
@@ -13,6 +14,9 @@ interface IdentifiedTrack {
   timestamp: Date;
   duration?: number;
   releaseDate?: string;
+  youtubeUrl?: string;
+  soundcloudUrl?: string;
+  spotifyUrl?: string;
 }
 
 interface StreamData {
@@ -152,12 +156,59 @@ export default function BirdyPage() {
           ) : currentData?.track ? (
             <div className="bg-gray-800 rounded-lg p-4">
               <div className="flex items-start gap-4">
+                {currentData.track.artwork && (
+                  <img 
+                    src={currentData.track.artwork} 
+                    alt={`${currentData.track.title} artwork`}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                )}
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-1">{currentData.track.title}</h3>
                   <p className="text-lg text-orange-400 mb-2">{currentData.track.artist}</p>
                   {currentData.track.album && (
                     <p className="text-sm text-gray-400 mb-2">{currentData.track.album}</p>
                   )}
+                  
+                  {/* Streaming Links */}
+                  {(currentData.track.youtubeUrl || currentData.track.soundcloudUrl || currentData.track.spotifyUrl) && (
+                    <div className="flex items-center gap-2 mb-2">
+                      {currentData.track.youtubeUrl && (
+                        <a 
+                          href={currentData.track.youtubeUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                        >
+                          <Youtube className="h-3 w-3" />
+                          YouTube
+                        </a>
+                      )}
+                      {currentData.track.soundcloudUrl && (
+                        <a 
+                          href={currentData.track.soundcloudUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 bg-orange-600 text-white px-2 py-1 rounded text-xs hover:bg-orange-700"
+                        >
+                          <SiSoundcloud className="h-3 w-3" />
+                          SoundCloud
+                        </a>
+                      )}
+                      {currentData.track.spotifyUrl && (
+                        <a 
+                          href={currentData.track.spotifyUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700"
+                        >
+                          <SiSpotify className="h-3 w-3" />
+                          Spotify
+                        </a>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -204,12 +255,59 @@ export default function BirdyPage() {
               {recentData.tracks.map((track) => (
                 <div key={track.id} className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors">
                   <div className="flex items-start gap-4">
+                    {track.artwork && (
+                      <img 
+                        src={track.artwork} 
+                        alt={`${track.title} artwork`}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                    )}
                     <div className="flex-1">
                       <h4 className="font-semibold text-white mb-1">{track.title}</h4>
                       <p className="text-orange-400 mb-1">{track.artist}</p>
                       {track.album && (
                         <p className="text-sm text-gray-400 mb-2">{track.album}</p>
                       )}
+                      
+                      {/* Streaming Links */}
+                      {(track.youtubeUrl || track.soundcloudUrl || track.spotifyUrl) && (
+                        <div className="flex items-center gap-1 mb-2">
+                          {track.youtubeUrl && (
+                            <a 
+                              href={track.youtubeUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 bg-red-600 text-white px-1.5 py-0.5 rounded text-xs hover:bg-red-700"
+                            >
+                              <Youtube className="h-2.5 w-2.5" />
+                              YT
+                            </a>
+                          )}
+                          {track.soundcloudUrl && (
+                            <a 
+                              href={track.soundcloudUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 bg-orange-600 text-white px-1.5 py-0.5 rounded text-xs hover:bg-orange-700"
+                            >
+                              <SiSoundcloud className="h-2.5 w-2.5" />
+                              SC
+                            </a>
+                          )}
+                          {track.spotifyUrl && (
+                            <a 
+                              href={track.spotifyUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 bg-green-600 text-white px-1.5 py-0.5 rounded text-xs hover:bg-green-700"
+                            >
+                              <SiSpotify className="h-2.5 w-2.5" />
+                              SP
+                            </a>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -246,7 +344,7 @@ export default function BirdyPage() {
 
         {/* Footer Info */}
         <div className="text-center mt-8 text-gray-500 text-sm">
-          <p>Powered by ACRCloud • Monitoring DHR Stream • Updates every 30 seconds</p>
+          <p>Powered by ACRCloud • Monitoring DHR Stream • Track identification every 2 minutes • <a href="/track-history" className="text-orange-400 hover:text-orange-300">View Full History</a></p>
         </div>
       </div>
     </div>

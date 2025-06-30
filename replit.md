@@ -11,16 +11,21 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 30, 2025**: Live Track Identification System FULLY OPERATIONAL
+- **June 30, 2025**: Enhanced Track Identification System with Permanent Storage & Streaming Links
   - Successfully implemented comprehensive live stream monitoring system using ACRCloud
   - Installed FFmpeg for audio capture from DHR icecast stream (https://ec1.everestcast.host:2775/stream)
+  - **UPGRADED TO 2-MINUTE MONITORING CYCLE** for optimal track detection frequency
+  - **PERMANENT DATABASE STORAGE**: All identified tracks saved to PostgreSQL with full metadata
+  - **TRACK ENRICHMENT SERVICE**: Automatically scrapes YouTube, SoundCloud, Spotify links and artwork
+  - **STREAMING PLATFORM INTEGRATION**: Working links to tracks on major music platforms
+  - **ADMIN TRACK HISTORY PAGE**: Complete track history with CSV export and data management (/track-history)
   - Created dedicated Birdy page (/birdy) with real-time track identification interface
-  - System captures 15-second audio samples every 30 seconds from 320kbps MP3 stream
-  - ACRCloud API successfully identifying tracks (e.g., "Exte C - Get Over feat. TimAdeep" at 40% confidence)
-  - Live track display with current track, recent tracks history, and monitoring controls
-  - API endpoints: /api/track-monitor/current, /api/track-monitor/recent, /api/track-monitor/start, /api/track-monitor/stop
-  - Professional UI with confidence scores, timestamps, and service attribution
-  - Real-time updates every 5-10 seconds showing authentic track data from live DHR stream
+  - System captures 15-second audio samples every 2 minutes from 320kbps MP3 stream
+  - ACRCloud API successfully identifying tracks (e.g., "M.K Clive - Love Back" with SoundCloud link)
+  - Live track display with artwork, streaming links, confidence scores, and timestamps
+  - API endpoints: /api/track-monitor/*, /api/admin/track-history
+  - Professional UI with track artwork, streaming platform buttons, and enriched metadata
+  - Real-time updates showing authentic track data with permanent historical storage
 - **June 30, 2025**: Dragon Page Auto-Identification & Enhanced Audio Capture System
   - Implemented automatic track identification: first run after 30 seconds, then every minute
   - Enhanced audio capture with maximum quality settings: 4MB/s bitrate, 48kHz sample rate

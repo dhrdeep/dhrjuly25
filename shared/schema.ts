@@ -71,11 +71,31 @@ export const dailyDownloadLimits = pgTable("daily_download_limits", {
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
+// Track identification history table
+export const identifiedTracks = pgTable("identified_tracks", {
+  id: serial("id").primaryKey(),
+  trackId: text("track_id").notNull(), // unique identifier from ACRCloud
+  title: text("title").notNull(),
+  artist: text("artist").notNull(),
+  album: text("album"),
+  confidence: integer("confidence").notNull(),
+  service: text("service").notNull(), // ACRCloud, Shazam, etc.
+  duration: integer("duration"), // in seconds
+  releaseDate: text("release_date"),
+  artwork: text("artwork"), // URL to track artwork
+  youtubeUrl: text("youtube_url"),
+  soundcloudUrl: text("soundcloud_url"),
+  spotifyUrl: text("spotify_url"),
+  identifiedAt: timestamp("identified_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
 export const insertUserSchema = createInsertSchema(users);
 export const insertPatreonTokenSchema = createInsertSchema(patreonTokens);
 export const insertVipMixSchema = createInsertSchema(vipMixes);
 export const insertUserDownloadSchema = createInsertSchema(userDownloads);
 export const insertDailyDownloadLimitSchema = createInsertSchema(dailyDownloadLimits);
+export const insertIdentifiedTrackSchema = createInsertSchema(identifiedTracks);
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -87,3 +107,5 @@ export type UserDownload = typeof userDownloads.$inferSelect;
 export type InsertUserDownload = z.infer<typeof insertUserDownloadSchema>;
 export type DailyDownloadLimit = typeof dailyDownloadLimits.$inferSelect;
 export type InsertDailyDownloadLimit = z.infer<typeof insertDailyDownloadLimitSchema>;
+export type IdentifiedTrack = typeof identifiedTracks.$inferSelect;
+export type InsertIdentifiedTrack = z.infer<typeof insertIdentifiedTrackSchema>;

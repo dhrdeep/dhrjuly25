@@ -19,6 +19,7 @@ import StorageSetupPage from './pages/StorageSetupPage';
 import UserManagementPage from './pages/UserManagementPage';
 import PlayerPopoutPage from './pages/PlayerPopoutPage';
 import BirdyPage from './pages/BirdyPage';
+import TrackHistoryPage from './pages/TrackHistoryPage';
 
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
@@ -45,6 +46,7 @@ function App() {
             <Route path="/user-management" element={<UserManagementPage />} />
             <Route path="/player" element={<PlayerPopoutPage />} />
             <Route path="/birdy" element={<BirdyPage />} />
+            <Route path="/track-history" element={<TrackHistoryPage />} />
 
             <Route path="/sync" element={<SyncPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />

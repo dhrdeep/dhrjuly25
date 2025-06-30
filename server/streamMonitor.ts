@@ -6,6 +6,8 @@ import fetch from 'node-fetch';
 import FormData from 'form-data';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { storage } from './storage';
+import { trackEnrichmentService } from './trackEnrichmentService';
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -167,7 +169,7 @@ class StreamMonitor {
       
       if (result.status.code === 0 && result.metadata?.music?.length) {
         const music = result.metadata.music[0];
-        const track: IdentifiedTrack = {
+        const baseTrack = {
           id: crypto.randomUUID(),
           title: music.title,
           artist: music.artists.map(a => a.name).join(', '),
@@ -178,6 +180,35 @@ class StreamMonitor {
           duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
           releaseDate: music.release_date
         };
+
+        // Enrich track with artwork and streaming links
+        const enrichedData = await trackEnrichmentService.enrichTrack(baseTrack.title, baseTrack.artist);
+        
+        const track: IdentifiedTrack = {
+          ...baseTrack,
+          artwork: enrichedData.artwork,
+        };
+
+        // Save to database with enriched data
+        try {
+          await storage.saveIdentifiedTrack({
+            trackId: track.id,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            confidence: track.confidence,
+            service: track.service,
+            duration: track.duration,
+            releaseDate: track.releaseDate,
+            artwork: enrichedData.artwork,
+            youtubeUrl: enrichedData.youtubeUrl,
+            soundcloudUrl: enrichedData.soundcloudUrl,
+            spotifyUrl: enrichedData.spotifyUrl
+          });
+          console.log(`💾 Track saved to database: ${track.title} by ${track.artist}`);
+        } catch (error) {
+          console.error('Failed to save track to database:', error);
+        }
 
         console.log(`✅ Track identified: ${track.artist} - ${track.title} (${track.confidence}% confidence)`);
         return track;
@@ -245,10 +276,10 @@ class StreamMonitor {
     // Start immediately
     this.performIdentification();
 
-    // Then repeat every 30 seconds
+    // Then repeat every 2 minutes
     this.monitorInterval = setInterval(() => {
       this.performIdentification();
-    }, 30000);
+    }, 120000);
   }
 
   public stopMonitoring(): void {

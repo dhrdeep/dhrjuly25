@@ -5,6 +5,7 @@ import {
   vipMixes,
   userDownloads,
   dailyDownloadLimits,
+  identifiedTracks,
   type User, 
   type InsertUser,
   type PatreonToken,
@@ -14,9 +15,11 @@ import {
   type UserDownload,
   type InsertUserDownload,
   type DailyDownloadLimit,
-  type InsertDailyDownloadLimit
+  type InsertDailyDownloadLimit,
+  type IdentifiedTrack,
+  type InsertIdentifiedTrack
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -49,6 +52,12 @@ export interface IStorage {
   
   // Admin methods
   getAllUsers(): Promise<User[]>;
+  
+  // Track identification methods
+  saveIdentifiedTrack(track: InsertIdentifiedTrack): Promise<IdentifiedTrack>;
+  getAllIdentifiedTracks(): Promise<IdentifiedTrack[]>;
+  getRecentIdentifiedTracks(limit?: number): Promise<IdentifiedTrack[]>;
+  clearTrackHistory(): Promise<void>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -198,6 +207,27 @@ export class DrizzleStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  // Track identification methods
+  async saveIdentifiedTrack(track: InsertIdentifiedTrack): Promise<IdentifiedTrack> {
+    const result = await db.insert(identifiedTracks).values([track]).returning();
+    return result[0];
+  }
+
+  async getAllIdentifiedTracks(): Promise<IdentifiedTrack[]> {
+    return await db.select().from(identifiedTracks)
+      .orderBy(identifiedTracks.identifiedAt.desc());
+  }
+
+  async getRecentIdentifiedTracks(limit: number = 50): Promise<IdentifiedTrack[]> {
+    return await db.select().from(identifiedTracks)
+      .orderBy(identifiedTracks.identifiedAt.desc())
+      .limit(limit);
+  }
+
+  async clearTrackHistory(): Promise<void> {
+    await db.delete(identifiedTracks);
   }
 }
 

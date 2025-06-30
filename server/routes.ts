@@ -2137,6 +2137,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track History Admin API Endpoints
+  app.get("/api/admin/track-history", async (req, res) => {
+    try {
+      const tracks = await storage.getAllIdentifiedTracks();
+      res.json(tracks);
+    } catch (error) {
+      console.error('Error fetching track history:', error);
+      res.status(500).json({ error: 'Failed to fetch track history' });
+    }
+  });
+
+  app.delete("/api/admin/track-history", async (req, res) => {
+    try {
+      await storage.clearTrackHistory();
+      res.json({ success: true, message: 'Track history cleared' });
+    } catch (error) {
+      console.error('Error clearing track history:', error);
+      res.status(500).json({ error: 'Failed to clear track history' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

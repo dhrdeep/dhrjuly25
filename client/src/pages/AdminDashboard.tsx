@@ -100,6 +100,14 @@ export default function AdminDashboard() {
       color: 'text-slate-500',
       priority: 'medium'
     },
+    {
+      title: 'Track History',
+      description: 'View identified tracks and export data',
+      icon: Music,
+      href: '/track-history',
+      color: 'text-purple-500',
+      priority: 'medium'
+    }
 
   ];
 
