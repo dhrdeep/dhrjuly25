@@ -1475,6 +1475,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track identification API endpoint (imported from Netlify function)
+  app.post("/api/identify-track", async (req, res) => {
+    try {
+      const { audioBase64 } = req.body;
+
+      if (!audioBase64) {
+        return res.status(400).json({ error: 'Missing audio data' });
+      }
+
+      // Convert base64 to Buffer for API calls
+      const audioBuffer = Buffer.from(audioBase64, 'base64');
+      console.log('Track identification request received, audio size:', audioBuffer.length);
+
+      // Helper functions for track identification
+      const generateACRCloudSignature = (method: string, uri: string, accessKey: string, dataType: string, signatureVersion: string, timestamp: number, accessSecret: string) => {
+        const { createHmac } = require('crypto');
+        const stringToSign = [method, uri, accessKey, dataType, signatureVersion, timestamp].join('\n');
+        return createHmac('sha1', accessSecret)
+          .update(stringToSign)
+          .digest('base64');
+      };
+
+      const arrayBufferToBase64 = (buffer: Buffer) => {
+        return buffer.toString('base64');
+      };
+
+      // ACRCloud identification
+      const identifyWithACRCloud = async (audioBuffer: Buffer) => {
+        try {
+          console.log('Starting ACRCloud identification');
+          
+          const ACRCLOUD_CONFIG = {
+            host: process.env.ACRCLOUD_HOST || 'identify-eu-west-1.acrcloud.com',
+            endpoint: '/v1/identify',
+            access_key: process.env.ACRCLOUD_ACCESS_KEY,
+            access_secret: process.env.ACRCLOUD_ACCESS_SECRET,
+            data_type: 'audio',
+            signature_version: '1'
+          };
+
+          if (!ACRCLOUD_CONFIG.access_key || !ACRCLOUD_CONFIG.access_secret) {
+            console.log('ACRCloud credentials not configured');
+            return null;
+          }
+
+          const timestamp = Math.floor(Date.now() / 1000);
+          const signature = generateACRCloudSignature(
+            'POST',
+            ACRCLOUD_CONFIG.endpoint,
+            ACRCLOUD_CONFIG.access_key,
+            ACRCLOUD_CONFIG.data_type,
+            ACRCLOUD_CONFIG.signature_version,
+            timestamp,
+            ACRCLOUD_CONFIG.access_secret
+          );
+
+          const FormData = require('form-data');
+          const formData = new FormData();
+          formData.append('sample', audioBuffer, { filename: 'sample.wav', contentType: 'audio/wav' });
+          formData.append('sample_bytes', audioBuffer.length.toString());
+          formData.append('access_key', ACRCLOUD_CONFIG.access_key);
+          formData.append('data_type', ACRCLOUD_CONFIG.data_type);
+          formData.append('signature_version', ACRCLOUD_CONFIG.signature_version);
+          formData.append('signature', signature);
+          formData.append('timestamp', timestamp.toString());
+
+          const response = await fetch(`https://${ACRCLOUD_CONFIG.host}${ACRCLOUD_CONFIG.endpoint}`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            console.error('ACRCloud response not ok:', response.status, response.statusText);
+            return null;
+          }
+
+          const result = await response.json();
+          console.log('ACRCloud response:', result);
+
+          if (result.status.code === 0 && result.metadata?.music?.length > 0) {
+            const music = result.metadata.music[0];
+            return {
+              title: music.title || 'Unknown Title',
+              artist: music.artists?.[0]?.name || 'Unknown Artist',
+              album: music.album?.name || 'Unknown Album',
+              artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || null,
+              confidence: Math.round(music.score || 0),
+              service: 'ACRCloud',
+              duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
+              releaseDate: music.release_date,
+              id: `acrcloud_${Date.now()}`,
+              timestamp: new Date().toISOString()
+            };
+          }
+          return null;
+
+        } catch (error) {
+          console.error('ACRCloud identification error:', error);
+          return null;
+        }
+      };
+
+      // Shazam identification
+      const identifyWithShazam = async (audioBuffer: Buffer) => {
+        try {
+          console.log('Starting Shazam identification');
+          
+          const SHAZAM_CONFIG = {
+            host: process.env.SHAZAM_HOST || 'shazam.p.rapidapi.com',
+            key: process.env.SHAZAM_API_KEY
+          };
+
+          if (!SHAZAM_CONFIG.key) {
+            console.log('Shazam API key not configured');
+            return null;
+          }
+
+          const audioBase64 = arrayBufferToBase64(audioBuffer);
+
+          const response = await fetch('https://shazam.p.rapidapi.com/songs/v2/detect', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'text/plain',
+              'X-RapidAPI-Key': SHAZAM_CONFIG.key,
+              'X-RapidAPI-Host': SHAZAM_CONFIG.host
+            },
+            body: audioBase64
+          });
+
+          if (!response.ok) {
+            console.error('Shazam response not ok:', response.status, response.statusText);
+            return null;
+          }
+
+          const result = await response.json();
+          console.log('Shazam response:', result);
+
+          if (result.track) {
+            const track = result.track;
+            return {
+              title: track.title || 'Unknown Title',
+              artist: track.subtitle || 'Unknown Artist',
+              album: track.sections?.[0]?.metadata?.find((m: any) => m.title === 'Album')?.text || 'Unknown Album',
+              artwork: track.images?.coverart || track.images?.coverarthq || null,
+              confidence: 85, // Shazam doesn't provide confidence score
+              service: 'Shazam',
+              duration: undefined,
+              releaseDate: undefined,
+              id: `shazam_${Date.now()}`,
+              timestamp: new Date().toISOString()
+            };
+          }
+          return null;
+
+        } catch (error) {
+          console.error('Shazam identification error:', error);
+          return null;
+        }
+      };
+
+      // Try ACRCloud first
+      let result = await identifyWithACRCloud(audioBuffer);
+
+      if (result) {
+        console.log('Track identified with ACRCloud:', result.title, 'by', result.artist);
+        return res.json({ track: result });
+      }
+
+      // Fallback to Shazam
+      result = await identifyWithShazam(audioBuffer);
+
+      if (result) {
+        console.log('Track identified with Shazam:', result.title, 'by', result.artist);
+        return res.json({ track: result });
+      }
+
+      console.log('No track identified by either service');
+      return res.json({ track: null });
+
+    } catch (error) {
+      console.error('Track identification error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
