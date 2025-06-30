@@ -406,21 +406,44 @@ export default function DragonPage() {
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
-          console.log('Attempting identification with ACRCloud...');
+          console.log('Using server-side ACRCloud extraction tools approach...');
           
-          // Try ACRCloud first
-          let track = await identifyWithACRCloud(audioBlob);
-          if (track) {
-            console.log('ACRCloud identification successful');
-          } else {
-            console.log('ACRCloud failed, trying Shazam...');
-            // Try Shazam as fallback
-            track = await identifyWithShazam(audioBlob);
-            if (track) {
-              console.log('Shazam identification successful');
-            } else {
-              console.log('No track identified by either service');
-            }
+          // Convert audio to base64 for server processing
+          const audioBase64 = await audioToBase64(audioBlob);
+          
+          // Send to server-side ACRCloud extraction tools endpoint
+          const response = await fetch('/api/identify-track-extraction', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              audioBase64: audioBase64,
+              duration: 25 // 25 second capture
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log('ACRCloud extraction tools result:', result);
+
+          let track = null;
+          if (result.track) {
+            track = {
+              id: result.track.id || `track_${Date.now()}`,
+              title: result.track.title,
+              artist: result.track.artist,
+              album: result.track.album,
+              artwork: result.track.artwork || 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png',
+              confidence: result.track.confidence,
+              service: result.track.service,
+              duration: result.track.duration,
+              releaseDate: result.track.releaseDate,
+              timestamp: new Date().toISOString()
+            };
           }
           
           if (track) {
@@ -530,6 +553,18 @@ export default function DragonPage() {
   const searchTrack = (track: Track) => {
     const query = encodeURIComponent(`${track.artist} ${track.title}`);
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+  };
+
+  const audioToBase64 = (audioBlob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(audioBlob);
+    });
   };
 
   const getDublinTimestamp = () => {

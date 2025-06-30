@@ -48,6 +48,7 @@
     "@types/node-fetch": "^2.6.12",
     "aws-sdk": "^2.1692.0",
     "caniuse-lite": "^1.0.30001726",
+    "child_process": "^1.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
