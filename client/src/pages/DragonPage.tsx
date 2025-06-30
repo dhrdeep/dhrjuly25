@@ -452,9 +452,23 @@ export default function DragonPage() {
       console.log('Starting track identification process...');
       console.log('Audio blob size:', audioBlob.size, 'type:', audioBlob.type);
       
-      // Try ACRCloud identification (direct client-side API call)
+      // Convert WAV to format ACRCloud prefers and try identification
       console.log('Attempting identification with ACRCloud...');
-      const track = await identifyWithACRCloud(audioBlob);
+      
+      // If we have a large WAV file, try converting to optimal format for ACRCloud
+      let identificationBlob = audioBlob;
+      if (audioBlob.type === 'audio/wav' && audioBlob.size > 1000000) {
+        console.log('Large WAV detected, attempting format optimization for ACRCloud...');
+        try {
+          // Convert WAV to MP3-like format that ACRCloud prefers
+          identificationBlob = await convertWAVForACRCloud(audioBlob);
+          console.log(`Converted audio blob: ${identificationBlob.size} bytes, type: ${identificationBlob.type}`);
+        } catch (conversionError) {
+          console.warn('Audio conversion failed, using original WAV:', conversionError);
+        }
+      }
+      
+      const track = await identifyWithACRCloud(identificationBlob);
       
       if (track) {
         console.log('Track found:', track);
