@@ -11,6 +11,18 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 30, 2025**: Track Widget System with Content Crawling & Streaming Platform Integration
+  - **Channel-Specific Track Widgets**: Added TrackWidget components showing last 10 identified tracks for DHR1/DHR2
+  - **Streaming Platform Links**: Direct buttons to YouTube, SoundCloud, and Spotify for each track
+  - **Content Crawling Engine**: Automated recommendation system crawling external sites for similar tracks
+  - **Real-time Track Display**: Collapsible widgets with track artwork, confidence scores, and timestamps
+  - **Database Channel Support**: Enhanced identified_tracks table with channel field (DHR1/DHR2)
+  - **API Endpoints**: /api/tracks/recent/:channel and /api/tracks/recommendations for widget functionality
+  - **Smart Recommendations**: Multi-platform content discovery from SoundCloud, YouTube, and Beatport
+  - **Professional UI**: Expandable widgets with channel-specific branding (orange/pink color schemes)
+  - **Track History Integration**: Direct links to full track history page and enhanced search capabilities
+  - **VIP Genre Tags Removed**: Cleaned up VIP page by removing genre display labels per user request
+  - Integrated on DHR1 and DHR2 premium player pages alongside existing LiveTrackWidget components
 - **June 30, 2025**: Complete Ultra-Ethereal DHR Logo Animation System
   - **Professional Image-Based Logos**: Replaced text with authentic DHR logo images from official branding
   - **Ultra-Ghostly Transparency**: 0.005-0.008 opacity (99.5% transparent) for ethereal atmospheric effect

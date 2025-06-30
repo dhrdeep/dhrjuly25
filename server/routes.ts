@@ -2391,21 +2391,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // YouTube content crawler
   async function crawlYouTube(artist: string, title: string) {
     try {
-      const searchQuery = `${artist} ${title} mix`.replace(/\s+/g, '+');
+      const searchQuery = `${artist} ${title} deep house mix`.replace(/\s+/g, '+');
       
       // Simulate YouTube API search (in production, use real YouTube Data API)
       const similarTracks = [
         {
-          title: `${title} - Extended Mix`,
+          title: `${title} - Deep House Mix`,
           artist: `${artist} & Friends`,
           youtubeUrl: `https://www.youtube.com/results?search_query=${searchQuery}`,
           confidence: 80,
           service: 'YouTube'
         },
         {
-          title: `Best of ${artist} - Music Collection`,
+          title: `Best of ${artist} - Deep House Collection`,
           artist: artist,
-          youtubeUrl: `https://www.youtube.com/results?search_query=${artist.replace(/\s+/g, '+')}+music`,
+          youtubeUrl: `https://www.youtube.com/results?search_query=${artist.replace(/\s+/g, '+')}+deep+house`,
           confidence: 70,
           service: 'YouTube'
         }

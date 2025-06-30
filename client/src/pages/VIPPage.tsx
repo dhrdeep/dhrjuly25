@@ -407,14 +407,7 @@ const VIPPage: React.FC = () => {
                       </button>
                     </div>
                     
-                    {/* Genre and Tags */}
-                    {mix.genre && (
-                      <div className="mt-3">
-                        <span className="inline-block bg-orange-900/30 text-orange-300 px-2 py-1 rounded text-xs">
-                          {mix.genre}
-                        </span>
-                      </div>
-                    )}
+
                   </div>
                 </div>
               ))}
