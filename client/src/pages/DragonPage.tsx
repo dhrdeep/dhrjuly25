@@ -352,49 +352,30 @@ export default function DragonPage() {
       console.log('Manual Identification Triggered');
       console.log('Created New AudioContext');
       
-      // Create AudioContext with higher sample rate and connect to HTML audio element
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
-        sampleRate: 48000 // Higher sample rate for more data
-      });
+      // Create AudioContext exactly like working system
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const source = audioContext.createMediaElementSource(audioRef.current);
       const destination = audioContext.createMediaStreamDestination();
       const gainNode = audioContext.createGain();
       
-      // Add additional processing nodes for richer audio
-      const compressor = audioContext.createDynamicsCompressor();
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 8192; // Higher resolution
-      
       console.log('Created MediaElementSource');
       
-      // Connect audio nodes with additional processing (matching working system)
+      // Connect audio nodes exactly like working system
       source.connect(gainNode);
-      gainNode.connect(compressor);
-      compressor.connect(analyser);
-      analyser.connect(destination);
-      analyser.connect(audioContext.destination); // Still output to speakers
+      gainNode.connect(destination);
+      gainNode.connect(audioContext.destination); // Still output to speakers
       
       console.log('Connected Audio Nodes With Gain Control');
       console.log('Clearing Auto-Identification Timer');
       console.log('Audio Tracks Found:', destination.stream.getAudioTracks().length);
       
-      // Try for highest quality recording possible
-      let mimeType = 'audio/webm;codecs=opus';
-      let recorderOptions: any = {
-        audioBitsPerSecond: 512000 // Maximum bitrate for largest files
-      };
-      
-      // Try WAV first for uncompressed audio
-      if (MediaRecorder.isTypeSupported('audio/wav')) {
-        mimeType = 'audio/wav';
-        recorderOptions = {}; // WAV doesn't support bitrate setting
-      }
-      
+      // Use exact same MIME type and settings as working system
+      const mimeType = 'audio/webm;codecs=opus';
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType,
-        ...recorderOptions
+        mimeType: mimeType
+        // No bitrate specified - use browser default like working system
       });
       
       console.log('Starting MediaRecorder...');
@@ -451,7 +432,7 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(); // Start without timeslice for one large chunk
+      mediaRecorder.start(1000); // 1 second timeslice EXACTLY like working system
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
