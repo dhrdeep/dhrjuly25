@@ -40,7 +40,7 @@
   border-radius: 4px;
 }
 
-/* Floating DHR Logo Animation - Enhanced Ghostly Full Page */
+/* Single Ultra-Ghostly DHR Logo Background - Global */
 .dhr-floating-bg {
   position: fixed;
   top: 0;
@@ -54,49 +54,21 @@
 
 .floating-dhr-logo {
   position: absolute;
-  width: 500px;
-  height: 500px;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 800px;
   background-image: url('https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.0003;
-  animation: ghostlyOrbitSlow 60s linear infinite;
+  opacity: 0.00008;
+  transform: translate(-50%, -50%);
+  animation: ghostlyOrbitSlow 120s linear infinite, ghostlyPulse30bpm 2s ease-in-out infinite, slowSpin 240s linear infinite;
   user-select: none;
-  filter: blur(8px) brightness(0.15) contrast(0.05) saturate(0.05);
+  filter: blur(15px) brightness(0.05) contrast(0.005) saturate(0.005);
   transform-origin: center center;
   mix-blend-mode: luminosity;
-}
-
-.floating-dhr-logo:nth-child(1) {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: spreadToCenter 3s ease-out forwards, ghostlyOrbitSlow 60s linear infinite 3s, ghostlyPulse30bpm 2s ease-in-out infinite 3s, slowSpin 120s linear infinite;
-}
-
-.floating-dhr-logo:nth-child(2) {
-  top: 50%;
-  left: 50%;
-  width: 450px;
-  height: 450px;
-  opacity: 0.0002;
-  transform: translate(-50%, -50%);
-  animation: spreadToTopLeft 3s ease-out forwards, ghostlyOrbitSlow 80s linear infinite 3s, ghostlyPulse15bpm 4s ease-in-out infinite 3s, slowSpin 150s linear infinite;
-  filter: blur(10px) brightness(0.1) contrast(0.02) saturate(0.02);
-  mix-blend-mode: screen;
-}
-
-.floating-dhr-logo:nth-child(3) {
-  top: 50%;
-  left: 50%;
-  width: 600px;
-  height: 600px;
-  opacity: 0.0001;
-  transform: translate(-50%, -50%);
-  animation: spreadToBottomRight 3s ease-out forwards, ghostlyOrbitSlow 100s linear infinite 3s, ghostlyPulse30bpm 2s ease-in-out infinite 3s, slowSpin 180s linear infinite;
-  filter: blur(12px) brightness(0.08) contrast(0.01) saturate(0.01);
-  mix-blend-mode: difference;
 }
 
 @keyframes ghostlyOrbitSlow {

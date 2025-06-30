@@ -114,11 +114,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
-      {/* Enhanced Ghostly DHR Background Animation */}
+      {/* Single Ultra-Ghostly DHR Background */}
       <div className="dhr-floating-bg">
-        <div className="floating-dhr-logo">DHR</div>
-        <div className="floating-dhr-logo">DHR</div>
-        <div className="floating-dhr-logo">DHR</div>
+        <div className="floating-dhr-logo"></div>
       </div>
 
       {/* Main Background */}
