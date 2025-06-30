@@ -333,6 +333,22 @@ export default function DragonPage() {
         throw new Error('Audio element not available');
       }
 
+      // Ensure audio is playing and has data
+      if (audioRef.current.paused) {
+        console.log('Audio is paused, starting playback...');  
+        await audioRef.current.play();
+        // Wait a moment for audio to stabilize
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      console.log('Audio element state:', {
+        paused: audioRef.current.paused,
+        currentTime: audioRef.current.currentTime,
+        duration: audioRef.current.duration,
+        readyState: audioRef.current.readyState,
+        networkState: audioRef.current.networkState
+      });
+
       console.log('Manual Identification Triggered');
       console.log('Created New AudioContext');
       
@@ -358,7 +374,8 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType
+        mimeType: mimeType,
+        audioBitsPerSecond: 320000 // Much higher bitrate for larger files
       });
       
       console.log('Starting MediaRecorder...');
@@ -415,7 +432,7 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(1000); // 1 second timeslice like working system
+      mediaRecorder.start(); // Start without timeslice for one large chunk
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
