@@ -352,7 +352,7 @@ export default function DragonPage() {
         }
 
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
-          sampleRate: 48000
+          sampleRate: 44100 // ACRCloud standard: 44.1kHz
         });
         
         const source = audioContext.createMediaElementSource(audioRef.current);
@@ -362,7 +362,7 @@ export default function DragonPage() {
         gainNode.connect(audioContext.destination);
         
         const sampleRate = audioContext.sampleRate;
-        const duration = 25;
+        const duration = 10; // ACRCloud optimal: 10 seconds
         const bufferSize = sampleRate * duration;
         const pcmBuffer = new Float32Array(bufferSize);
         let sampleIndex = 0;
@@ -407,7 +407,7 @@ export default function DragonPage() {
             console.log(`PCM capture timeout: ${wavBlob.size} bytes`);
             resolve(wavBlob);
           }
-        }, 26000);
+        }, 11000); // 11 seconds timeout for 10 second capture
         
       } catch (error) {
         reject(error);
@@ -450,7 +450,7 @@ export default function DragonPage() {
     return new Promise((resolve, reject) => {
       try {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
-          sampleRate: 44100 // ACRCloud standard sample rate
+          sampleRate: 44100 // ACRCloud required: 44.1kHz
         });
         
         const fileReader = new FileReader();
@@ -459,8 +459,8 @@ export default function DragonPage() {
             const arrayBuffer = e.target?.result as ArrayBuffer;
             const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
             
-            // Create a shorter, more focused clip (ACRCloud works better with 15-20 seconds)
-            const duration = Math.min(audioBuffer.duration, 15);
+            // ACRCloud optimal specifications: 10 seconds, 44.1kHz, <1MB
+            const duration = Math.min(audioBuffer.duration, 10);
             const sampleRate = 44100;
             const samples = duration * sampleRate;
             
@@ -592,7 +592,7 @@ export default function DragonPage() {
   const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
-      setIdentificationStatus('Recording 25 Seconds For Identification...');
+      setIdentificationStatus('Recording 10 Seconds For Identification...');
       
       if (!audioRef.current) {
         throw new Error('Audio element not available');
@@ -767,7 +767,7 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 25000); // 25 second capture to generate larger files like working system
+      }, 10000); // 10 second capture to match ACRCloud optimal duration
       
     } catch (error) {
       console.error('Audio capture error:', error);
