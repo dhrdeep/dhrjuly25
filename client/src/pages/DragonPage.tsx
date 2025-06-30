@@ -381,8 +381,8 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType
-        // No bitrate constraints - let browser use maximum quality
+        mimeType: mimeType,
+        audioBitsPerSecond: 384000 // Specific bitrate to match 402KB target
       });
       
       console.log('Starting MediaRecorder...');
@@ -454,13 +454,13 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(); // No timeslice - let browser generate optimal chunks like working system
+      mediaRecorder.start(100); // Small timeslice to force more data chunks like working system
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 60000); // Much longer recording to force larger file sizes
+      }, 15000); // Back to 15 seconds like working system with optimized chunking
       
     } catch (error) {
       console.error('Audio capture error:', error);
