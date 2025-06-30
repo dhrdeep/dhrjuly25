@@ -1479,9 +1479,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Track identification API endpoint (imported from Netlify function)
   app.post("/api/identify-track", async (req, res) => {
     try {
+      console.log('Track identification endpoint called');
+      console.log('Request body keys:', Object.keys(req.body));
       const { audioBase64 } = req.body;
 
       if (!audioBase64) {
+        console.log('Missing audioBase64 in request body');
         return res.status(400).json({ error: 'Missing audio data' });
       }
 
