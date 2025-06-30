@@ -64,7 +64,7 @@
   background-position: center;
   opacity: 0.00008;
   transform: translate(-50%, -50%);
-  animation: ghostlyOrbitSlow 120s linear infinite, ghostlyPulse30bpm 2s ease-in-out infinite, slowSpin 240s linear infinite;
+  animation: stealthyDrift 180s ease-in-out infinite, ghostlyPulse30bpm 2s ease-in-out infinite, slowSpin 240s linear infinite, smokyFloat 90s ease-in-out infinite;
   user-select: none;
   filter: blur(15px) brightness(0.05) contrast(0.005) saturate(0.005);
   transform-origin: center center;
@@ -121,6 +121,51 @@
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes stealthyDrift {
+  0% {
+    transform: translate(-50%, -50%) translateX(0px) translateY(0px);
+  }
+  15% {
+    transform: translate(-50%, -50%) translateX(-120px) translateY(-80px);
+  }
+  30% {
+    transform: translate(-50%, -50%) translateX(80px) translateY(-150px);
+  }
+  45% {
+    transform: translate(-50%, -50%) translateX(150px) translateY(60px);
+  }
+  60% {
+    transform: translate(-50%, -50%) translateX(-80px) translateY(120px);
+  }
+  75% {
+    transform: translate(-50%, -50%) translateX(-180px) translateY(-40px);
+  }
+  90% {
+    transform: translate(-50%, -50%) translateX(60px) translateY(100px);
+  }
+  100% {
+    transform: translate(-50%, -50%) translateX(0px) translateY(0px);
+  }
+}
+
+@keyframes smokyFloat {
+  0% {
+    filter: blur(15px) brightness(0.05) contrast(0.005) saturate(0.005);
+  }
+  25% {
+    filter: blur(18px) brightness(0.03) contrast(0.002) saturate(0.002);
+  }
+  50% {
+    filter: blur(12px) brightness(0.08) contrast(0.008) saturate(0.008);
+  }
+  75% {
+    filter: blur(20px) brightness(0.02) contrast(0.001) saturate(0.001);
+  }
+  100% {
+    filter: blur(15px) brightness(0.05) contrast(0.005) saturate(0.005);
   }
 }
 
