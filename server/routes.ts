@@ -7,6 +7,7 @@ import fetch from "node-fetch";
 import { storage } from "./storage";
 import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
 import { fileHostingService } from "./fileHostingService";
+import { streamMonitor } from "./streamMonitor";
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
@@ -2094,6 +2095,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       throw error;
     }
   };
+
+  // Live Track Identification API Endpoints
+  app.get("/api/track-monitor/current", (req, res) => {
+    try {
+      const currentTrack = streamMonitor.getCurrentTrack();
+      res.json({ track: currentTrack, isActive: streamMonitor.isActive() });
+    } catch (error) {
+      console.error('Error getting current track:', error);
+      res.status(500).json({ error: 'Failed to get current track' });
+    }
+  });
+
+  app.get("/api/track-monitor/recent", (req, res) => {
+    try {
+      const recentTracks = streamMonitor.getRecentTracks();
+      res.json({ tracks: recentTracks, isActive: streamMonitor.isActive() });
+    } catch (error) {
+      console.error('Error getting recent tracks:', error);
+      res.status(500).json({ error: 'Failed to get recent tracks' });
+    }
+  });
+
+  app.post("/api/track-monitor/start", (req, res) => {
+    try {
+      streamMonitor.startMonitoring();
+      res.json({ success: true, message: 'Track monitoring started' });
+    } catch (error) {
+      console.error('Error starting track monitoring:', error);
+      res.status(500).json({ error: 'Failed to start track monitoring' });
+    }
+  });
+
+  app.post("/api/track-monitor/stop", (req, res) => {
+    try {
+      streamMonitor.stopMonitoring();
+      res.json({ success: true, message: 'Track monitoring stopped' });
+    } catch (error) {
+      console.error('Error stopping track monitoring:', error);
+      res.status(500).json({ error: 'Failed to stop track monitoring' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { streamMonitor } from "./streamMonitor";
 
 const app = express();
 app.use(express.json({ limit: "100mb" }));
@@ -67,5 +68,9 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start the stream monitoring system
+    console.log('🎵 Starting DHR Stream Monitoring System...');
+    streamMonitor.startMonitoring();
   });
 })();
