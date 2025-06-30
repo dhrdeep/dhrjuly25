@@ -56,25 +56,40 @@ export default function DragonPage() {
 
 
 
-  // Auto-identification timer effect
+  // Auto-identification timer effect - starts after 30 seconds, then every minute
   useEffect(() => {
     if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
       if (autoIdentifyTimer.current) {
-        clearInterval(autoIdentifyTimer.current);
+        clearTimeout(autoIdentifyTimer.current);
       }
       
-      autoIdentifyTimer.current = setInterval(() => {
-        if (isPlaying && !isIdentifying && connectionStatus === 'connected') {
+      console.log('Auto-identification enabled - first run in 30 seconds');
+      
+      // First identification after 30 seconds
+      autoIdentifyTimer.current = setTimeout(() => {
+        if (isPlaying && !isIdentifying && connectionStatus === 'connected' && autoIdentify) {
+          console.log('Running first auto-identification...');
           captureStreamAudio();
+          
+          // Then continue every minute
+          autoIdentifyTimer.current = setInterval(() => {
+            if (isPlaying && !isIdentifying && connectionStatus === 'connected' && autoIdentify) {
+              console.log('Running periodic auto-identification...');
+              captureStreamAudio();
+            }
+          }, 60000); // 60 second intervals after first run
         }
-      }, 60000); // 60 second intervals
+      }, 30000); // 30 seconds for first identification
+      
     } else if (autoIdentifyTimer.current) {
+      clearTimeout(autoIdentifyTimer.current);
       clearInterval(autoIdentifyTimer.current);
       autoIdentifyTimer.current = null;
     }
 
     return () => {
       if (autoIdentifyTimer.current) {
+        clearTimeout(autoIdentifyTimer.current);
         clearInterval(autoIdentifyTimer.current);
       }
     };
@@ -392,11 +407,17 @@ export default function DragonPage() {
       
       console.log(`Using MIME Type: ${mimeType}`);
       
-      // Match working system settings exactly - higher bitrate to reach 402KB target
-      const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 1024000 // Very high quality to generate 402KB files like working system
-      });
+      // Match working system settings exactly - use detected MIME type with maximum bitrate
+      const recorderOptions: MediaRecorderOptions = {
+        mimeType: mimeType
+      };
+      
+      // Only add bitrate for compressed formats
+      if (mimeType.includes('opus') || mimeType.includes('webm')) {
+        recorderOptions.audioBitsPerSecond = 2048000; // Maximum bitrate to generate 402KB files
+      }
+      
+      const mediaRecorder = new MediaRecorder(destination.stream, recorderOptions);
       
       console.log('Starting MediaRecorder...');
       
@@ -467,7 +488,7 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(1000); // Larger timeslices to capture more data per chunk like working system
+      mediaRecorder.start(2000); // Larger timeslices to capture more data per chunk like working system
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
