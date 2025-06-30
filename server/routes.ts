@@ -6,6 +6,12 @@ import fetch from "node-fetch";
 import { storage } from "./storage";
 import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
 import { fileHostingService } from "./fileHostingService";
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import { PassThrough } from 'stream';
+
+// Configure FFmpeg path
+ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Patreon OAuth endpoint to replace Supabase edge function
@@ -1507,9 +1513,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // ACRCloud identification
+      const convertWebMToPCM = async (webmBuffer: Buffer): Promise<Buffer> => {
+        return new Promise((resolve, reject) => {
+          const inputStream = new PassThrough();
+          const outputStream = new PassThrough();
+          const chunks: Buffer[] = [];
+
+          outputStream.on('data', (chunk) => chunks.push(chunk));
+          outputStream.on('end', () => resolve(Buffer.concat(chunks)));
+          outputStream.on('error', reject);
+
+          ffmpeg(inputStream)
+            .inputFormat('webm')
+            .audioCodec('pcm_s16le')
+            .audioFrequency(44100)
+            .audioChannels(1)
+            .format('wav')
+            .pipe(outputStream);
+
+          inputStream.end(webmBuffer);
+        });
+      };
+
       const identifyWithACRCloud = async (audioBuffer: Buffer) => {
         try {
           console.log('Starting ACRCloud identification');
+          
+          // Convert WebM to PCM WAV format for better fingerprint generation
+          let processedBuffer = audioBuffer;
+          try {
+            console.log('Converting WebM to PCM format...');
+            processedBuffer = await convertWebMToPCM(audioBuffer);
+            console.log('Audio conversion successful, new size:', processedBuffer.length);
+          } catch (conversionError) {
+            console.log('Audio conversion failed, using original buffer:', conversionError);
+            // Continue with original buffer if conversion fails
+          }
           
           const ACRCLOUD_CONFIG = {
             host: process.env.ACRCLOUD_HOST || 'identify-eu-west-1.acrcloud.com',
@@ -1537,8 +1576,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
 
           const formData = new FormData();
-          formData.append('sample', audioBuffer, { filename: 'sample.wav', contentType: 'audio/wav' });
-          formData.append('sample_bytes', audioBuffer.length.toString());
+          formData.append('sample', processedBuffer, { filename: 'sample.wav', contentType: 'audio/wav' });
+          formData.append('sample_bytes', processedBuffer.length.toString());
           formData.append('access_key', ACRCLOUD_CONFIG.access_key);
           formData.append('data_type', ACRCLOUD_CONFIG.data_type);
           formData.append('signature_version', ACRCLOUD_CONFIG.signature_version);
