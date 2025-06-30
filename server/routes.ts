@@ -1572,27 +1572,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log('Starting ACRCloud identification');
           
-          // Convert WebM to PCM WAV format for better fingerprint generation
-          let processedBuffer = audioBuffer;
+          // Try both original WebM and converted PCM formats
           console.log('Original audio buffer size:', audioBuffer.length);
           console.log('Original audio buffer type:', audioBuffer.constructor.name);
           
-          try {
-            console.log('Converting WebM to PCM format...');
-            processedBuffer = await convertWebMToPCM(audioBuffer);
-            console.log('Audio conversion successful, new size:', processedBuffer.length);
-            console.log('Processed audio buffer type:', processedBuffer.constructor.name);
+          let processedBuffer = audioBuffer;
+          let contentType = 'audio/webm';
+          let filename = 'sample.webm';
+          
+          // First try with original WebM format as per documentation
+          console.log('Attempting identification with original WebM format first...');
+          
+          const makeACRCloudRequest = async (buffer: Buffer, format: string, filename: string) => {
+            const formData = new FormData();
+            formData.append('sample', Buffer.from(buffer), { filename: filename, contentType: format });
+            formData.append('sample_bytes', buffer.length.toString());
+            formData.append('access_key', ACRCLOUD_CONFIG.access_key);
+            formData.append('data_type', ACRCLOUD_CONFIG.data_type);
+            formData.append('signature_version', ACRCLOUD_CONFIG.signature_version);
+            formData.append('signature', signature);
+            formData.append('timestamp', timestamp.toString());
             
-            // Validate the processed audio buffer
-            if (processedBuffer.length < 8000) {
-              console.log('Warning: Processed audio buffer seems too small for fingerprinting');
+            const response = await fetch(`https://${ACRCLOUD_CONFIG.host}${ACRCLOUD_CONFIG.endpoint}`, {
+              method: 'POST',
+              body: formData,
+              headers: formData.getHeaders()
+            });
+
+            if (!response.ok) {
+              console.error('ACRCloud response not ok:', response.status, response.statusText);
+              return null;
             }
-            
-          } catch (conversionError) {
-            console.log('Audio conversion failed, using original buffer:', conversionError);
-            // Continue with original buffer if conversion fails
+
+            return await response.json();
+          };
+          
+          // Try original WebM first
+          console.log('Trying original WebM format...');
+          let result = await makeACRCloudRequest(processedBuffer, contentType, filename);
+          
+          if (result && result.status.code === 0 && result.metadata?.music?.length > 0) {
+            console.log('SUCCESS with WebM format!');
+            const music = result.metadata.music[0];
+            return {
+              title: music.title || 'Unknown Title',
+              artist: music.artists?.[0]?.name || 'Unknown Artist',
+              album: music.album?.name || 'Unknown Album',
+              artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || null,
+              confidence: Math.round(music.score || 0),
+              service: 'ACRCloud',
+              duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
+              releaseDate: music.release_date
+            };
           }
           
+          console.log('WebM format failed, trying PCM conversion...');
+          // Fallback to PCM conversion
+          try {
+            const pcmBuffer = await convertWebMToPCM(audioBuffer);
+            result = await makeACRCloudRequest(pcmBuffer, 'audio/wav', 'sample.wav');
+            
+            if (result && result.status.code === 0 && result.metadata?.music?.length > 0) {
+              console.log('SUCCESS with PCM format!');
+              const music = result.metadata.music[0];
+              return {
+                title: music.title || 'Unknown Title',
+                artist: music.artists?.[0]?.name || 'Unknown Artist',
+                album: music.album?.name || 'Unknown Album',
+                artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || null,
+                confidence: Math.round(music.score || 0),
+                service: 'ACRCloud',
+                duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
+                releaseDate: music.release_date
+              };
+            }
+          } catch (conversionError) {
+            console.log('PCM conversion failed:', conversionError);
+          }
+          
+          console.log('Both WebM and PCM formats failed:', result);
+          return null;
+          
+        } catch (error) {
+          console.error('ACRCloud error:', error);
+          return null;
+        }
+      };
+
+      const identifyWithACRCloudOLD_REMOVED = async (audioBuffer: Buffer) => {
+        try {
           const ACRCLOUD_CONFIG = {
             host: process.env.ACRCLOUD_HOST || 'identify-eu-west-1.acrcloud.com',
             endpoint: '/v1/identify',
@@ -1619,17 +1687,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
 
           const formData = new FormData();
-          formData.append('sample', processedBuffer, { filename: 'sample.wav', contentType: 'audio/wav' });
+          formData.append('sample', Buffer.from(processedBuffer), { filename: filename, contentType: contentType });
           formData.append('sample_bytes', processedBuffer.length.toString());
           formData.append('access_key', ACRCLOUD_CONFIG.access_key);
           formData.append('data_type', ACRCLOUD_CONFIG.data_type);
           formData.append('signature_version', ACRCLOUD_CONFIG.signature_version);
           formData.append('signature', signature);
           formData.append('timestamp', timestamp.toString());
+          
+          console.log('FormData prepared with:', {
+            sampleSize: processedBuffer.length,
+            accessKey: ACRCLOUD_CONFIG.access_key.substring(0, 10) + '...',
+            timestamp: timestamp,
+            signatureLength: signature.length
+          });
 
           const response = await fetch(`https://${ACRCLOUD_CONFIG.host}${ACRCLOUD_CONFIG.endpoint}`, {
             method: 'POST',
             body: formData,
+            headers: formData.getHeaders()
           });
 
           if (!response.ok) {
@@ -1730,16 +1806,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      // Try Shazam first with original WebM audio (often works better with streaming content)
-      let result = await identifyWithShazam(audioBuffer);
+      // Try ACRCloud first with original audio format (as per working documentation)
+      let result = await identifyWithACRCloud(audioBuffer);
 
       if (result) {
-        console.log('Track identified with Shazam:', result.title, 'by', result.artist);
+        console.log('Track identified with ACRCloud:', result.title, 'by', result.artist);
         return res.json({ track: result });
       }
 
-      // Try ACRCloud with converted audio as fallback
-      result = await identifyWithACRCloud(audioBuffer);
+      // Try Shazam as fallback
+      result = await identifyWithShazam(audioBuffer);
 
       if (result) {
         console.log('Track identified with Shazam:', result.title, 'by', result.artist);
