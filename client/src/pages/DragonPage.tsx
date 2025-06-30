@@ -407,20 +407,19 @@ export default function DragonPage() {
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
-          console.log('Using official ACRCloud extraction tools...');
+          console.log('Using working system approach - direct API calls...');
           
-          // Convert audio to base64 for server processing
+          // Convert audio to base64 for server processing 
           const audioBase64 = await audioToBase64(audioBlob);
           
-          // Send to server-side ACRCloud extraction tools endpoint
-          const response = await fetch('/api/identify-track-extraction', {
+          // Send to server endpoint that matches working documentation
+          const response = await fetch('/api/identify-track', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              audioBase64: audioBase64,
-              duration: 25 // 25 second capture
+              audioBase64: audioBase64
             })
           });
 
@@ -429,7 +428,7 @@ export default function DragonPage() {
           }
 
           const result = await response.json();
-          console.log('ACRCloud extraction tools result:', result);
+          console.log('Track identification result:', result);
 
           let track = null;
           if (result.track) {
