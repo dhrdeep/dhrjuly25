@@ -363,9 +363,8 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType,
-        audioBitsPerSecond: 512000, // Higher bitrate to match 402KB files
-        bitsPerSecond: 512000
+        mimeType: mimeType
+        // Remove bitrate constraints - let browser use optimal defaults like working system
       });
       
       console.log('Starting MediaRecorder...');
