@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Music, ExternalLink, Clock, Star, Download, Refresh } from 'lucide-react';
+import { Music, ExternalLink, Clock, Star, Download, RefreshCw } from 'lucide-react';
 
 interface IdentifiedTrack {
   id: string;
@@ -102,7 +102,7 @@ const LiveMonitorPage: React.FC = () => {
             disabled={isLoading}
             className="flex items-center gap-2 mx-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50"
           >
-            <Refresh className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </header>

@@ -54,21 +54,36 @@
 
 .floating-dhr-logo {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 800px;
-  height: 800px;
   background-image: url('https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  user-select: none;
+  transform-origin: center center;
+}
+
+.floating-dhr-logo:nth-child(1) {
+  top: 30%;
+  left: 20%;
+  width: 600px;
+  height: 600px;
   opacity: 0.00008;
   transform: translate(-50%, -50%);
   animation: stealthyDrift 180s ease-in-out infinite, ghostlyPulse30bpm 2s ease-in-out infinite, slowSpin 240s linear infinite, smokyFloat 90s ease-in-out infinite;
-  user-select: none;
   filter: blur(15px) brightness(0.05) contrast(0.005) saturate(0.005);
-  transform-origin: center center;
   mix-blend-mode: luminosity;
+}
+
+.floating-dhr-logo:nth-child(2) {
+  top: 70%;
+  left: 80%;
+  width: 700px;
+  height: 700px;
+  opacity: 0.00006;
+  transform: translate(-50%, -50%);
+  animation: stealthyDriftReverse 200s ease-in-out infinite, ghostlyPulse15bpm 4s ease-in-out infinite, slowSpin 300s linear infinite reverse, smokyFloatAlt 110s ease-in-out infinite;
+  filter: blur(18px) brightness(0.03) contrast(0.003) saturate(0.003);
+  mix-blend-mode: screen;
 }
 
 @keyframes ghostlyOrbitSlow {
@@ -166,6 +181,48 @@
   }
   100% {
     filter: blur(15px) brightness(0.05) contrast(0.005) saturate(0.005);
+  }
+}
+
+@keyframes stealthyDriftReverse {
+  0% {
+    transform: translate(-50%, -50%) translateX(0px) translateY(0px);
+  }
+  15% {
+    transform: translate(-50%, -50%) translateX(120px) translateY(80px);
+  }
+  30% {
+    transform: translate(-50%, -50%) translateX(-80px) translateY(150px);
+  }
+  45% {
+    transform: translate(-50%, -50%) translateX(-150px) translateY(-60px);
+  }
+  60% {
+    transform: translate(-50%, -50%) translateX(80px) translateY(-120px);
+  }
+  75% {
+    transform: translate(-50%, -50%) translateX(180px) translateY(40px);
+  }
+  90% {
+    transform: translate(-50%, -50%) translateX(-60px) translateY(-100px);
+  }
+  100% {
+    transform: translate(-50%, -50%) translateX(0px) translateY(0px);
+  }
+}
+
+@keyframes smokyFloatAlt {
+  0% {
+    filter: blur(18px) brightness(0.03) contrast(0.003) saturate(0.003);
+  }
+  30% {
+    filter: blur(12px) brightness(0.06) contrast(0.006) saturate(0.006);
+  }
+  60% {
+    filter: blur(22px) brightness(0.01) contrast(0.001) saturate(0.001);
+  }
+  100% {
+    filter: blur(18px) brightness(0.03) contrast(0.003) saturate(0.003);
   }
 }
 
