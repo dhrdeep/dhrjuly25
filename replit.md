@@ -13,12 +13,12 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 ## Recent Changes
 - **June 30, 2025**: Track Identification System Fully Operational and Authentication Fixed
   - Fixed FFmpeg conversion crashes that were causing server to fail
-  - Implemented proper 15-second audio recording duration for optimal fingerprinting
+  - Optimized to 14-second audio recording duration within 12-15 second ACRCloud optimal range
   - Added comprehensive error handling and timeout protection for audio processing
   - Configured ACRCloud API credentials with proper signature authentication
   - Enhanced audio capture quality from 128kbps to 320kbps for better fingerprinting
   - Fixed auto-identification timer logic to prevent premature clearing
-  - Reduced auto-identification interval to 30 seconds for faster response
+  - Optimized auto-identification interval to 30 seconds for individual track detection within DJ mixes
   - Added detailed debugging logs and diagnostic information for troubleshooting
   - System now handles WebM to PCM conversion with proper fallback mechanisms
   - Both ACRCloud and Shazam APIs properly authenticated and functional

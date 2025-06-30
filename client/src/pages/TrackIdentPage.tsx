@@ -176,7 +176,7 @@ const TrackIdentPage: React.FC = () => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
-      }, 15000);
+      }, 14000);
       
     } catch (error) {
       console.error('Audio capture error:', error);
@@ -265,7 +265,7 @@ const TrackIdentPage: React.FC = () => {
         if (!isIdentifying && isPlaying && connectionStatus === 'connected') {
           captureStreamAudio();
         }
-      }, 60000);
+      }, 30000);
       autoIdentifyTimer.current = interval;
     } else if (autoIdentifyTimer.current) {
       clearInterval(autoIdentifyTimer.current);
