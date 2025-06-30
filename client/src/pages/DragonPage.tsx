@@ -380,7 +380,10 @@ export default function DragonPage() {
       
       console.log(`Using MIME Type: ${mimeType}`);
       
-      const mediaRecorder = new MediaRecorder(destination.stream); // No constraints - use browser defaults
+      const mediaRecorder = new MediaRecorder(destination.stream, {
+        mimeType: 'audio/webm;codecs=opus',
+        audioBitsPerSecond: 128000 // Exact specs from working system documentation
+      });
       
       console.log('Starting MediaRecorder...');
       
@@ -451,13 +454,13 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(1000); // 1 second chunks to match working system's larger data chunks
+      mediaRecorder.start(500); // 500ms timeslice exactly like working system
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 15000); // Back to 15 seconds like working system with optimized chunking
+      }, 25000); // 25 second capture exactly like working system documentation
       
     } catch (error) {
       console.error('Audio capture error:', error);
