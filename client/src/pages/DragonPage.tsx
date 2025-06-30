@@ -282,7 +282,11 @@ export default function DragonPage() {
       if (!response.ok) {
         console.log('Shazam response not ok:', response.status);
         const errorText = await response.text();
-        console.log('Shazam error response:', JSON.parse(errorText));
+        try {
+          console.log('Shazam error response:', JSON.parse(errorText));
+        } catch {
+          console.log('Shazam error response:', errorText);
+        }
         return null;
       }
       
@@ -363,8 +367,8 @@ export default function DragonPage() {
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType
-        // Remove bitrate constraints - let browser use optimal defaults like working system
+        mimeType: mimeType,
+        audioBitsPerSecond: 128000 // Force higher quality like working system
       });
       
       console.log('Starting MediaRecorder...');
@@ -442,7 +446,7 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 15000); // Back to 15 second capture like working system
+      }, 30000); // Extended duration to generate larger files like working system
       
     } catch (error) {
       console.error('Audio capture error:', error);
