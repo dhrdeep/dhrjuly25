@@ -1545,11 +1545,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ffmpegProcess = ffmpeg(inputStream)
               .inputFormat('webm')
               .audioCodec('pcm_s16le')
-              .audioFrequency(22050) // Lower frequency for better compatibility
+              .audioFrequency(44100) // Standard frequency for ACRCloud
               .audioChannels(1)
-              .audioFilters(['volume=2.0', 'highpass=f=80', 'lowpass=f=8000']) // Audio enhancement
+              .audioFilters(['volume=1.5']) // Simple volume boost without filtering
               .format('wav')
-              .duration(15) // Limit to 15 seconds for better processing
+              .duration(10) // 10 seconds for optimal fingerprinting
               .on('error', (error) => {
                 clearTimeout(timeout);
                 console.error('FFmpeg conversion error:', error);
@@ -1721,16 +1721,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      // Try ACRCloud first
-      let result = await identifyWithACRCloud(audioBuffer);
+      // Try Shazam first with original WebM audio (often works better with streaming content)
+      let result = await identifyWithShazam(audioBuffer);
 
       if (result) {
-        console.log('Track identified with ACRCloud:', result.title, 'by', result.artist);
+        console.log('Track identified with Shazam:', result.title, 'by', result.artist);
         return res.json({ track: result });
       }
 
-      // Fallback to Shazam
-      result = await identifyWithShazam(audioBuffer);
+      // Try ACRCloud with converted audio as fallback
+      result = await identifyWithACRCloud(audioBuffer);
 
       if (result) {
         console.log('Track identified with Shazam:', result.title, 'by', result.artist);
@@ -1738,7 +1738,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('No track identified by any service');
-      return res.json({ track: null });
+      
+      // Provide diagnostic information about why identification might have failed
+      const diagnosticInfo = {
+        audioSize: audioBuffer.length,
+        timestamp: new Date().toISOString(),
+        services_attempted: ['Shazam', 'ACRCloud'],
+        likely_reasons: [
+          'Audio may be a DJ mix or live set rather than individual tracks',
+          'Track may not be in commercial music databases',
+          'Audio quality may be insufficient for fingerprinting',
+          'Content may be original/unreleased music'
+        ]
+      };
+      
+      console.log('Track identification diagnostic info:', diagnosticInfo);
+      return res.json({ 
+        track: null, 
+        diagnostic: diagnosticInfo 
+      });
 
     } catch (error) {
       console.error('Track identification error:', error);
