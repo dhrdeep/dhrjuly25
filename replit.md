@@ -11,14 +11,17 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 30, 2025**: Ultra-Ethereal DHR Logo Background Animation & Image-Based Logos
-  - Replaced text-based floating logos with authentic DHR logo images for professional branding
-  - Created ultra-ghostly atmospheric effect: 0.005-0.008 opacity (95% more transparent)
-  - Enhanced dreamy blur effects: 3-5px blur with reduced brightness and contrast
-  - Implemented advanced blend modes (soft-light, overlay, luminosity) for seamless integration
-  - Enhanced pulse animations with gentle scaling and deep atmospheric breathing effects
-  - Removed Track Identifier and Dragon pages from navigation and routing system
-  - Streamlined navigation to focus on core DHR experience: Home, DHR1/DHR2 Premium, VIP, Forum, Upload, Shop
+- **June 30, 2025**: Complete Ultra-Ethereal DHR Logo Animation System
+  - **Professional Image-Based Logos**: Replaced text with authentic DHR logo images from official branding
+  - **Ultra-Ghostly Transparency**: 0.005-0.008 opacity (99.5% transparent) for ethereal atmospheric effect
+  - **Deep Atmospheric Filtering**: 3-5px blur, reduced brightness (0.3-0.6), low contrast/saturation
+  - **Advanced Blend Modes**: soft-light, overlay, luminosity for seamless background integration
+  - **Multi-Speed Rhythmic Pulsing**: 30 BPM (2s) and 15 BPM (4s) breathing effects with scaling
+  - **Slow Rotation Animation**: Individual spinning at 120s, 150s, 180s intervals for hypnotic movement  
+  - **Opening Sequence**: Logos start centered, gracefully spread to positions over 3 seconds
+  - **Size Variation**: 300px, 250px, 350px logos for visual depth and layering
+  - **Orbital Drift**: Different speed orbital movements (60s, 80s, 100s) around screen
+  - Navigation streamlined to core DHR experience: Home, DHR1/DHR2 Premium, VIP, Forum, Upload, Shop
   - Live track identification continues operating perfectly through premium streaming pages
 - **June 30, 2025**: Enhanced Track Identification System with Permanent Storage & Streaming Links
   - Successfully implemented comprehensive live stream monitoring system using ACRCloud
