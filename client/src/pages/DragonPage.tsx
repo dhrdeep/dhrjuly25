@@ -445,6 +445,48 @@ export default function DragonPage() {
     return buffer;
   };
 
+  // Standalone audio identification processing function
+  const processAudioForIdentification = useCallback(async (audioBlob: Blob) => {
+    try {
+      setIdentificationStatus('Processing Audio For Identification...');
+      console.log('Starting track identification process...');
+      console.log('Audio blob size:', audioBlob.size, 'type:', audioBlob.type);
+      
+      // Try ACRCloud identification (direct client-side API call)
+      console.log('Attempting identification with ACRCloud...');
+      const track = await identifyWithACRCloud(audioBlob);
+      
+      if (track) {
+        console.log('Track found:', track);
+        console.log('Track identified with ACRCloud:', track);
+        
+        if (!isDuplicateTrack(track, identifiedTracks)) {
+          setCurrentTrack(track);
+          setIdentifiedTracks(prev => [track, ...prev].slice(0, 50));
+          setIdentificationStatus(`Track Identified: ${track.title} by ${track.artist} (${track.service})`);
+          console.log(`Track Identified: ${JSON.stringify(track)}`);
+        } else {
+          setIdentificationStatus('Track Already Identified Recently');
+        }
+      } else {
+        console.log('No track identified by ACRCloud');
+        setIdentificationStatus('No Track Match Found - Song May Not Be In Database');
+        console.log('No Track Identified');
+      }
+    } catch (error) {
+      console.error('Identification error:', error);
+      setIdentificationStatus('Identification Error - Please Try Again');
+    }
+    
+    setIsIdentifying(false);
+    
+    setTimeout(() => {
+      if (!autoIdentify) {
+        setIdentificationStatus('');
+      }
+    }, 5000);
+  }, [identifiedTracks, autoIdentify, identifyWithACRCloud]);
+
   // Enhanced capture with raw PCM approach for 402KB target files
   const captureStreamAudio = useCallback(async () => {
     try {
@@ -632,7 +674,7 @@ export default function DragonPage() {
       setIdentificationStatus('Audio Capture Failed - Please Wait Before Trying Again');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
-  }, [isDuplicateTrack, identifiedTracks, autoIdentify]);
+  }, [captureRawPCMAudio, processAudioForIdentification]);
 
   const handlePlay = async () => {
     if (audioRef.current) {
