@@ -362,13 +362,27 @@ export default function DragonPage() {
       console.log('Clearing Auto-Identification Timer');
       console.log('Audio Tracks Found:', destination.stream.getAudioTracks().length);
       
-      // Use exact same MIME type and settings as working system
-      const mimeType = 'audio/webm;codecs=opus';
+      // Try different MIME type to see if we can get larger files
+      let mimeType = 'audio/webm';
+      let options = {};
+      
+      // Test what MIME types are supported
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=pcm')) {
+        mimeType = 'audio/webm;codecs=pcm';
+        console.log('Using PCM codec for larger files');
+      } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+        mimeType = 'audio/wav';
+        console.log('Using WAV format for larger files');
+      } else {
+        mimeType = 'audio/webm;codecs=opus';
+        console.log('Fallback to Opus codec');
+      }
+      
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType,
-        audioBitsPerSecond: 1024000 // Much higher bitrate to match 402KB working system
+        mimeType: mimeType
+        // No bitrate constraints - let browser use maximum quality
       });
       
       console.log('Starting MediaRecorder...');
@@ -446,7 +460,7 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 30000); // Extended duration to generate larger files like working system
+      }, 60000); // Much longer recording to force larger file sizes
       
     } catch (error) {
       console.error('Audio capture error:', error);
