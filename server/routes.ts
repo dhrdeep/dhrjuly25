@@ -1545,9 +1545,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ffmpegProcess = ffmpeg(inputStream)
               .inputFormat('webm')
               .audioCodec('pcm_s16le')
-              .audioFrequency(44100)
+              .audioFrequency(22050) // Lower frequency for better compatibility
               .audioChannels(1)
+              .audioFilters(['volume=2.0', 'highpass=f=80', 'lowpass=f=8000']) // Audio enhancement
               .format('wav')
+              .duration(15) // Limit to 15 seconds for better processing
               .on('error', (error) => {
                 clearTimeout(timeout);
                 console.error('FFmpeg conversion error:', error);
@@ -1572,10 +1574,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Convert WebM to PCM WAV format for better fingerprint generation
           let processedBuffer = audioBuffer;
+          console.log('Original audio buffer size:', audioBuffer.length);
+          console.log('Original audio buffer type:', audioBuffer.constructor.name);
+          
           try {
             console.log('Converting WebM to PCM format...');
             processedBuffer = await convertWebMToPCM(audioBuffer);
             console.log('Audio conversion successful, new size:', processedBuffer.length);
+            console.log('Processed audio buffer type:', processedBuffer.constructor.name);
+            
+            // Validate the processed audio buffer
+            if (processedBuffer.length < 8000) {
+              console.log('Warning: Processed audio buffer seems too small for fingerprinting');
+            }
+            
           } catch (conversionError) {
             console.log('Audio conversion failed, using original buffer:', conversionError);
             // Continue with original buffer if conversion fails
@@ -1725,7 +1737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ track: result });
       }
 
-      console.log('No track identified by either service');
+      console.log('No track identified by any service');
       return res.json({ track: null });
 
     } catch (error) {

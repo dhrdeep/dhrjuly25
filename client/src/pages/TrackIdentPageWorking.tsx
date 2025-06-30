@@ -173,7 +173,7 @@ const TrackIdentPage: React.FC = () => {
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: mimeType,
-        audioBitsPerSecond: 128000
+        audioBitsPerSecond: 320000 // Higher quality for better fingerprinting
       });
       
       mediaRecorderRef.current = mediaRecorder;
