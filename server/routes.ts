@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { createHmac } from "crypto";
+import FormData from "form-data";
 import { storage } from "./storage";
 import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
 import { fileHostingService } from "./fileHostingService";
@@ -1534,7 +1535,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ACRCLOUD_CONFIG.access_secret
           );
 
-          const FormData = require('form-data');
           const formData = new FormData();
           formData.append('sample', audioBuffer, { filename: 'sample.wav', contentType: 'audio/wav' });
           formData.append('sample_bytes', audioBuffer.length.toString());
