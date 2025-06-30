@@ -1537,7 +1537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
 
           const formData = new FormData();
-          formData.append('sample', audioBuffer, { filename: 'sample.webm', contentType: 'audio/webm' });
+          formData.append('sample', audioBuffer, { filename: 'sample.wav', contentType: 'audio/wav' });
           formData.append('sample_bytes', audioBuffer.length.toString());
           formData.append('access_key', ACRCLOUD_CONFIG.access_key);
           formData.append('data_type', ACRCLOUD_CONFIG.data_type);

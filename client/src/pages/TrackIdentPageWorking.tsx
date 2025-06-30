@@ -144,15 +144,18 @@ const TrackIdentPage: React.FC = () => {
       console.log('Audio Tracks Found:', audioTracks.length);
       setIdentificationStatus('Capturing Stream Audio...');
       
-      let mimeType = 'audio/webm;codecs=opus';
+      let mimeType = 'audio/wav';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm';
+        mimeType = 'audio/webm;codecs=opus';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4';
+          mimeType = 'audio/webm';
           if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = 'audio/ogg;codecs=opus';
+            mimeType = 'audio/mp4';
             if (!MediaRecorder.isTypeSupported(mimeType)) {
-              mimeType = '';
+              mimeType = 'audio/ogg;codecs=opus';
+              if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = '';
+              }
             }
           }
         }
