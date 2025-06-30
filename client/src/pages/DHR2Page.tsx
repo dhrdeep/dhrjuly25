@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, Play, Download, Zap, Clock, Users } from 'lucide-react';
 import MediaPlayer from '../components/MediaPlayer';
 import SubscriptionGate from '../components/SubscriptionGate';
+import LiveTrackWidget from '../components/LiveTrackWidget';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
@@ -119,23 +120,30 @@ const DHR2Page: React.FC = () => {
             </div>
           </header>
 
-          {/* Premium Player */}
-          <section className="mb-12 flex justify-center">
-            <iframe
-              src="/evercast-player-dhr2.html"
-              width="300"
-              height="600"
-              frameBorder="0"
-              style={{
-                border: '2px solid #f79e02',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                maxWidth: '100%',
-                backgroundColor: '#111827'
-              }}
-              title="DHR2 Everestcast Player"
-              onLoad={() => setIsPlaying(true)}
-            />
+          {/* Premium Player and Live Track */}
+          <section className="mb-12">
+            <div className="flex justify-center gap-6">
+              <iframe
+                src="/evercast-player-dhr2.html"
+                width="300"
+                height="600"
+                frameBorder="0"
+                style={{
+                  border: '2px solid #f79e02',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  maxWidth: '100%',
+                  backgroundColor: '#111827'
+                }}
+                title="DHR2 Everestcast Player"
+                onLoad={() => setIsPlaying(true)}
+              />
+              
+              {/* Live Track Identification */}
+              <div className="w-80 space-y-4">
+                <LiveTrackWidget className="sticky top-4" channel="dhr2" />
+              </div>
+            </div>
           </section>
 
           {/* Features Grid */}

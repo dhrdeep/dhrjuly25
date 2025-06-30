@@ -100,22 +100,29 @@ const DHR1Page: React.FC = () => {
             </div>
           </header>
 
-          {/* Premium Player */}
-          <section className="mb-12 flex justify-center">
-            <iframe
-              src="/evercast-player.html"
-              width="600"
-              height="1000"
-              frameBorder="0"
-              style={{
-                border: 'none',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                maxWidth: '100%'
-              }}
-              title="DHR1 Everestcast Player"
-              onLoad={() => setIsPlaying(true)}
-            />
+          {/* Premium Player and Live Track */}
+          <section className="mb-12">
+            <div className="flex justify-center gap-6">
+              <iframe
+                src="/evercast-player.html"
+                width="600"
+                height="1000"
+                frameBorder="0"
+                style={{
+                  border: 'none',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  maxWidth: '100%'
+                }}
+                title="DHR1 Everestcast Player"
+                onLoad={() => setIsPlaying(true)}
+              />
+              
+              {/* Live Track Identification */}
+              <div className="w-80 space-y-4">
+                <LiveTrackWidget className="sticky top-4" />
+              </div>
+            </div>
           </section>
 
           {/* Features Grid */}

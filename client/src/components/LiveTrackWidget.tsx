@@ -26,9 +26,10 @@ interface StreamData {
 interface LiveTrackWidgetProps {
   className?: string;
   compact?: boolean;
+  channel?: 'dhr1' | 'dhr2';
 }
 
-export default function LiveTrackWidget({ className = '', compact = false }: LiveTrackWidgetProps) {
+export default function LiveTrackWidget({ className = '', compact = false, channel = 'dhr1' }: LiveTrackWidgetProps) {
   // Fetch current track from live monitoring
   const { data: currentData, isLoading } = useQuery<StreamData>({
     queryKey: ['track-monitor-current'],
