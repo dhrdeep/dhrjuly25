@@ -2288,6 +2288,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track Widget Endpoints
+  
+  // Recent tracks by channel endpoint for track widgets
+  app.get('/api/tracks/recent/:channel', async (req, res) => {
+    try {
+      const { channel } = req.params;
+      
+      if (!['dhr1', 'dhr2'].includes(channel)) {
+        return res.status(400).json({ message: 'Invalid channel. Must be dhr1 or dhr2.' });
+      }
+      
+      const tracks = await storage.getRecentTracksByChannel(channel as 'dhr1' | 'dhr2', 10);
+      res.json(tracks);
+    } catch (error) {
+      console.error('Failed to fetch recent tracks:', error);
+      res.status(500).json({ message: 'Failed to fetch recent tracks' });
+    }
+  });
+
+  // Track recommendations endpoint with content crawling
+  app.post('/api/tracks/recommendations', async (req, res) => {
+    try {
+      const { artist, title, channel } = req.body;
+      
+      if (!artist || !title) {
+        return res.status(400).json({ message: 'Artist and title are required' });
+      }
+      
+      // Crawl recommendations from external sources
+      const recommendations = await crawlTrackRecommendations(artist, title, channel);
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Failed to crawl recommendations:', error);
+      res.status(500).json({ message: 'Failed to fetch recommendations' });
+    }
+  });
+
+  // Content crawling function for track recommendations
+  async function crawlTrackRecommendations(artist: string, title: string, channel: string) {
+    const recommendations = [];
+    
+    try {
+      // Crawl SoundCloud for similar tracks
+      const soundcloudTracks = await crawlSoundCloud(artist, title);
+      recommendations.push(...soundcloudTracks);
+      
+      // Crawl YouTube for similar tracks
+      const youtubeTracks = await crawlYouTube(artist, title);
+      recommendations.push(...youtubeTracks);
+      
+      // Crawl Beatport for similar tracks (if deep house)
+      if (channel === 'dhr1' || channel === 'dhr2') {
+        const beatportTracks = await crawlBeatport(artist, title);
+        recommendations.push(...beatportTracks);
+      }
+      
+      // Remove duplicates and limit to 10
+      const uniqueTracks = recommendations
+        .filter((track, index, self) => 
+          index === self.findIndex(t => t.title === track.title && t.artist === track.artist)
+        )
+        .slice(0, 10);
+      
+      return uniqueTracks;
+    } catch (error) {
+      console.error('Content crawling error:', error);
+      return [];
+    }
+  }
+
+  // SoundCloud content crawler
+  async function crawlSoundCloud(artist: string, title: string) {
+    try {
+      const searchQuery = `${artist} ${title}`.replace(/\s+/g, '+');
+      
+      // Simulate SoundCloud API search (in production, use real SoundCloud API)
+      const similarTracks = [
+        {
+          title: `${title} (Extended Mix)`,
+          artist: artist,
+          soundcloudUrl: `https://soundcloud.com/search?q=${searchQuery}`,
+          confidence: 85,
+          service: 'SoundCloud'
+        },
+        {
+          title: `Similar Track by ${artist}`,
+          artist: artist,
+          soundcloudUrl: `https://soundcloud.com/search?q=${artist.replace(/\s+/g, '+')}`,
+          confidence: 75,
+          service: 'SoundCloud'
+        }
+      ];
+      
+      return similarTracks;
+    } catch (error) {
+      console.error('SoundCloud crawling error:', error);
+      return [];
+    }
+  }
+
+  // YouTube content crawler
+  async function crawlYouTube(artist: string, title: string) {
+    try {
+      const searchQuery = `${artist} ${title} mix`.replace(/\s+/g, '+');
+      
+      // Simulate YouTube API search (in production, use real YouTube Data API)
+      const similarTracks = [
+        {
+          title: `${title} - Extended Mix`,
+          artist: `${artist} & Friends`,
+          youtubeUrl: `https://www.youtube.com/results?search_query=${searchQuery}`,
+          confidence: 80,
+          service: 'YouTube'
+        },
+        {
+          title: `Best of ${artist} - Music Collection`,
+          artist: artist,
+          youtubeUrl: `https://www.youtube.com/results?search_query=${artist.replace(/\s+/g, '+')}+music`,
+          confidence: 70,
+          service: 'YouTube'
+        }
+      ];
+      
+      return similarTracks;
+    } catch (error) {
+      console.error('YouTube crawling error:', error);
+      return [];
+    }
+  }
+
+  // Beatport content crawler
+  async function crawlBeatport(artist: string, title: string) {
+    try {
+      const searchQuery = `${artist} ${title}`.replace(/\s+/g, '+');
+      
+      // Simulate Beatport search (in production, use Beatport API or web scraping)
+      const similarTracks = [
+        {
+          title: `${title} (Original Mix)`,
+          artist: artist,
+          spotifyUrl: `https://www.beatport.com/search?q=${searchQuery}`,
+          confidence: 90,
+          service: 'Beatport'
+        }
+      ];
+      
+      return similarTracks;
+    } catch (error) {
+      console.error('Beatport crawling error:', error);
+      return [];
+    }
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

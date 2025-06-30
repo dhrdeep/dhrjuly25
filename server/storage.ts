@@ -63,6 +63,7 @@ export interface IStorage {
   saveIdentifiedTrack(track: InsertIdentifiedTrack): Promise<IdentifiedTrack>;
   getAllIdentifiedTracks(): Promise<IdentifiedTrack[]>;
   getRecentIdentifiedTracks(limit?: number): Promise<IdentifiedTrack[]>;
+  getRecentTracksByChannel(channel: 'dhr1' | 'dhr2', limit?: number): Promise<IdentifiedTrack[]>;
   clearTrackHistory(): Promise<void>;
   
   // Google Ads methods
@@ -241,6 +242,13 @@ export class DrizzleStorage implements IStorage {
 
   async getRecentIdentifiedTracks(limit: number = 50): Promise<IdentifiedTrack[]> {
     return await db.select().from(identifiedTracks)
+      .orderBy(identifiedTracks.identifiedAt.desc())
+      .limit(limit);
+  }
+
+  async getRecentTracksByChannel(channel: 'dhr1' | 'dhr2', limit: number = 10): Promise<IdentifiedTrack[]> {
+    return await db.select().from(identifiedTracks)
+      .where(eq(identifiedTracks.channel, channel))
       .orderBy(identifiedTracks.identifiedAt.desc())
       .limit(limit);
   }

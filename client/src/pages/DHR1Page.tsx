@@ -4,6 +4,7 @@ import SubscriptionGate from '../components/SubscriptionGate';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import LiveTrackWidget from '../components/LiveTrackWidget';
+import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
@@ -106,9 +107,10 @@ const DHR1Page: React.FC = () => {
             <div className="flex justify-center gap-6">
               <ReliableStreamPlayer channel="dhr1" className="w-full max-w-lg" />
               
-              {/* Live Track Identification */}
+              {/* Live Track Identification & Recent Tracks */}
               <div className="w-80 space-y-4">
                 <LiveTrackWidget className="sticky top-4" />
+                <TrackWidget channel="dhr1" className="sticky top-4" />
               </div>
             </div>
           </section>

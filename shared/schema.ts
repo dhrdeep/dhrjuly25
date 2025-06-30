@@ -78,6 +78,7 @@ export const identifiedTracks = pgTable("identified_tracks", {
   title: text("title").notNull(),
   artist: text("artist").notNull(),
   album: text("album"),
+  channel: text("channel").notNull().default('dhr1'), // 'dhr1' or 'dhr2'
   confidence: integer("confidence").notNull(),
   service: text("service").notNull(), // ACRCloud, Shazam, etc.
   duration: integer("duration"), // in seconds
