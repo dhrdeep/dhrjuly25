@@ -22,6 +22,9 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - **Professional UI**: Expandable widgets with channel-specific branding (orange/pink color schemes)
   - **Track History Integration**: Direct links to full track history page and enhanced search capabilities
   - **VIP Genre Tags Removed**: Cleaned up VIP page by removing genre display labels per user request
+  - **DHR2 Streaming URLs Updated**: Configured authentic DHR2 streaming infrastructure using ports 1560/1565
+  - **Multiple Tune-In Formats**: Added support for WindowsMedia, Winamp, iTunes, RealPlayer, and WebPlayer
+  - **Direct Stream Access**: Implemented HTTP (1560) and HTTPS (1565) streaming endpoints for DHR2
   - Integrated on DHR1 and DHR2 premium player pages alongside existing LiveTrackWidget components
 - **June 30, 2025**: Complete Ultra-Ethereal DHR Logo Animation System
   - **Professional Image-Based Logos**: Replaced text with authentic DHR logo images from official branding
@@ -240,6 +243,25 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - Vite for development and building
 - Tailwind CSS for styling
 - Lucide React for icons
+
+## Streaming Infrastructure
+### DHR1 Premium
+- Stream URL: https://ec1.everestcast.host:2775/stream
+- API: https://ec1.everestcast.host:2775/api/v2
+- Status: Active with live track identification
+
+### DHR2 Exclusive
+- Direct Stream URLs:
+  - HTTP: http://ec1.everestcast.host:1560/stream
+  - HTTPS: https://ec1.everestcast.host:1565/stream
+- API: https://ec1.everestcast.host:1560/api/v2
+- Tune-In Formats:
+  - WindowsMedia: https://ec1.everestcast.host:1480/abvuo196/1/wmp.asx
+  - Winamp: https://ec1.everestcast.host:1480/abvuo196/1/winamp.m3u
+  - iTunes: https://ec1.everestcast.host:1480/abvuo196/1/itunes.pls
+  - RealPlayer: https://ec1.everestcast.host:1480/abvuo196/1/realplayer.ram
+  - WebPlayer: https://ec1.everestcast.host:1480/abvuo196/1/web
+- Stream Status: http://ec1.everestcast.host:1560
 
 ## Environment Setup
 The project uses environment variables for configuration:

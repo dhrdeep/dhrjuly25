@@ -27,7 +27,7 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
     dhr2: { 
       name: 'DHR2 Exclusive', 
       color: '#fa9200',
-      streamUrl: 'https://ec1.everestcast.host:1480/stream'
+      streamUrl: 'https://ec1.everestcast.host:1565/stream'
     }
   };
   const config = channelConfig[channel];
