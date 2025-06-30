@@ -438,7 +438,7 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 30000); // 30 second capture to match working system size
+      }, 15000); // Back to 15 second capture like working system
       
     } catch (error) {
       console.error('Audio capture error:', error);
