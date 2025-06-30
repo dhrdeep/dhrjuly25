@@ -65,31 +65,21 @@ export default function DragonPage() {
     });
   };
 
-  // Direct client-side identification - replicating working system
+  // Direct client-side identification - focused on ACRCloud
   const identifyTrack = async (audioBlob: Blob): Promise<Track | null> => {
-    console.log('Starting track identification process...');
+    console.log('Starting ACRCloud track identification...');
     
     try {
-      // Try ACRCloud first (primary service)
-      console.log('Attempting identification with ACRCloud...');
       const acrResult = await identifyWithACRCloud(audioBlob);
       if (acrResult) {
         console.log('Track identified with ACRCloud:', acrResult);
         return acrResult;
       }
       
-      // Fallback to Shazam
-      console.log('ACRCloud failed, trying Shazam...');
-      const shazamResult = await identifyWithShazam(audioBlob);
-      if (shazamResult) {
-        console.log('Track identified with Shazam:', shazamResult);
-        return shazamResult;
-      }
-      
-      console.log('No track identified by either service');
+      console.log('No track identified by ACRCloud');
       return null;
     } catch (error) {
-      console.error('Track identification error:', error);
+      console.error('ACRCloud identification error:', error);
       return null;
     }
   };
@@ -97,13 +87,18 @@ export default function DragonPage() {
   // ACRCloud identification (direct client implementation)
   const identifyWithACRCloud = async (audioBlob: Blob): Promise<Track | null> => {
     try {
-      console.log(`Starting ACRCloud identification with blob size: ${audioBlob.size}`);
+      console.log(`Starting ACRCloud identification with blob size: ${audioBlob.size}, type: ${audioBlob.type}`);
       
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      console.log(`Converted to ArrayBuffer, length: ${arrayBuffer.byteLength}`);
+      // Always convert to WAV format for better ACRCloud compatibility
+      console.log('Converting audio to WAV format for ACRCloud...');
+      const wavBlob = await convertAudioForACRCloud(audioBlob);
+      console.log(`Converted to WAV, size: ${wavBlob.size}`);
+      
+      const arrayBuffer = await wavBlob.arrayBuffer();
+      console.log(`WAV ArrayBuffer length: ${arrayBuffer.byteLength}`);
       
       const formData = new FormData();
-      formData.append('sample', audioBlob);
+      formData.append('sample', wavBlob, 'sample.wav');
       formData.append('sample_bytes', arrayBuffer.byteLength.toString());
       formData.append('access_key', import.meta.env.VITE_ACRCLOUD_ACCESS_KEY || '');
       
@@ -117,11 +112,17 @@ export default function DragonPage() {
       formData.append('timestamp', timestamp.toString());
       formData.append('data_type', 'audio');
       
-      console.log('Sending request to ACRCloud...');
+      console.log('Sending WAV audio to ACRCloud...');
+      console.log('Access Key:', import.meta.env.VITE_ACRCLOUD_ACCESS_KEY?.substring(0, 8) + '...');
+      
       const response = await fetch('https://identify-eu-west-1.acrcloud.com/v1/identify', {
         method: 'POST',
         body: formData
       });
+      
+      if (!response.ok) {
+        throw new Error(`ACRCloud API response: ${response.status} ${response.statusText}`);
+      }
       
       const result = await response.json();
       console.log('ACRCloud response:', result);
@@ -157,51 +158,7 @@ export default function DragonPage() {
     }
   };
 
-  // Shazam identification (direct client implementation)
-  const identifyWithShazam = async (audioBlob: Blob): Promise<Track | null> => {
-    try {
-      console.log(`Starting Shazam identification with blob size: ${audioBlob.size}`);
-      
-      const base64Audio = await audioToBase64(audioBlob);
-      console.log(`Converted to base64 for Shazam, length: ${base64Audio.length}`);
-      
-      console.log('Sending request to Shazam...');
-      const response = await fetch('https://shazam.p.rapidapi.com/songs/detect', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-          'X-RapidAPI-Key': import.meta.env.VITE_SHAZAM_API_KEY || '',
-          'X-RapidAPI-Host': 'shazam.p.rapidapi.com'
-        },
-        body: base64Audio
-      });
-      
-      const result = await response.json();
-      console.log('Shazam response:', result);
-      
-      if (result.matches && result.matches.length > 0) {
-        const match = result.matches[0];
-        const track = match.track;
-        
-        return {
-          id: `shazam_${Date.now()}`,
-          title: track.title,
-          artist: track.subtitle,
-          album: track.sections?.[0]?.metadata?.find((m: any) => m.title === 'Album')?.text,
-          artwork: track.images?.coverart || track.images?.background,
-          confidence: Math.round((match.frequencyskew || 0) * 100),
-          service: 'Shazam',
-          timestamp: new Date().toISOString()
-        };
-      } else {
-        console.log('No track found in Shazam response');
-        return null;
-      }
-    } catch (error) {
-      console.error('Shazam identification error:', error);
-      return null;
-    }
-  };
+
 
   // Generate HMAC-SHA1 signature for ACRCloud
   const generateHmacSha1 = async (message: string, secret: string): Promise<string> => {
@@ -220,6 +177,67 @@ export default function DragonPage() {
     const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
     const signatureArray = new Uint8Array(signature);
     return btoa(String.fromCharCode(...signatureArray));
+  };
+
+  // Convert audio for better ACRCloud compatibility
+  const convertAudioForACRCloud = async (audioBlob: Blob): Promise<Blob> => {
+    try {
+      // Create an audio context to process the audio
+      const audioContext = new AudioContext();
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Create a simple WAV blob from the audio buffer
+      const wavBlob = audioBufferToWav(audioBuffer);
+      audioContext.close();
+      
+      return wavBlob;
+    } catch (error) {
+      console.error('Audio conversion failed, using original blob:', error);
+      return audioBlob;
+    }
+  };
+
+  // Convert AudioBuffer to WAV format
+  const audioBufferToWav = (audioBuffer: AudioBuffer): Blob => {
+    const numberOfChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const length = audioBuffer.length * numberOfChannels * 2;
+    const buffer = new ArrayBuffer(44 + length);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+    view.setUint16(32, numberOfChannels * 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length, true);
+    
+    // Convert float32 audio data to int16
+    let offset = 44;
+    for (let i = 0; i < audioBuffer.length; i++) {
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        offset += 2;
+      }
+    }
+    
+    return new Blob([buffer], { type: 'audio/wav' });
   };
 
   // Search for artwork on music platforms
@@ -326,9 +344,27 @@ export default function DragonPage() {
         throw new Error('Failed to setup audio capture');
       }
       
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus',
-        audioBitsPerSecond: 128000 // As per documentation
+      // Try different audio formats for better compatibility
+      let mediaRecorder;
+      const supportedFormats = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/wav'
+      ];
+      
+      let selectedFormat = supportedFormats[0];
+      for (const format of supportedFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          selectedFormat = format;
+          break;
+        }
+      }
+      
+      console.log(`Using MIME Type: ${selectedFormat}`);
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: selectedFormat,
+        audioBitsPerSecond: 320000 // Higher quality for better fingerprinting
       });
       
       const chunks: Blob[] = [];
@@ -482,7 +518,7 @@ export default function DragonPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold text-orange-400">DHR Track Identifier</h1>
-              <p className="text-slate-300 text-lg mt-2">Dual-Service AI Music Recognition</p>
+              <p className="text-slate-300 text-lg mt-2">ACRCloud AI Music Recognition</p>
             </div>
           </div>
           
@@ -588,7 +624,7 @@ export default function DragonPage() {
         <div className="bg-slate-800 rounded-2xl p-6 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-2">Track Identification System</h2>
-            <p className="text-slate-400">15-Second Audio Capture • ACRCloud + Shazam APIs</p>
+            <p className="text-slate-400">15-Second Audio Capture • ACRCloud API</p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
@@ -686,7 +722,7 @@ export default function DragonPage() {
         {/* Footer */}
         <div className="text-center mt-8 text-slate-500">
           <p className="text-sm">
-            Powered By ACRCloud & Shazam APIs • 15-Second Audio Capture • Dublin Timezone
+            Powered By ACRCloud API • 15-Second Audio Capture • Dublin Timezone
           </p>
         </div>
       </div>
