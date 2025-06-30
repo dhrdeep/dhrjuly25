@@ -2010,7 +2010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Convert WebM to WAV format for ACRCloud extraction tool
       console.log('Converting WebM to WAV format...');
-      const convertCommand = `ffmpeg -i ${tempWebM} -ar 8000 -ac 1 -f wav ${tempWav} -y`;
+      const convertCommand = `${ffmpegPath.path} -i ${tempWebM} -ar 8000 -ac 1 -f wav ${tempWav} -y`;
       execSync(convertCommand, { encoding: 'utf8' });
       console.log('Conversion completed');
       
