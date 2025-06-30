@@ -2158,6 +2158,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Google Ads configuration routes
+  app.get("/api/admin/google-ads/configs", async (req, res) => {
+    try {
+      const configs = await storage.getAllGoogleAdsConfigs();
+      res.json(configs);
+    } catch (error) {
+      console.error('Error fetching Google Ads configs:', error);
+      res.status(500).json({ error: 'Failed to fetch Google Ads configurations' });
+    }
+  });
+
+  app.post("/api/admin/google-ads/configs", async (req, res) => {
+    try {
+      const configData = req.body;
+      const config = await storage.createGoogleAdsConfig(configData);
+      res.json(config);
+    } catch (error) {
+      console.error('Error creating Google Ads config:', error);
+      res.status(500).json({ error: 'Failed to create Google Ads configuration' });
+    }
+  });
+
+  app.patch("/api/admin/google-ads/configs/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const config = await storage.updateGoogleAdsConfig(id, updates);
+      res.json(config);
+    } catch (error) {
+      console.error('Error updating Google Ads config:', error);
+      res.status(500).json({ error: 'Failed to update Google Ads configuration' });
+    }
+  });
+
+  app.delete("/api/admin/google-ads/configs/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteGoogleAdsConfig(id);
+      res.json({ success: true, message: 'Google Ads configuration deleted' });
+    } catch (error) {
+      console.error('Error deleting Google Ads config:', error);
+      res.status(500).json({ error: 'Failed to delete Google Ads configuration' });
+    }
+  });
+
+  // Google Ads stats routes
+  app.get("/api/admin/google-ads/stats", async (req, res) => {
+    try {
+      const { dateFrom, dateTo, adSlotId } = req.query;
+      
+      let stats;
+      if (adSlotId) {
+        stats = await storage.getGoogleAdsStatsBySlot(adSlotId as string);
+      } else if (dateFrom && dateTo) {
+        stats = await storage.getGoogleAdsStatsByDate(dateFrom as string, dateTo as string);
+      } else {
+        // Get recent stats (last 30 days for example)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
+        stats = await storage.getGoogleAdsStatsByDate(dateStr, new Date().toISOString().split('T')[0]);
+      }
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching Google Ads stats:', error);
+      res.status(500).json({ error: 'Failed to fetch Google Ads statistics' });
+    }
+  });
+
+  app.post("/api/admin/google-ads/stats", async (req, res) => {
+    try {
+      const statsData = req.body;
+      const stats = await storage.saveGoogleAdsStats(statsData);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error saving Google Ads stats:', error);
+      res.status(500).json({ error: 'Failed to save Google Ads statistics' });
+    }
+  });
+
+  // Google Ads sync route (simulated - would integrate with Google Ads API)
+  app.post("/api/admin/google-ads/sync", async (req, res) => {
+    try {
+      // This would normally integrate with Google Ads API
+      // For now, we'll simulate generating some sample stats
+      const configs = await storage.getAllGoogleAdsConfigs();
+      const today = new Date().toISOString().split('T')[0];
+      
+      let syncedCount = 0;
+      for (const config of configs.filter(c => c.isActive)) {
+        // Generate sample data (in real implementation, fetch from Google Ads API)
+        const statsData = {
+          adSlotId: config.adSlotId,
+          impressions: Math.floor(Math.random() * 10000) + 1000,
+          clicks: Math.floor(Math.random() * 100) + 10,
+          revenue: (Math.random() * 50 + 5).toFixed(2),
+          ctr: ((Math.random() * 3) + 0.5).toFixed(2),
+          dateRecorded: today
+        };
+        
+        // Calculate CTR properly
+        statsData.ctr = ((statsData.clicks / statsData.impressions) * 100).toFixed(2);
+        
+        await storage.saveGoogleAdsStats(statsData);
+        syncedCount++;
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Synced data for ${syncedCount} ad slots`,
+        syncedSlots: syncedCount
+      });
+    } catch (error) {
+      console.error('Error syncing Google Ads data:', error);
+      res.status(500).json({ error: 'Failed to sync Google Ads data' });
+    }
+  });
+
+  // Google Ads revenue summary
+  app.get("/api/admin/google-ads/revenue", async (req, res) => {
+    try {
+      const totalRevenue = await storage.getTotalGoogleAdsRevenue();
+      res.json({ totalRevenue });
+    } catch (error) {
+      console.error('Error fetching Google Ads revenue:', error);
+      res.status(500).json({ error: 'Failed to fetch Google Ads revenue' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

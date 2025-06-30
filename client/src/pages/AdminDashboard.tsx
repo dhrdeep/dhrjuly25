@@ -107,6 +107,14 @@ export default function AdminDashboard() {
       href: '/track-history',
       color: 'text-purple-500',
       priority: 'medium'
+    },
+    {
+      title: 'Google Ads Management',
+      description: 'Configure and monitor Google AdSense',
+      icon: BarChart3,
+      href: '/google-ads-admin',
+      color: 'text-emerald-500',
+      priority: 'high'
     }
 
   ];

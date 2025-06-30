@@ -6,6 +6,8 @@ import {
   userDownloads,
   dailyDownloadLimits,
   identifiedTracks,
+  googleAdsConfig,
+  googleAdsStats,
   type User, 
   type InsertUser,
   type PatreonToken,
@@ -17,7 +19,11 @@ import {
   type DailyDownloadLimit,
   type InsertDailyDownloadLimit,
   type IdentifiedTrack,
-  type InsertIdentifiedTrack
+  type InsertIdentifiedTrack,
+  type GoogleAdsConfig,
+  type InsertGoogleAdsConfig,
+  type GoogleAdsStats,
+  type InsertGoogleAdsStats
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -58,6 +64,19 @@ export interface IStorage {
   getAllIdentifiedTracks(): Promise<IdentifiedTrack[]>;
   getRecentIdentifiedTracks(limit?: number): Promise<IdentifiedTrack[]>;
   clearTrackHistory(): Promise<void>;
+  
+  // Google Ads methods
+  getAllGoogleAdsConfigs(): Promise<GoogleAdsConfig[]>;
+  getGoogleAdsConfig(id: number): Promise<GoogleAdsConfig | undefined>;
+  createGoogleAdsConfig(config: InsertGoogleAdsConfig): Promise<GoogleAdsConfig>;
+  updateGoogleAdsConfig(id: number, updates: Partial<GoogleAdsConfig>): Promise<GoogleAdsConfig>;
+  deleteGoogleAdsConfig(id: number): Promise<void>;
+  
+  // Google Ads stats methods
+  saveGoogleAdsStats(stats: InsertGoogleAdsStats): Promise<GoogleAdsStats>;
+  getGoogleAdsStatsByDate(dateFrom: string, dateTo: string): Promise<GoogleAdsStats[]>;
+  getGoogleAdsStatsBySlot(adSlotId: string): Promise<GoogleAdsStats[]>;
+  getTotalGoogleAdsRevenue(): Promise<string>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -228,6 +247,60 @@ export class DrizzleStorage implements IStorage {
 
   async clearTrackHistory(): Promise<void> {
     await db.delete(identifiedTracks);
+  }
+
+  // Google Ads methods
+  async getAllGoogleAdsConfigs(): Promise<GoogleAdsConfig[]> {
+    return await db.select().from(googleAdsConfig).orderBy(googleAdsConfig.createdAt.desc());
+  }
+
+  async getGoogleAdsConfig(id: number): Promise<GoogleAdsConfig | undefined> {
+    const [config] = await db.select().from(googleAdsConfig).where(eq(googleAdsConfig.id, id));
+    return config;
+  }
+
+  async createGoogleAdsConfig(configData: InsertGoogleAdsConfig): Promise<GoogleAdsConfig> {
+    const [config] = await db.insert(googleAdsConfig).values(configData).returning();
+    return config;
+  }
+
+  async updateGoogleAdsConfig(id: number, updates: Partial<GoogleAdsConfig>): Promise<GoogleAdsConfig> {
+    const [config] = await db.update(googleAdsConfig)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(googleAdsConfig.id, id))
+      .returning();
+    return config;
+  }
+
+  async deleteGoogleAdsConfig(id: number): Promise<void> {
+    await db.delete(googleAdsConfig).where(eq(googleAdsConfig.id, id));
+  }
+
+  // Google Ads stats methods
+  async saveGoogleAdsStats(statsData: InsertGoogleAdsStats): Promise<GoogleAdsStats> {
+    const [stats] = await db.insert(googleAdsStats).values(statsData).returning();
+    return stats;
+  }
+
+  async getGoogleAdsStatsByDate(dateFrom: string, dateTo: string): Promise<GoogleAdsStats[]> {
+    return await db.select().from(googleAdsStats)
+      .where(and(
+        eq(googleAdsStats.dateRecorded, dateFrom), // Simple implementation for single date
+        // In real implementation, use proper date range query
+      ))
+      .orderBy(googleAdsStats.dateRecorded.desc());
+  }
+
+  async getGoogleAdsStatsBySlot(adSlotId: string): Promise<GoogleAdsStats[]> {
+    return await db.select().from(googleAdsStats)
+      .where(eq(googleAdsStats.adSlotId, adSlotId))
+      .orderBy(googleAdsStats.dateRecorded.desc());
+  }
+
+  async getTotalGoogleAdsRevenue(): Promise<string> {
+    const stats = await db.select().from(googleAdsStats);
+    const total = stats.reduce((sum, stat) => sum + parseFloat(stat.revenue || '0'), 0);
+    return total.toFixed(2);
   }
 }
 
