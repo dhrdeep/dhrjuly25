@@ -436,7 +436,7 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(1000); // 1 second timeslice EXACTLY like working system
+      mediaRecorder.start(); // No timeslice - let browser generate optimal chunks like working system
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
