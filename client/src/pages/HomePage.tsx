@@ -187,12 +187,9 @@ const HomePage: React.FC = () => {
             {/* Logo and Brand */}
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <img 
-                  src={DHR_LOGO_URL} 
-                  alt="DHR Logo"
-                  className="h-16 w-16 rounded-2xl shadow-2xl border border-orange-400/30"
-                  onError={handleArtworkError}
-                />
+                <div className="h-16 w-16 rounded-2xl shadow-2xl border border-orange-400/30 bg-gradient-to-br from-orange-500/20 to-orange-600/20 backdrop-blur-sm flex items-center justify-center">
+                  <span className="text-2xl font-black text-orange-400 animate-pulse">DHR</span>
+                </div>
                 <div className="absolute inset-0 rounded-2xl bg-orange-400/20 blur-lg -z-10"></div>
               </div>
               <div>
@@ -398,12 +395,9 @@ const HomePage: React.FC = () => {
                 {/* Player Header */}
                 <div className="text-center mb-6">
                   <div className="relative inline-block mb-4">
-                    <img 
-                      src={DHR_LOGO_URL} 
-                      alt="DHR Logo"
-                      className="h-20 w-20 rounded-2xl shadow-2xl border-2 border-orange-400/50 mx-auto"
-                      onError={handleArtworkError}
-                    />
+                    <div className="h-20 w-20 rounded-2xl shadow-2xl border-2 border-orange-400/50 mx-auto bg-gradient-to-br from-orange-500/20 to-orange-600/20 backdrop-blur-sm flex items-center justify-center">
+                      <span className="text-3xl font-black text-orange-400 animate-pulse">DHR</span>
+                    </div>
                     <div className="absolute inset-0 rounded-2xl bg-orange-400/20 animate-pulse"></div>
                   </div>
                   <h3 className="text-xl font-bold text-white">DHR Live Stream</h3>
