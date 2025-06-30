@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Mic, MicOff, RotateCcw, Music, Headphones, Radio, Search } from 'lucide-react';
+import { identifyTrack } from '@/services/audioRecognition';
 
 interface Track {
   id: string;
@@ -50,185 +51,35 @@ export default function DragonPage() {
     };
   }, []);
 
-  // Convert audio blob to base64
-  const audioToBase64 = (audioBlob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const arrayBuffer = reader.result as ArrayBuffer;
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('');
-        resolve(btoa(binaryString));
-      };
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(audioBlob);
-    });
-  };
 
-  // Direct client-side identification - focused on ACRCloud
-  const identifyTrack = async (audioBlob: Blob): Promise<Track | null> => {
-    console.log('Starting ACRCloud track identification...');
-    
-    try {
-      const acrResult = await identifyWithACRCloud(audioBlob);
-      if (acrResult) {
-        console.log('Track identified with ACRCloud:', acrResult);
-        return acrResult;
+
+
+
+
+
+  // Auto-identification timer effect
+  useEffect(() => {
+    if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
+      if (autoIdentifyTimer.current) {
+        clearInterval(autoIdentifyTimer.current);
       }
       
-      console.log('No track identified by ACRCloud');
-      return null;
-    } catch (error) {
-      console.error('ACRCloud identification error:', error);
-      return null;
+      autoIdentifyTimer.current = setInterval(() => {
+        if (isPlaying && !isIdentifying && connectionStatus === 'connected') {
+          captureStreamAudio();
+        }
+      }, 60000); // 60 second intervals
+    } else if (autoIdentifyTimer.current) {
+      clearInterval(autoIdentifyTimer.current);
+      autoIdentifyTimer.current = null;
     }
-  };
 
-  // ACRCloud identification (direct client implementation - matching working system)
-  const identifyWithACRCloud = async (audioBlob: Blob): Promise<Track | null> => {
-    try {
-      console.log(`Starting ACRCloud identification with blob size: ${audioBlob.size}`);
-      
-      // Use original WebM blob directly (like working system)
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      console.log(`Converted to ArrayBuffer, length: ${arrayBuffer.byteLength}`);
-      
-      const formData = new FormData();
-      formData.append('sample', audioBlob);
-      formData.append('sample_bytes', arrayBuffer.byteLength.toString());
-      formData.append('access_key', import.meta.env.VITE_ACRCLOUD_ACCESS_KEY || '');
-      
-      // Generate signature for ACRCloud
-      const timestamp = Math.floor(Date.now() / 1000);
-      const stringToSign = `POST\n/v1/identify\n${import.meta.env.VITE_ACRCLOUD_ACCESS_KEY}\naudio\n1\n${timestamp}`;
-      const signature = await generateHmacSha1(stringToSign, import.meta.env.VITE_ACRCLOUD_ACCESS_SECRET || '');
-      
-      formData.append('signature_version', '1');
-      formData.append('signature', signature);
-      formData.append('timestamp', timestamp.toString());
-      formData.append('data_type', 'audio');
-      
-      console.log('Sending request to ACRCloud...');
-      const response = await fetch('https://identify-eu-west-1.acrcloud.com/v1/identify', {
-        method: 'POST',
-        body: formData
-      });
-      
-      const result = await response.json();
-      console.log('ACRCloud response:', result);
-      
-      if (result.status?.code === 0 && result.metadata?.music?.length > 0) {
-        const track = result.metadata.music[0];
-        console.log('Track found:', track);
-        
-        // Search for artwork
-        console.log(`Searching for artwork on music platforms for: ${track.artists?.[0]?.name} - ${track.title}`);
-        const artwork = await searchForArtwork(track.artists?.[0]?.name, track.title);
-        
-        return {
-          id: `acrcloud_${Date.now()}`,
-          title: track.title,
-          artist: track.artists?.[0]?.name || 'Unknown Artist',
-          album: track.album?.name,
-          artwork: artwork || 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png',
-          confidence: Math.round((track.score || 0) * 100),
-          service: 'ACRCloud',
-          duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : undefined,
-          releaseDate: track.release_date,
-          timestamp: new Date().toISOString()
-        };
-      } else {
-        console.log('No music found in ACRCloud response, status:', result.status);
-        console.log('No match found in ACRCloud database');
-        return null;
-      }
-    } catch (error) {
-      console.error('ACRCloud identification error:', error);
-      return null;
-    }
-  };
-
-
-
-  // Generate HMAC-SHA1 signature for ACRCloud
-  const generateHmacSha1 = async (message: string, secret: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secret);
-    const messageData = encoder.encode(message);
-    
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-1' },
-      false,
-      ['sign']
-    );
-    
-    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
-    const signatureArray = new Uint8Array(signature);
-    return btoa(String.fromCharCode(...signatureArray));
-  };
-
-  // Convert audio for better ACRCloud compatibility
-  const convertAudioForACRCloud = async (audioBlob: Blob): Promise<Blob> => {
-    try {
-      // Create an audio context to process the audio
-      const audioContext = new AudioContext();
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
-      // Create a simple WAV blob from the audio buffer
-      const wavBlob = audioBufferToWav(audioBuffer);
-      audioContext.close();
-      
-      return wavBlob;
-    } catch (error) {
-      console.error('Audio conversion failed, using original blob:', error);
-      return audioBlob;
-    }
-  };
-
-  // Convert AudioBuffer to WAV format
-  const audioBufferToWav = (audioBuffer: AudioBuffer): Blob => {
-    const numberOfChannels = audioBuffer.numberOfChannels;
-    const sampleRate = audioBuffer.sampleRate;
-    const length = audioBuffer.length * numberOfChannels * 2;
-    const buffer = new ArrayBuffer(44 + length);
-    const view = new DataView(buffer);
-    
-    // WAV header
-    const writeString = (offset: number, string: string) => {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
+    return () => {
+      if (autoIdentifyTimer.current) {
+        clearInterval(autoIdentifyTimer.current);
       }
     };
-    
-    writeString(0, 'RIFF');
-    view.setUint32(4, 36 + length, true);
-    writeString(8, 'WAVE');
-    writeString(12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numberOfChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * numberOfChannels * 2, true);
-    view.setUint16(32, numberOfChannels * 2, true);
-    view.setUint16(34, 16, true);
-    writeString(36, 'data');
-    view.setUint32(40, length, true);
-    
-    // Convert float32 audio data to int16
-    let offset = 44;
-    for (let i = 0; i < audioBuffer.length; i++) {
-      for (let channel = 0; channel < numberOfChannels; channel++) {
-        const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
-        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-        offset += 2;
-      }
-    }
-    
-    return new Blob([buffer], { type: 'audio/wav' });
-  };
+  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
 
   // Search for artwork on music platforms
   const searchForArtwork = async (artist: string, title: string): Promise<string | null> => {
