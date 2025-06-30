@@ -146,7 +146,7 @@ const TrackIdentPage: React.FC = () => {
       }
 
       console.log('Audio Tracks Found:', audioTracks.length);
-      setIdentificationStatus('Capturing Stream Audio...');
+      setIdentificationStatus('Recording 15 Seconds For Identification...');
       
       let mimeType = 'audio/wav';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -260,7 +260,7 @@ const TrackIdentPage: React.FC = () => {
           console.log('Stopping Audio Recording...');
           mediaRecorderRef.current.stop();
         }
-      }, 20000);
+      }, 15000); // 15 seconds for optimal track identification
       
     } catch (error) {
       console.error('Audio Capture Error:', error);

@@ -1549,7 +1549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .audioChannels(1)
               .audioFilters(['volume=1.5']) // Simple volume boost without filtering
               .format('wav')
-              .duration(10) // 10 seconds for optimal fingerprinting
+              .duration(15) // 15 seconds for optimal fingerprinting
               .on('error', (error) => {
                 clearTimeout(timeout);
                 console.error('FFmpeg conversion error:', error);
