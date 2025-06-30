@@ -18,7 +18,7 @@ import BulkImportPage from './pages/BulkImportPage';
 import StorageSetupPage from './pages/StorageSetupPage';
 import UserManagementPage from './pages/UserManagementPage';
 import PlayerPopoutPage from './pages/PlayerPopoutPage';
-import DragonPage from './pages/DragonPage';
+import BirdyPage from './pages/BirdyPage';
 
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
@@ -44,7 +44,7 @@ function App() {
             <Route path="/storage-setup" element={<StorageSetupPage />} />
             <Route path="/user-management" element={<UserManagementPage />} />
             <Route path="/player" element={<PlayerPopoutPage />} />
-            <Route path="/dragon" element={<DragonPage />} />
+            <Route path="/birdy" element={<BirdyPage />} />
 
             <Route path="/sync" element={<SyncPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />

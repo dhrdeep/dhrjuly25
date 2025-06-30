@@ -11,6 +11,11 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 30, 2025**: Page Management Update - Created Birdy Page and Removed Dragon Page
+  - Created new blank page at /birdy with clean minimal design
+  - Removed Dragon page and all associated track identification functionality
+  - Updated routing to replace /dragon with /birdy route
+  - Simplified codebase by removing complex audio capture and identification systems
 - **June 30, 2025**: Dragon Page Auto-Identification & Enhanced Audio Capture System
   - Implemented automatic track identification: first run after 30 seconds, then every minute
   - Enhanced audio capture with maximum quality settings: 4MB/s bitrate, 48kHz sample rate
