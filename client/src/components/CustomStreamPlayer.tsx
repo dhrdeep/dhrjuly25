@@ -226,12 +226,22 @@ export default function CustomStreamPlayer({ channel, className = '' }: CustomSt
           
           <button
             onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: `${currentTrack.title} - ${currentTrack.artist}`,
-                  text: `Now playing on ${currentConfig.name}`,
-                  url: window.location.href
-                });
+              try {
+                if (navigator.share && navigator.share.length !== undefined) {
+                  navigator.share({
+                    title: `${currentTrack.title} - ${currentTrack.artist}`,
+                    text: `Now playing on ${currentConfig.name}`,
+                    url: window.location.href
+                  }).catch(() => {
+                    // Fallback: copy to clipboard
+                    navigator.clipboard?.writeText(`${currentTrack.title} - ${currentTrack.artist} | ${currentConfig.name}`);
+                  });
+                } else {
+                  // Fallback: copy to clipboard
+                  navigator.clipboard?.writeText(`${currentTrack.title} - ${currentTrack.artist} | ${currentConfig.name}`);
+                }
+              } catch (error) {
+                console.log('Share not supported');
               }
             }}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
