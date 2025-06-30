@@ -11,16 +11,15 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
-- **June 30, 2025**: Dragon Page Track Identification - File Size Optimization in Progress
+- **June 30, 2025**: Dragon Page Track Identification - Implementing Working System Specifications
   - Implemented direct client-side ACRCloud and Shazam API calls in Dragon page
-  - Fixed all syntax errors and duplicate function implementations  
-  - Audio capture generating ~107KB WebM files (improved from 54KB)
-  - Working system consistently generates 402KB files on same stream content
-  - Testing extended recording duration (60 seconds) and different codecs to reach 402KB target
-  - Client-side approach implemented but file size disparity preventing ACRCloud fingerprint generation
-  - ACRCloud error 2004 "Can't generate fingerprint" persists until file size matches working system
-  - Same stream content successfully identified as "Calvin K. Samuel - 2 Timer" on reference system
-  - File size optimization critical for enabling successful track identification
+  - Applied exact specifications from working system documentation:
+    - 25-second recording duration (not 15 seconds)
+    - 500ms timeslice chunking for optimal data collection
+    - 128kbps bitrate with audio/webm;codecs=opus format
+  - Identified ACRCloud extraction tools as potential solution for consistent 402KB file generation
+  - Working system successfully identifies "Calvin K. Samuel - 2 Timer" on same stream content
+  - Testing current implementation against documented working specifications
 - **June 30, 2025**: Dragon Page Audio Capture Optimization and Analysis Completed
   - Extensively optimized Dragon page audio capture system with multiple approaches
   - Improved audio blob generation from 54KB to 107KB through enhanced recording methods
