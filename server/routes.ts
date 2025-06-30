@@ -1639,6 +1639,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const result = await response.json();
           console.log('ACRCloud response:', result);
+          
+          if (result.status && result.status.code !== 0) {
+            console.log('ACRCloud error details:', {
+              code: result.status.code,
+              message: result.status.msg,
+              audioSize: processedBuffer.length,
+              audioType: processedBuffer.constructor.name
+            });
+          }
 
           if (result.status.code === 0 && result.metadata?.music?.length > 0) {
             const music = result.metadata.music[0];
