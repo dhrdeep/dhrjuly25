@@ -1518,20 +1518,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const inputStream = new PassThrough();
           const outputStream = new PassThrough();
           const chunks: Buffer[] = [];
+          let ffmpegProcess: any = null;
+
+          // Set up timeout to prevent hanging
+          const timeout = setTimeout(() => {
+            if (ffmpegProcess) {
+              ffmpegProcess.kill('SIGKILL');
+            }
+            reject(new Error('FFmpeg conversion timeout'));
+          }, 30000); // 30 second timeout
 
           outputStream.on('data', (chunk) => chunks.push(chunk));
-          outputStream.on('end', () => resolve(Buffer.concat(chunks)));
-          outputStream.on('error', reject);
+          outputStream.on('end', () => {
+            clearTimeout(timeout);
+            resolve(Buffer.concat(chunks));
+          });
+          outputStream.on('error', (error) => {
+            clearTimeout(timeout);
+            if (ffmpegProcess) {
+              ffmpegProcess.kill('SIGKILL');
+            }
+            reject(error);
+          });
 
-          ffmpeg(inputStream)
-            .inputFormat('webm')
-            .audioCodec('pcm_s16le')
-            .audioFrequency(44100)
-            .audioChannels(1)
-            .format('wav')
-            .pipe(outputStream);
+          try {
+            ffmpegProcess = ffmpeg(inputStream)
+              .inputFormat('webm')
+              .audioCodec('pcm_s16le')
+              .audioFrequency(44100)
+              .audioChannels(1)
+              .format('wav')
+              .on('error', (error) => {
+                clearTimeout(timeout);
+                console.error('FFmpeg conversion error:', error);
+                reject(error);
+              })
+              .on('end', () => {
+                console.log('FFmpeg conversion completed successfully');
+              })
+              .pipe(outputStream, { end: true });
 
-          inputStream.end(webmBuffer);
+            inputStream.end(webmBuffer);
+          } catch (error) {
+            clearTimeout(timeout);
+            reject(error);
+          }
         });
       };
 
