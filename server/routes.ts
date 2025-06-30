@@ -10,6 +10,8 @@ import { fileHostingService } from "./fileHostingService";
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
+import fs from 'fs';
+import { execSync } from 'child_process';
 
 // Configure FFmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath.path);
@@ -2002,11 +2004,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tempInput = `/tmp/input_${Date.now()}.webm`;
       const tempOutput = `/tmp/fingerprint_${Date.now()}.txt`;
       
-      require('fs').writeFileSync(tempInput, audioBuffer);
+      fs.writeFileSync(tempInput, audioBuffer);
       console.log(`Saved audio to temp file: ${tempInput} (${audioBuffer.length} bytes)`);
       
       // Use official ACRCloud extraction tool with -cli flag for recognition
-      const { execSync } = require('child_process');
       const command = `cd server && ./acrcloud_extr -cli -l 12 -i ${tempInput} -o ${tempOutput}`;
       
       console.log('Running ACRCloud extraction tool...');
@@ -2014,12 +2015,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('ACRCloud extraction tool output:', result);
       
       // Read the generated fingerprint
-      const fingerprint = require('fs').readFileSync(tempOutput);
+      const fingerprint = fs.readFileSync(tempOutput);
       console.log(`Generated fingerprint: ${fingerprint.length} bytes`);
       
       // Cleanup temp files
-      require('fs').unlinkSync(tempInput);
-      require('fs').unlinkSync(tempOutput);
+      fs.unlinkSync(tempInput);
+      fs.unlinkSync(tempOutput);
       
       return fingerprint;
     } catch (error) {
