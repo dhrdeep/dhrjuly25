@@ -1936,12 +1936,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Shared audio processing function for both endpoints
+  const convertWebMToPCM = async (webmBuffer: Buffer): Promise<Buffer> => {
+    return new Promise((resolve, reject) => {
+      const inputStream = new PassThrough();
+      const outputStream = new PassThrough();
+      const chunks: Buffer[] = [];
+      let ffmpegProcess: any = null;
+
+      // Set up timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        if (ffmpegProcess) {
+          ffmpegProcess.kill('SIGKILL');
+        }
+        reject(new Error('FFmpeg conversion timeout'));
+      }, 30000); // 30 second timeout
+
+      outputStream.on('data', (chunk) => chunks.push(chunk));
+      outputStream.on('end', () => {
+        clearTimeout(timeout);
+        resolve(Buffer.concat(chunks));
+      });
+      outputStream.on('error', (error) => {
+        clearTimeout(timeout);
+        if (ffmpegProcess) {
+          ffmpegProcess.kill('SIGKILL');
+        }
+        reject(error);
+      });
+
+      try {
+        ffmpegProcess = ffmpeg(inputStream)
+          .inputFormat('webm')
+          .audioCodec('pcm_s16le')
+          .audioFrequency(44100) // Standard frequency for ACRCloud
+          .audioChannels(1)
+          .audioFilters(['volume=1.5']) // Simple volume boost without filtering
+          .format('wav')
+          .duration(25) // 25 seconds for ACRCloud extraction tools approach
+          .on('error', (error) => {
+            clearTimeout(timeout);
+            console.error('FFmpeg conversion error:', error);
+            reject(error);
+          })
+          .on('end', () => {
+            console.log('FFmpeg conversion completed successfully');
+          })
+          .pipe(outputStream, { end: true });
+
+        inputStream.end(webmBuffer);
+      } catch (error) {
+        clearTimeout(timeout);
+        reject(error);
+      }
+    });
+  };
+
   // ACRCloud extraction tools processing functions
   const processAudioWithExtractionTools = async (audioBuffer: Buffer): Promise<Buffer> => {
     try {
       console.log('Processing audio with ACRCloud extraction tools methodology...');
       
-      // Convert WebM to PCM using ffmpeg with ACRCloud-optimized settings
+      // Convert WebM to PCM using the existing conversion function
       const pcmBuffer = await convertWebMToPCM(audioBuffer);
       console.log(`Converted to PCM format: ${pcmBuffer.length} bytes`);
       
