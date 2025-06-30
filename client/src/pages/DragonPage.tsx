@@ -185,8 +185,15 @@ export default function DragonPage() {
       const accessKey = import.meta.env.VITE_ACRCLOUD_ACCESS_KEY;
       const accessSecret = import.meta.env.VITE_ACRCLOUD_ACCESS_SECRET;
       
+      console.log('ACRCloud credentials check:', {
+        hasAccessKey: !!accessKey,
+        hasAccessSecret: !!accessSecret,
+        accessKeyLength: accessKey?.length || 0,
+        secretKeyLength: accessSecret?.length || 0
+      });
+      
       if (!accessKey || !accessSecret) {
-        console.log('ACRCloud credentials not available');
+        console.log('ACRCloud credentials not available - missing environment variables');
         return null;
       }
       
@@ -263,8 +270,13 @@ export default function DragonPage() {
       
       const shazamKey = import.meta.env.VITE_SHAZAM_API_KEY;
       
+      console.log('Shazam credentials check:', {
+        hasShazamKey: !!shazamKey,
+        keyLength: shazamKey?.length || 0
+      });
+      
       if (!shazamKey) {
-        console.log('Shazam API key not available');
+        console.log('Shazam API key not available - missing environment variable');
         return null;
       }
       
