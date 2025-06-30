@@ -114,48 +114,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
-      {/* Floating DHR Logo Animation */}
+      {/* Enhanced Ghostly DHR Background Animation */}
       <div className="dhr-floating-bg">
-        <div className="floating-dhr-logo">DHR</div>
-        <div className="floating-dhr-logo">DHR</div>
         <div className="floating-dhr-logo">DHR</div>
         <div className="floating-dhr-logo">DHR</div>
         <div className="floating-dhr-logo">DHR</div>
       </div>
 
-      {/* Single Subtle Background Logo */}
+      {/* Main Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900" />
-        
-        {/* Single centered background logo - spinning around screen */}
-        <div 
-          className="absolute"
-          style={{
-            width: '100vw',
-            height: '100vh',
-            left: '0',
-            top: '0',
-            animation: 'orbitSlowly 60s linear infinite'
-          }}
-        >
-          <div
-            className="absolute opacity-10"
-            style={{
-              width: '200px',
-              height: '200px',
-              left: '50%',
-              top: '20%',
-              marginLeft: '-100px',
-              marginTop: '-100px',
-              backgroundImage: `url(${DHR_LOGO_URL})`,
-              backgroundPosition: 'center',
-              backgroundSize: 'contain',
-              backgroundRepeat: 'no-repeat',
-              animation: 'pulse60bpm 1s ease-in-out infinite, spin 20s linear infinite'
-            }}
-          />
-        </div>
-        
         <div className="absolute inset-0 bg-gradient-to-br from-orange-900/5 via-transparent to-orange-900/5" />
       </div>
 

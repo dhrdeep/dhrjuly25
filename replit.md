@@ -11,6 +11,13 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **June 30, 2025**: Enhanced Ghostly DHR Logo Background Animation & Streamlined Navigation
+  - Upgraded floating DHR logo animation to cover entire page with 300px+ sized logos
+  - Implemented slow 60-second orbital rotation with 2-second pulsing animation
+  - Enhanced transparency and ghostly appearance with blur effects and 0.03-0.04 opacity
+  - Removed Track Identifier and Dragon pages from navigation and routing system
+  - Streamlined navigation to focus on core DHR experience: Home, DHR1/DHR2 Premium, VIP, Forum, Upload, Shop
+  - Live track identification continues operating perfectly through premium streaming pages
 - **June 30, 2025**: Enhanced Track Identification System with Permanent Storage & Streaming Links
   - Successfully implemented comprehensive live stream monitoring system using ACRCloud
   - Installed FFmpeg for audio capture from DHR icecast stream (https://ec1.everestcast.host:2775/stream)
