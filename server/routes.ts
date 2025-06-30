@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { createHmac } from "crypto";
 import { storage } from "./storage";
 import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
 import { fileHostingService } from "./fileHostingService";
@@ -1490,7 +1491,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Helper functions for track identification
       const generateACRCloudSignature = (method: string, uri: string, accessKey: string, dataType: string, signatureVersion: string, timestamp: number, accessSecret: string) => {
-        const { createHmac } = require('crypto');
         const stringToSign = [method, uri, accessKey, dataType, signatureVersion, timestamp].join('\n');
         return createHmac('sha1', accessSecret)
           .update(stringToSign)
