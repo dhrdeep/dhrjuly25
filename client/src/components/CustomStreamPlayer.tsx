@@ -62,12 +62,18 @@ export default function CustomStreamPlayer({ channel, className = '' }: CustomSt
   const { data: trackData } = useQuery<EvercastData>({
     queryKey: [`evercast-${channel}`],
     queryFn: async () => {
-      const response = await fetch(`${currentConfig.apiUrl}/server/${currentConfig.serverId}/tracks`);
-      if (!response.ok) throw new Error('Failed to fetch track data');
-      const result = await response.json();
-      return result.data;
+      try {
+        const response = await fetch(`${currentConfig.apiUrl}/server/${currentConfig.serverId}/tracks`);
+        if (!response.ok) throw new Error('Failed to fetch track data');
+        const result = await response.json();
+        return result.data;
+      } catch (error) {
+        console.log('API fetch error:', error);
+        return null;
+      }
     },
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: false,
   });
 
   // Audio control functions

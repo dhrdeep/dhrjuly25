@@ -3,7 +3,7 @@ import { Star, Play, Download, Zap, Clock, Users } from 'lucide-react';
 import MediaPlayer from '../components/MediaPlayer';
 import SubscriptionGate from '../components/SubscriptionGate';
 import LiveTrackWidget from '../components/LiveTrackWidget';
-import CustomStreamPlayer from '../components/CustomStreamPlayer';
+import SimpleStreamPlayer from '../components/SimpleStreamPlayer';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
@@ -124,7 +124,7 @@ const DHR2Page: React.FC = () => {
           {/* Premium Player and Live Track */}
           <section className="mb-12">
             <div className="flex justify-center gap-6">
-              <CustomStreamPlayer channel="dhr2" className="w-full max-w-lg" />
+              <SimpleStreamPlayer channel="dhr2" className="w-full max-w-lg" />
               
               {/* Live Track Identification */}
               <div className="w-80 space-y-4">
