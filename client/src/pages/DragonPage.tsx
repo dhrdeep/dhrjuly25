@@ -323,53 +323,62 @@ export default function DragonPage() {
     }
   };
 
-  // Capture 15 seconds of audio for identification
+  // Capture 15 seconds of audio for identification - EXACT REPLICA of working thedeepbeat.com system
   const captureStreamAudio = useCallback(async () => {
     try {
       setIsIdentifying(true);
       setIdentificationStatus('Recording 15 Seconds For Identification...');
       
-      const stream = await setupAudioCapture();
-      if (!stream) {
-        throw new Error('Failed to setup audio capture');
+      if (!audioRef.current) {
+        throw new Error('Audio element not available');
       }
+
+      console.log('Manual Identification Triggered');
+      console.log('Created New AudioContext');
       
-      // Try different audio formats for better compatibility
-      let mediaRecorder;
-      const supportedFormats = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/wav'
-      ];
+      // Create AudioContext and connect to HTML audio element (exactly like working system)
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = audioContext.createMediaElementSource(audioRef.current);
+      const destination = audioContext.createMediaStreamDestination();
+      const gainNode = audioContext.createGain();
       
-      let selectedFormat = supportedFormats[0];
-      for (const format of supportedFormats) {
-        if (MediaRecorder.isTypeSupported(format)) {
-          selectedFormat = format;
-          break;
-        }
-      }
+      console.log('Created MediaElementSource');
       
-      console.log(`Using MIME Type: ${selectedFormat}`);
-      mediaRecorder = new MediaRecorder(stream, {
-        mimeType: selectedFormat,
-        audioBitsPerSecond: 256000 // Higher bitrate for larger blob size
+      // Connect audio nodes with gain control (matching working system)
+      source.connect(gainNode);
+      gainNode.connect(destination);
+      gainNode.connect(audioContext.destination); // Still output to speakers
+      
+      console.log('Connected Audio Nodes With Gain Control');
+      console.log('Clearing Auto-Identification Timer');
+      console.log('Audio Tracks Found:', destination.stream.getAudioTracks().length);
+      
+      // Use the same MIME type as working system
+      const mimeType = 'audio/webm;codecs=opus';
+      console.log(`Using MIME Type: ${mimeType}`);
+      
+      const mediaRecorder = new MediaRecorder(destination.stream, {
+        mimeType: mimeType
       });
+      
+      console.log('Starting MediaRecorder...');
       
       const chunks: Blob[] = [];
       
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunks.push(event.data);
-          console.log('Audio chunk captured:', event.data.size, 'bytes');
+          console.log(`Data Available: ${event.data.size} bytes`);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        console.log('Recording stopped, processing audio...');
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('Stopping MediaRecorder...');
+        console.log('Recording Stopped, Processing Audio...');
+        
+        const audioBlob = new Blob(chunks, { type: mimeType });
         console.log(`Created Audio Blob: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+        console.log('Sending To Identification Service...');
         
         try {
           setIdentificationStatus('Processing Audio For Identification...');
@@ -380,11 +389,13 @@ export default function DragonPage() {
               setCurrentTrack(track);
               setIdentifiedTracks(prev => [track, ...prev].slice(0, 50));
               setIdentificationStatus(`Track Identified: ${track.title} by ${track.artist} (${track.service})`);
+              console.log(`Track Identified: ${JSON.stringify(track)}`);
             } else {
               setIdentificationStatus('Track Already Identified Recently');
             }
           } else {
             setIdentificationStatus('No Track Match Found - Song May Not Be In Database');
+            console.log('No Track Identified');
           }
         } catch (error) {
           console.error('Identification error:', error);
@@ -392,6 +403,10 @@ export default function DragonPage() {
         }
         
         setIsIdentifying(false);
+        
+        // Clean up AudioContext
+        audioContext.close();
+        
         setTimeout(() => {
           if (!autoIdentify) {
             setIdentificationStatus('');
@@ -399,8 +414,9 @@ export default function DragonPage() {
         }, 5000);
       };
 
-      console.log('Starting audio recording...');
-      mediaRecorder.start(); // Start recording without chunks to get larger blob
+      console.log('Audio Capture Setup Completed');
+      mediaRecorder.start(1000); // 1 second timeslice like working system
+      
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
@@ -413,7 +429,7 @@ export default function DragonPage() {
       setIdentificationStatus('Audio Capture Failed');
       setTimeout(() => setIdentificationStatus(''), 3000);
     }
-  }, [setupAudioCapture, isDuplicateTrack, identifiedTracks, autoIdentify]);
+  }, [isDuplicateTrack, identifiedTracks, autoIdentify]);
 
   const handlePlay = async () => {
     if (audioRef.current) {
