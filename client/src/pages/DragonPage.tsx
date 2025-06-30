@@ -352,30 +352,49 @@ export default function DragonPage() {
       console.log('Manual Identification Triggered');
       console.log('Created New AudioContext');
       
-      // Create AudioContext and connect to HTML audio element (exactly like working system)
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Create AudioContext with higher sample rate and connect to HTML audio element
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+        sampleRate: 48000 // Higher sample rate for more data
+      });
       const source = audioContext.createMediaElementSource(audioRef.current);
       const destination = audioContext.createMediaStreamDestination();
       const gainNode = audioContext.createGain();
       
+      // Add additional processing nodes for richer audio
+      const compressor = audioContext.createDynamicsCompressor();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 8192; // Higher resolution
+      
       console.log('Created MediaElementSource');
       
-      // Connect audio nodes with gain control (matching working system)
+      // Connect audio nodes with additional processing (matching working system)
       source.connect(gainNode);
-      gainNode.connect(destination);
-      gainNode.connect(audioContext.destination); // Still output to speakers
+      gainNode.connect(compressor);
+      compressor.connect(analyser);
+      analyser.connect(destination);
+      analyser.connect(audioContext.destination); // Still output to speakers
       
       console.log('Connected Audio Nodes With Gain Control');
       console.log('Clearing Auto-Identification Timer');
       console.log('Audio Tracks Found:', destination.stream.getAudioTracks().length);
       
-      // Use the same MIME type as working system
-      const mimeType = 'audio/webm;codecs=opus';
+      // Try for highest quality recording possible
+      let mimeType = 'audio/webm;codecs=opus';
+      let recorderOptions: any = {
+        audioBitsPerSecond: 512000 // Maximum bitrate for largest files
+      };
+      
+      // Try WAV first for uncompressed audio
+      if (MediaRecorder.isTypeSupported('audio/wav')) {
+        mimeType = 'audio/wav';
+        recorderOptions = {}; // WAV doesn't support bitrate setting
+      }
+      
       console.log(`Using MIME Type: ${mimeType}`);
       
       const mediaRecorder = new MediaRecorder(destination.stream, {
         mimeType: mimeType,
-        audioBitsPerSecond: 320000 // Much higher bitrate for larger files
+        ...recorderOptions
       });
       
       console.log('Starting MediaRecorder...');
@@ -438,7 +457,7 @@ export default function DragonPage() {
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 15000); // 15 second capture as recommended
+      }, 30000); // 30 second capture to match working system size
       
     } catch (error) {
       console.error('Audio capture error:', error);
