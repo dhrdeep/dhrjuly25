@@ -121,16 +121,20 @@ const TrackIdentPage: React.FC = () => {
 
   const captureStreamAudio = async () => {
     try {
+      console.log('=== Starting Track Identification Process ===');
       setIsIdentifying(true);
       setIdentificationStatus('Setting Up Audio Capture...');
       
       const stream = await setupAudioCapture();
       if (!stream) {
+        console.log('Failed to setup audio capture, aborting identification');
         setIsIdentifying(false);
         setIdentificationStatus('Failed To Setup Audio Capture');
         setTimeout(() => setIdentificationStatus(''), 3000);
         return;
       }
+      
+      console.log('Audio capture setup successful, proceeding with recording');
 
       const audioTracks = stream.getAudioTracks();
       if (audioTracks.length === 0) {
@@ -356,16 +360,16 @@ const TrackIdentPage: React.FC = () => {
 
   // Auto-identify effect
   useEffect(() => {
-    if (autoIdentify && isPlaying && !isIdentifying && connectionStatus === 'connected') {
+    if (autoIdentify && isPlaying && connectionStatus === 'connected' && !autoIdentifyTimer.current) {
       console.log('Setting Up Auto-Identification Timer');
       const interval = setInterval(() => {
-        if (!isIdentifying && isPlaying && connectionStatus === 'connected') {
+        if (!isIdentifying && isPlaying && connectionStatus === 'connected' && autoIdentify) {
           console.log('Auto-Identification Triggered');
           captureStreamAudio();
         }
-      }, 60000);
+      }, 30000); // Reduced to 30 seconds for testing
       autoIdentifyTimer.current = interval;
-    } else if (autoIdentifyTimer.current) {
+    } else if ((!autoIdentify || !isPlaying || connectionStatus !== 'connected') && autoIdentifyTimer.current) {
       console.log('Clearing Auto-Identification Timer');
       clearInterval(autoIdentifyTimer.current);
       autoIdentifyTimer.current = null;
@@ -374,9 +378,10 @@ const TrackIdentPage: React.FC = () => {
     return () => {
       if (autoIdentifyTimer.current) {
         clearInterval(autoIdentifyTimer.current);
+        autoIdentifyTimer.current = null;
       }
     };
-  }, [autoIdentify, isPlaying, isIdentifying, connectionStatus]);
+  }, [autoIdentify, isPlaying, connectionStatus]); // Removed isIdentifying from dependency array
 
   const formatDublinTime = (timestamp: string) => {
     const date = new Date(timestamp);
