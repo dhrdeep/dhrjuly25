@@ -1584,6 +1584,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Attempting identification with original WebM format first...');
           
           const makeACRCloudRequest = async (buffer: Buffer, format: string, filename: string) => {
+            const ACRCLOUD_CONFIG = {
+              host: process.env.ACRCLOUD_HOST || 'identify-eu-west-1.acrcloud.com',
+              endpoint: '/v1/identify',
+              access_key: process.env.ACRCLOUD_ACCESS_KEY,
+              access_secret: process.env.ACRCLOUD_ACCESS_SECRET,
+              data_type: 'audio',
+              signature_version: '1'
+            };
+
+            if (!ACRCLOUD_CONFIG.access_key || !ACRCLOUD_CONFIG.access_secret) {
+              console.log('ACRCloud credentials not configured');
+              return null;
+            }
+
+            const timestamp = Math.floor(Date.now() / 1000);
+            const signature = generateACRCloudSignature(
+              'POST',
+              ACRCLOUD_CONFIG.endpoint,
+              ACRCLOUD_CONFIG.access_key,
+              ACRCLOUD_CONFIG.data_type,
+              ACRCLOUD_CONFIG.signature_version,
+              timestamp,
+              ACRCLOUD_CONFIG.access_secret
+            );
+
             const formData = new FormData();
             formData.append('sample', Buffer.from(buffer), { filename: filename, contentType: format });
             formData.append('sample_bytes', buffer.length.toString());
