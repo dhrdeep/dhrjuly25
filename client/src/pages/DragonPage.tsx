@@ -380,10 +380,7 @@ export default function DragonPage() {
       
       console.log(`Using MIME Type: ${mimeType}`);
       
-      const mediaRecorder = new MediaRecorder(destination.stream, {
-        mimeType: mimeType,
-        audioBitsPerSecond: 128000 // Match input stream bitrate exactly
-      });
+      const mediaRecorder = new MediaRecorder(destination.stream); // No constraints - use browser defaults
       
       console.log('Starting MediaRecorder...');
       
@@ -454,7 +451,7 @@ export default function DragonPage() {
       };
 
       console.log('Audio Capture Setup Completed');
-      mediaRecorder.start(100); // Small timeslice to force more data chunks like working system
+      mediaRecorder.start(1000); // 1 second chunks to match working system's larger data chunks
       
       setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
