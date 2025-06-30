@@ -2000,17 +2000,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Processing audio with official ACRCloud extraction tool...');
       
-      // Save audio to temporary file
-      const tempInput = `/tmp/input_${Date.now()}.webm`;
+      // Save WebM audio to temporary file
+      const tempWebM = `/tmp/input_${Date.now()}.webm`;
+      const tempWav = `/tmp/converted_${Date.now()}.wav`;
       const tempOutput = `/tmp/fingerprint_${Date.now()}.txt`;
       
-      fs.writeFileSync(tempInput, audioBuffer);
-      console.log(`Saved audio to temp file: ${tempInput} (${audioBuffer.length} bytes)`);
+      fs.writeFileSync(tempWebM, audioBuffer);
+      console.log(`Saved WebM audio to temp file: ${tempWebM} (${audioBuffer.length} bytes)`);
+      
+      // Convert WebM to WAV format for ACRCloud extraction tool
+      console.log('Converting WebM to WAV format...');
+      const convertCommand = `ffmpeg -i ${tempWebM} -ar 8000 -ac 1 -f wav ${tempWav} -y`;
+      execSync(convertCommand, { encoding: 'utf8' });
+      console.log('Conversion completed');
       
       // Use official ACRCloud extraction tool with -cli flag for recognition
-      const command = `cd server && ./acrcloud_extr -cli -l 12 -i ${tempInput} -o ${tempOutput}`;
+      const command = `cd server && ./acrcloud_extr -cli -l 12 -i ${tempWav} -o ${tempOutput}`;
       
-      console.log('Running ACRCloud extraction tool...');
+      console.log('Running ACRCloud extraction tool on converted WAV...');
       const result = execSync(command, { encoding: 'utf8' });
       console.log('ACRCloud extraction tool output:', result);
       
@@ -2019,7 +2026,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Generated fingerprint: ${fingerprint.length} bytes`);
       
       // Cleanup temp files
-      fs.unlinkSync(tempInput);
+      fs.unlinkSync(tempWebM);
+      fs.unlinkSync(tempWav);
       fs.unlinkSync(tempOutput);
       
       return fingerprint;
