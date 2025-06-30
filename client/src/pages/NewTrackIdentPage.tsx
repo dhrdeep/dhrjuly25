@@ -35,7 +35,7 @@ export default function NewTrackIdentPage() {
   const chunksRef = useRef<Blob[]>([]);
   const autoIdentifyTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Stream URL - using DHR stream
+  // Stream URL - using DHR stream (enhanced with Dragon page optimizations)
   const streamUrl = "https://streaming.shoutcast.com/dhr";
 
   useEffect(() => {
