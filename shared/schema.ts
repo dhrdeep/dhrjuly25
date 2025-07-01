@@ -115,6 +115,22 @@ export const googleAdsStats = pgTable("google_ads_stats", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
+// Article comments for forum news
+export const articleComments = pgTable("article_comments", {
+  id: serial("id").primaryKey(),
+  articleId: text("article_id").notNull(), // RSS item ID or URL hash
+  articleTitle: text("article_title").notNull(),
+  articleSource: text("article_source").notNull(),
+  userId: text("user_id").notNull(),
+  userEmail: text("user_email"),
+  userName: text("user_name"), 
+  userTier: text("user_tier").notNull(), // DHR1, DHR2, VIP
+  comment: text("comment").notNull(),
+  isVisible: boolean("is_visible").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
 export const insertUserSchema = createInsertSchema(users);
 export const insertPatreonTokenSchema = createInsertSchema(patreonTokens);
 export const insertVipMixSchema = createInsertSchema(vipMixes);
@@ -123,6 +139,7 @@ export const insertDailyDownloadLimitSchema = createInsertSchema(dailyDownloadLi
 export const insertIdentifiedTrackSchema = createInsertSchema(identifiedTracks);
 export const insertGoogleAdsConfigSchema = createInsertSchema(googleAdsConfig);
 export const insertGoogleAdsStatsSchema = createInsertSchema(googleAdsStats);
+export const insertArticleCommentSchema = createInsertSchema(articleComments);
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -140,3 +157,5 @@ export type GoogleAdsConfig = typeof googleAdsConfig.$inferSelect;
 export type InsertGoogleAdsConfig = z.infer<typeof insertGoogleAdsConfigSchema>;
 export type GoogleAdsStats = typeof googleAdsStats.$inferSelect;
 export type InsertGoogleAdsStats = z.infer<typeof insertGoogleAdsStatsSchema>;
+export type ArticleComment = typeof articleComments.$inferSelect;
+export type InsertArticleComment = z.infer<typeof insertArticleCommentSchema>;

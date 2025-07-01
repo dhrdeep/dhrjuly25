@@ -8,6 +8,7 @@ import {
   identifiedTracks,
   googleAdsConfig,
   googleAdsStats,
+  articleComments,
   type User, 
   type InsertUser,
   type PatreonToken,
@@ -23,7 +24,9 @@ import {
   type GoogleAdsConfig,
   type InsertGoogleAdsConfig,
   type GoogleAdsStats,
-  type InsertGoogleAdsStats
+  type InsertGoogleAdsStats,
+  type ArticleComment,
+  type InsertArticleComment
 } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
@@ -78,6 +81,12 @@ export interface IStorage {
   getGoogleAdsStatsByDate(dateFrom: string, dateTo: string): Promise<GoogleAdsStats[]>;
   getGoogleAdsStatsBySlot(adSlotId: string): Promise<GoogleAdsStats[]>;
   getTotalGoogleAdsRevenue(): Promise<string>;
+
+  // Article comment methods
+  saveArticleComment(comment: InsertArticleComment): Promise<ArticleComment>;
+  getCommentsByArticle(articleId: string): Promise<ArticleComment[]>;
+  getRecentComments(limit?: number): Promise<ArticleComment[]>;
+  deleteComment(id: number): Promise<void>;
 }
 
 export class DrizzleStorage implements IStorage {
@@ -309,6 +318,37 @@ export class DrizzleStorage implements IStorage {
     const stats = await db.select().from(googleAdsStats);
     const total = stats.reduce((sum, stat) => sum + parseFloat(stat.revenue || '0'), 0);
     return total.toFixed(2);
+  }
+
+  // Article comment methods
+  async saveArticleComment(commentData: InsertArticleComment): Promise<ArticleComment> {
+    const [comment] = await db
+      .insert(articleComments)
+      .values(commentData)
+      .returning();
+    return comment;
+  }
+
+  async getCommentsByArticle(articleId: string): Promise<ArticleComment[]> {
+    return await db.select().from(articleComments)
+      .where(and(
+        eq(articleComments.articleId, articleId),
+        eq(articleComments.isVisible, true)
+      ))
+      .orderBy(desc(articleComments.createdAt));
+  }
+
+  async getRecentComments(limit: number = 10): Promise<ArticleComment[]> {
+    return await db.select().from(articleComments)
+      .where(eq(articleComments.isVisible, true))
+      .orderBy(desc(articleComments.createdAt))
+      .limit(limit);
+  }
+
+  async deleteComment(id: number): Promise<void> {
+    await db.update(articleComments)
+      .set({ isVisible: false })
+      .where(eq(articleComments.id, id));
   }
 }
 

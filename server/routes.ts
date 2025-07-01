@@ -2583,6 +2583,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Article Comment API Endpoints - Subscription Required
+  app.post('/api/comments', async (req, res) => {
+    try {
+      const { articleId, articleTitle, articleSource, comment, userTier, userId, userEmail, userName } = req.body;
+      
+      // Validate subscription tier (DHR1, DHR2, VIP only)
+      if (!['DHR1', 'DHR2', 'VIP'].includes(userTier)) {
+        return res.status(403).json({ error: 'Active subscription required to comment' });
+      }
+
+      if (!articleId || !comment || !userId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const newComment = await storage.saveArticleComment({
+        articleId,
+        articleTitle: articleTitle || 'Unknown Article',
+        articleSource: articleSource || 'Unknown Source',
+        userId,
+        userEmail,
+        userName: userName || 'Anonymous',
+        userTier,
+        comment: comment.trim(),
+        isVisible: true
+      });
+
+      res.json(newComment);
+    } catch (error) {
+      console.error('Error saving comment:', error);
+      res.status(500).json({ error: 'Failed to save comment' });
+    }
+  });
+
+  app.get('/api/comments/:articleId', async (req, res) => {
+    try {
+      const { articleId } = req.params;
+      const comments = await storage.getCommentsByArticle(articleId);
+      res.json(comments);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      res.status(500).json({ error: 'Failed to fetch comments' });
+    }
+  });
+
+  app.get('/api/comments/recent/:limit?', async (req, res) => {
+    try {
+      const limit = parseInt(req.params.limit as string) || 10;
+      const comments = await storage.getRecentComments(limit);
+      res.json(comments);
+    } catch (error) {
+      console.error('Error fetching recent comments:', error);
+      res.status(500).json({ error: 'Failed to fetch recent comments' });
+    }
+  });
+
+  app.delete('/api/comments/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteComment(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      res.status(500).json({ error: 'Failed to delete comment' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

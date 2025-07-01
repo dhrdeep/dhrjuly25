@@ -28,6 +28,7 @@ import {
   Clock,
   Maximize2
 } from 'lucide-react';
+import ScrollingNewsBanner from '../components/ScrollingNewsBanner';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -347,6 +348,9 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Scrolling News Banner */}
+      <ScrollingNewsBanner />
 
       {/* Immersive Features Section */}
       <section className="py-20 px-4 relative">

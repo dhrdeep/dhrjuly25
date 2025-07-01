@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Newspaper, ExternalLink, RefreshCw, Globe, Rss } from 'lucide-react';
+import ArticleComments from './ArticleComments';
 
 interface RSSItem {
   id: string;
@@ -27,6 +28,14 @@ interface CrawledItem {
 
 export default function ForumNews() {
   const [activeTab, setActiveTab] = useState('rss');
+  
+  // Mock user data (in real app, get from auth context)
+  const userData = {
+    id: 'user_123',
+    name: 'Music Lover',
+    email: 'user@example.com',
+    tier: 'DHR1' // Could be DHR1, DHR2, VIP, or null for free users
+  };
 
   // RSS Feeds Query
   const { data: rssItems = [], isLoading: rssLoading, refetch: refetchRSS } = useQuery({
@@ -88,6 +97,17 @@ export default function ForumNews() {
             </div>
           </div>
         </div>
+        
+        {/* Comments Section - Subscription Required */}
+        <ArticleComments
+          articleId={item.id}
+          articleTitle={item.title}
+          articleSource={item.source}
+          userTier={userData.tier}
+          userId={userData.id}
+          userName={userData.name}
+          userEmail={userData.email}
+        />
       </div>
     </div>
   );
