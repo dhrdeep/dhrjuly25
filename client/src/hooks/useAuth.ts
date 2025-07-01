@@ -17,21 +17,59 @@ interface AuthUser {
 export function useAuth() {
   const queryClient = useQueryClient();
 
-  // Check session-based authentication
-  const { data: user, isLoading: authLoading } = useQuery({
+  // Check session-based authentication with proper error handling
+  const { data: user, isLoading: authLoading, error } = useQuery({
     queryKey: ["/api/auth/me"],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    // Return null for 401 errors instead of throwing
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          credentials: 'include', // Important for session cookies
+        });
+        
+        if (response.status === 401) {
+          return null; // Not authenticated
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        return null;
+      }
+    }
   });
 
   // Simple email authentication
   const emailSignIn = useMutation({
     mutationFn: async ({ email }: { email: string }) => {
-      const response = await apiRequest("POST", "/api/auth/simple-login", { email });
+      const response = await fetch("/api/auth/simple-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include', // Important for session cookies
+        body: JSON.stringify({ email }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Login failed: ${response.status} ${response.statusText}`);
+      }
+      
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Login successful, invalidating auth cache:", data);
+      // Force refetch user data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: Error) => {
       console.error("Email sign in failed:", error);
@@ -51,6 +89,14 @@ export function useAuth() {
 
   const isLoading = authLoading;
   const isAuthenticated = !!user;
+
+  // Debug logging
+  console.log("useAuth state:", {
+    user,
+    isLoading,
+    isAuthenticated,
+    error
+  });
 
   return {
     user: user as AuthUser | undefined,
