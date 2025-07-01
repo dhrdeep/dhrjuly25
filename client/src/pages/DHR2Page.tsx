@@ -12,7 +12,7 @@ const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436
 
 const DHR2Page: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:1480/api/v2/current', isPlaying);
+  const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:1560/api/v2/current', isPlaying);
   const { user, isLoading, isAuthenticated } = useAuth();
   const [userPermissions, setUserPermissions] = useState<any>(null);
   const [permissionsLoading, setPermissionsLoading] = useState(true);

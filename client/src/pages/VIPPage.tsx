@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Crown, Loader2, Play, Download, Star, Clock, Users, Lock } from 'lucide-react';
+import { Crown, Loader2, Play, Download, Star, Clock, Users, Lock, Music, Headphones } from 'lucide-react';
+import SunsetDanceBackground from '../components/SunsetDanceBackground';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
