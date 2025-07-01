@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-import videoSrc from '@assets/Video_Ready_Deep_House_Sunset_1751327610493.mp4';
 
 interface VideoBackgroundProps {
   className?: string;
@@ -16,22 +15,34 @@ export default function VideoBackground({
 }: VideoBackgroundProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleCanPlay = () => {
+      console.log('Video can play - attempting to start...');
       setIsLoaded(true);
-      video.play().catch(console.error);
+      video.play().catch((error) => {
+        console.error('Video play failed:', error);
+        setHasError(true);
+      });
     };
 
     const handleLoadedData = () => {
+      console.log('Video data loaded');
       video.currentTime = 0;
+    };
+
+    const handleError = (e: Event) => {
+      console.error('Video error:', e);
+      setHasError(true);
     };
 
     video.addEventListener('canplaythrough', handleCanPlay);
     video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('error', handleError);
     
     // Ensure video loops seamlessly
     video.addEventListener('ended', () => {
@@ -42,6 +53,7 @@ export default function VideoBackground({
     return () => {
       video.removeEventListener('canplaythrough', handleCanPlay);
       video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('error', handleError);
     };
   }, []);
 
@@ -72,7 +84,7 @@ export default function VideoBackground({
         playsInline
         preload="metadata"
       >
-        <source src={videoSrc} type="video/mp4" />
+        <source src="/Video_Ready_Deep_House_Sunset_1751327610493.mp4" type="video/mp4" />
       </video>
 
       {/* Overlay */}
@@ -129,10 +141,56 @@ export default function VideoBackground({
         ))}
       </div>
 
-      {/* Loading State */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black" />
-      )}
+      {/* Cinematic Sunset Background - Always Visible */}
+      <div className="absolute inset-0">
+        {/* Deep House Sunset Gradient */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              linear-gradient(
+                180deg,
+                rgba(31, 41, 55, 0.95) 0%,
+                rgba(75, 85, 99, 0.85) 20%,
+                rgba(120, 53, 15, 0.6) 40%,
+                rgba(194, 65, 12, 0.4) 60%,
+                rgba(251, 146, 60, 0.3) 80%,
+                rgba(252, 211, 77, 0.2) 100%
+              ),
+              radial-gradient(
+                ellipse at 70% 20%,
+                rgba(252, 211, 77, 0.15) 0%,
+                rgba(251, 146, 60, 0.1) 30%,
+                transparent 70%
+              ),
+              radial-gradient(
+                ellipse at 30% 70%,
+                rgba(147, 51, 234, 0.08) 0%,
+                rgba(79, 70, 229, 0.05) 40%,
+                transparent 70%
+              )
+            `
+          }}
+        />
+        
+        {/* Animated Sunset Layers */}
+        <div 
+          className="absolute inset-0 animate-pulse"
+          style={{
+            background: `
+              radial-gradient(
+                circle at 75% 25%,
+                rgba(251, 146, 60, 0.08) 0%,
+                transparent 50%
+              )
+            `,
+            animationDuration: '8s'
+          }}
+        />
+        
+        {/* Silhouette Effect Layer */}
+        <div className="absolute inset-0 bg-black/20" />
+      </div>
     </div>
   );
 }
