@@ -1005,55 +1005,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch both supporters and subscriptions from Buy Me a Coffee API
       let allSupporters = [];
       
-      // Fetch one-time supporters
+      // Fetch one-time supporters with pagination
       try {
-        const supportersResponse = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        let page = 1;
+        let hasMoreSupporters = true;
+        let totalOneTimeSupports = 0;
 
-        if (supportersResponse.ok) {
-          const supportersText = await supportersResponse.text();
-          const supportersData = JSON.parse(supportersText);
-          const oneTimeSupports = supportersData.data || [];
-          console.log(`Found ${oneTimeSupports.length} one-time supporters`);
-          allSupporters.push(...oneTimeSupports);
+        while (hasMoreSupporters) {
+          const supportersResponse = await fetch(`https://developers.buymeacoffee.com/api/v1/supporters?page=${page}`, {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (supportersResponse.ok) {
+            const supportersText = await supportersResponse.text();
+            const supportersData = JSON.parse(supportersText);
+            const oneTimeSupports = supportersData.data || [];
+            
+            console.log(`Page ${page} supporters API response structure:`, {
+              hasData: !!supportersData.data,
+              dataLength: oneTimeSupports.length,
+              hasPagination: !!(supportersData.current_page || supportersData.last_page),
+              currentPage: supportersData.current_page,
+              lastPage: supportersData.last_page,
+              totalCount: supportersData.total || supportersData.count,
+              perPage: supportersData.per_page
+            });
+            
+            if (oneTimeSupports.length > 0) {
+              console.log(`Page ${page}: Found ${oneTimeSupports.length} one-time supporters`);
+              allSupporters.push(...oneTimeSupports);
+              totalOneTimeSupports += oneTimeSupports.length;
+              page++;
+              
+              // Check if we have pagination info
+              if (supportersData.current_page && supportersData.last_page) {
+                hasMoreSupporters = supportersData.current_page < supportersData.last_page;
+                console.log(`Pagination info: ${supportersData.current_page}/${supportersData.last_page}, continuing: ${hasMoreSupporters}`);
+              } else {
+                // If no pagination info, assume we have more if we got a full page
+                hasMoreSupporters = oneTimeSupports.length >= 20; // Typical page size
+                console.log(`No pagination info, got ${oneTimeSupports.length} items, continuing: ${hasMoreSupporters}`);
+              }
+            } else {
+              hasMoreSupporters = false;
+              console.log(`No supporters found on page ${page}, stopping pagination`);
+            }
+          } else {
+            console.log(`Error fetching supporters page ${page}:`, supportersResponse.status);
+            hasMoreSupporters = false;
+          }
         }
+        
+        console.log(`Total one-time supporters fetched: ${totalOneTimeSupports}`);
       } catch (error) {
         console.log('Error fetching one-time supporters:', error);
       }
 
-      // Fetch recurring subscriptions
+      // Fetch recurring subscriptions with pagination
       try {
-        const subscriptionsResponse = await fetch('https://developers.buymeacoffee.com/api/v1/subscriptions', {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        let page = 1;
+        let hasMoreSubscriptions = true;
+        let totalSubscriptions = 0;
 
-        if (subscriptionsResponse.ok) {
-          const subscriptionsText = await subscriptionsResponse.text();
-          const subscriptionsData = JSON.parse(subscriptionsText);
-          const recurringSupports = subscriptionsData.data || [];
-          console.log(`Found ${recurringSupports.length} recurring subscriptions`);
-          
-          // Transform subscription data to match supporter format
-          recurringSupports.forEach(sub => {
-            allSupporters.push({
-              ...sub,
-              support_id: sub.subscription_id || sub.id,
-              payer_email: sub.payer_email || sub.supporter_email,
-              payer_name: sub.payer_name || sub.supporter_name,
-              support_coffee_price: sub.subscription_coffee_price || sub.coffee_price,
-              support_coffees: sub.subscription_coffees || sub.coffees,
-              support_created_on: sub.subscription_created_on || sub.created_on,
-              is_recurring: true
-            });
+        while (hasMoreSubscriptions) {
+          const subscriptionsResponse = await fetch(`https://developers.buymeacoffee.com/api/v1/subscriptions?page=${page}`, {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
           });
+
+          if (subscriptionsResponse.ok) {
+            const subscriptionsText = await subscriptionsResponse.text();
+            const subscriptionsData = JSON.parse(subscriptionsText);
+            const recurringSupports = subscriptionsData.data || [];
+            
+            console.log(`Page ${page} subscriptions API response structure:`, {
+              hasData: !!subscriptionsData.data,
+              dataLength: recurringSupports.length,
+              hasPagination: !!(subscriptionsData.current_page || subscriptionsData.last_page),
+              currentPage: subscriptionsData.current_page,
+              lastPage: subscriptionsData.last_page,
+              totalCount: subscriptionsData.total || subscriptionsData.count,
+              perPage: subscriptionsData.per_page
+            });
+            
+            if (recurringSupports.length > 0) {
+              console.log(`Page ${page}: Found ${recurringSupports.length} recurring subscriptions`);
+              
+              // Transform subscription data to match supporter format
+              recurringSupports.forEach((sub: any) => {
+                allSupporters.push({
+                  ...sub,
+                  support_id: sub.subscription_id || sub.id,
+                  payer_email: sub.payer_email || sub.supporter_email,
+                  payer_name: sub.payer_name || sub.supporter_name,
+                  support_coffee_price: sub.subscription_coffee_price || sub.coffee_price,
+                  support_coffees: sub.subscription_coffees || sub.coffees,
+                  support_created_on: sub.subscription_created_on || sub.created_on,
+                  is_recurring: true
+                });
+              });
+              
+              totalSubscriptions += recurringSupports.length;
+              page++;
+              
+              // Check if we have pagination info
+              if (subscriptionsData.current_page && subscriptionsData.last_page) {
+                hasMoreSubscriptions = subscriptionsData.current_page < subscriptionsData.last_page;
+              } else {
+                // If no pagination info, assume we have more if we got a full page
+                hasMoreSubscriptions = recurringSupports.length >= 20; // Typical page size
+              }
+            } else {
+              hasMoreSubscriptions = false;
+            }
+          } else {
+            console.log(`Error fetching subscriptions page ${page}:`, subscriptionsResponse.status);
+            hasMoreSubscriptions = false;
+          }
         }
+        
+        console.log(`Total subscriptions fetched: ${totalSubscriptions}`);
       } catch (error) {
         console.log('Error fetching subscriptions:', error);
       }
