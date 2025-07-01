@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import SharedBackground from "@/components/SharedBackground";
 import { Link } from "wouter";
 
 export default function SimpleAuthPage() {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,8 +34,11 @@ export default function SimpleAuthPage() {
       const result = await response.json();
       console.log("Authentication successful:", result);
 
-      // Force page refresh to pick up session and redirect to home
-      window.location.href = "/";
+      // Invalidate all queries to force fresh data after authentication
+      await queryClient.invalidateQueries();
+      
+      // Redirect to home page after successful authentication
+      setLocation("/");
     } catch (err: any) {
       setError(err.message || "Authentication failed");
     } finally {
