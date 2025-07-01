@@ -222,39 +222,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Create session manually
-      (req as any).login = (user: any, callback: (err?: any) => void) => {
-        (req as any).user = {
-          claims: {
-            sub: user.id,
-            email: user.email,
-            first_name: user.firstName || '',
-            last_name: user.lastName || '',
-            profile_image_url: user.profileImageUrl || ''
-          },
-          access_token: 'email_login_token',
-          expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-        };
-        callback();
+      // Store user in session
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionExpiry: user.subscriptionExpiry,
+        isAdmin: user.isAdmin || false,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl
       };
 
-      (req as any).login(user, (err: any) => {
-        if (err) {
-          console.error("Login error:", err);
-          return res.status(500).json({ message: "Login failed" });
-        }
-
-        res.json({
-          message: "Login successful",
-          tier: user.subscriptionTier,
-          user: {
-            id: user.id,
-            email: user.email,
-            subscriptionTier: user.subscriptionTier,
-            subscriptionStatus: user.subscriptionStatus,
-            subscriptionExpiry: user.subscriptionExpiry
-          }
-        });
+      res.json({
+        message: "Login successful",
+        tier: user.subscriptionTier,
+        user: req.session.user
       });
 
     } catch (error) {
