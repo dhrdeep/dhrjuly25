@@ -11,6 +11,7 @@ import {
   articleComments,
   type User, 
   type InsertUser,
+  type UpsertUser,
   type PatreonToken,
   type InsertPatreonToken,
   type VipMix,
@@ -38,6 +39,9 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  setUserAdmin(id: string, isAdmin: boolean): Promise<User>;
+  setUserTier(id: string, tier: string, expiry?: Date): Promise<User>;
   
   // Patreon token methods
   savePatreonTokens(tokens: InsertPatreonToken): Promise<PatreonToken>;
@@ -119,6 +123,44 @@ export class DrizzleStorage implements IStorage {
 
   async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async setUserAdmin(id: string, isAdmin: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isAdmin, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async setUserTier(id: string, tier: string, expiry?: Date): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        subscriptionTier: tier,
+        subscriptionExpiry: expiry,
+        subscriptionSource: 'admin',
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
   // Patreon token methods

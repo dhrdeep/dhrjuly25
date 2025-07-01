@@ -28,6 +28,7 @@ import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
 import PatreonManagementPage from './pages/PatreonManagementPage';
 import BmacManagementPage from './pages/BmacManagementPage';
+import AdminUserManagement from './pages/AdminUserManagement';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
@@ -72,6 +73,7 @@ function App() {
             <Route path="/sync" element={<SyncPage />} />
             <Route path="/patreon-management" element={<PatreonManagementPage />} />
             <Route path="/bmac-management" element={<BmacManagementPage />} />
+            <Route path="/admin-user-management" element={<AdminUserManagement />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
           </Routes>
         </Layout>

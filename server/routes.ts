@@ -11,6 +11,7 @@ import { streamMonitor } from "./streamMonitor";
 import { rssService } from "./rssService";
 import { redditService } from "./redditService";
 import { webCrawlerService } from "./webCrawlerService";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
@@ -21,6 +22,80 @@ import { execSync } from 'child_process';
 ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Replit authentication
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Admin route to manually assign user tiers
+  app.post('/api/admin/assign-tier', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { email, tier, expiryDays } = req.body;
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Calculate expiry date if provided
+      let expiry: Date | undefined;
+      if (expiryDays && expiryDays > 0) {
+        expiry = new Date();
+        expiry.setDate(expiry.getDate() + expiryDays);
+      }
+
+      // Update user tier
+      const updatedUser = await storage.setUserTier(user.id, tier, expiry);
+      
+      res.json({
+        message: `User ${email} assigned to ${tier} tier`,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error assigning tier:", error);
+      res.status(500).json({ message: "Failed to assign tier" });
+    }
+  });
+
+  // Admin route to set admin status
+  app.post('/api/admin/set-admin', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId, isAdmin: adminStatus } = req.body;
+      
+      const updatedUser = await storage.setUserAdmin(userId, adminStatus);
+      
+      res.json({
+        message: `User admin status updated`,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error setting admin status:", error);
+      res.status(500).json({ message: "Failed to set admin status" });
+    }
+  });
+
+  // Get all users (admin only)
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   // Patreon OAuth endpoint to replace Supabase edge function
   app.post("/api/patreon-oauth", async (req, res) => {
     try {

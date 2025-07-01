@@ -1,14 +1,28 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 export const users = pgTable("users", {
-  id: text("id").primaryKey(), // Support both local IDs and Patreon IDs like "patreon_123"
-  email: text("email").notNull().unique(),
-  username: text("username").notNull(),
+  id: varchar("id").primaryKey().notNull(), // Replit user ID or local ID
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  username: text("username"),
   subscriptionTier: text("subscription_tier").notNull().default('free'), // 'free', 'dhr1', 'dhr2', 'vip'
   subscriptionStatus: text("subscription_status").notNull().default('active'), // 'active', 'inactive', 'cancelled'
-  subscriptionSource: text("subscription_source").default('local'), // 'local', 'patreon', 'bmac', 'stripe'
+  subscriptionSource: text("subscription_source").default('replit'), // 'replit', 'patreon', 'bmac', 'admin'
   subscriptionStartDate: timestamp("subscription_start_date"),
   subscriptionExpiry: timestamp("subscription_expiry"),
   patreonTier: text("patreon_tier"),
@@ -23,7 +37,9 @@ export const users = pgTable("users", {
   nextChargeDate: timestamp("next_charge_date"),
   totalDownloads: integer("total_downloads").default(0),
   preferences: jsonb("preferences").default({}),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  isAdmin: boolean("is_admin").default(false), // Admin access control
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at")
 });
 
@@ -152,6 +168,7 @@ export const insertArticleCommentSchema = createInsertSchema(articleComments);
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = typeof users.$inferInsert;
 export type PatreonToken = typeof patreonTokens.$inferSelect;
 export type InsertPatreonToken = z.infer<typeof insertPatreonTokenSchema>;
 export type VipMix = typeof vipMixes.$inferSelect;
