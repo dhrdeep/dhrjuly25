@@ -3,6 +3,7 @@ import { Crown, Download, Play, Search, Filter, Star, Clock, Users, HardDrive, L
 import { vipService, VipAccess } from '../services/vipService';
 import { VipMix } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
+import SharedBackground from '../components/SharedBackground';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -172,6 +173,7 @@ const VIPPage: React.FC = () => {
 
   return (
     <div className="min-h-screen text-white py-8 px-4">
+      <SharedBackground />
       {/* Notification Banner */}
       {notification && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-orange-500 text-white px-6 py-3 rounded-lg shadow-lg">

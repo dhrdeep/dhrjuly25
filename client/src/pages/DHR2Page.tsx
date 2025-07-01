@@ -6,6 +6,7 @@ import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
 import SunsetDanceBackground from '../components/SunsetDanceBackground';
+import SharedBackground from '../components/SharedBackground';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
@@ -81,8 +82,9 @@ const DHR2Page: React.FC = () => {
 
   return (
     <>
+      <SharedBackground intensity="intense" />
       <SunsetDanceBackground 
-        opacity={0.7}
+        opacity={0.3}
         className="fixed inset-0"
       />
       <SubscriptionGate requiredTier="premium" contentType="dhr2">
