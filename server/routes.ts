@@ -3141,6 +3141,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CSV Import endpoint for Patreon and BMAC data
+  app.post('/api/admin/import-csv', async (req: any, res) => {
+    try {
+      const file = req.files?.csvFile;
+      if (!file || Array.isArray(file)) {
+        return res.status(400).json({
+          success: false,
+          error: 'No CSV file provided'
+        });
+      }
+
+      const csvContent = file.data.toString('utf8');
+      const lines = csvContent.trim().split('\n');
+      
+      if (lines.length < 2) {
+        return res.status(400).json({
+          success: false,
+          error: 'CSV file must contain headers and at least one data row'
+        });
+      }
+
+      // Parse headers - remove quotes and normalize
+      const headers = lines[0].split(',').map((h: string) => h.replace(/"/g, '').trim());
+      console.log('CSV Headers detected:', headers);
+
+      // Define header mappings for different CSV formats
+      const patreonHeaderMap = new Map([
+        ['Member Email', 'email'],
+        ['Member Name', 'username'], 
+        ['Membership renews on', 'renewsOn'],
+        ['Membership start date', 'startDate'],
+        ['Membership amount', 'amount'],
+        ['Membership amount currency', 'currency'],
+        ['Subscription status', 'status'],
+        ['Subscription cancelled on', 'cancelledOn']
+      ]);
+
+      const bmacHeaderMap = new Map([
+        ['Name', 'username'],
+        ['Email', 'email'],
+        ['Current Tier', 'tier'],
+        ['Total Support (cents)', 'amount'],
+        ['Status', 'status'],
+        ['Join Date', 'startDate'],
+        ['Notes', 'notes'],
+        ['Cancel Date', 'cancelledOn'],
+        ['Access Expiration', 'expiry']
+      ]);
+
+      // Determine CSV type and use appropriate mapping
+      let headerMap;
+      let csvType;
+      
+      if (headers.includes('Member Email') && headers.includes('Membership renews on')) {
+        headerMap = patreonHeaderMap;
+        csvType = 'patreon';
+      } else if (headers.includes('Name') && headers.includes('Total Support (cents)')) {
+        headerMap = bmacHeaderMap;
+        csvType = 'bmac';
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: `Unsupported CSV format. Expected Patreon format with headers: ${Array.from(patreonHeaderMap.keys()).join(', ')} OR BMAC format with headers: ${Array.from(bmacHeaderMap.keys()).join(', ')}`
+        });
+      }
+
+      let imported = 0;
+      let updated = 0;
+      let errors: string[] = [];
+
+      // Process each data row
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const values = lines[i].split(',').map((v: string) => v.replace(/"/g, '').trim());
+          const rowData: any = {};
+          
+          // Map values using the appropriate header mapping
+          headers.forEach((header: string, index: number) => {
+            const mappedField = headerMap.get(header);
+            if (mappedField && values[index]) {
+              rowData[mappedField] = values[index];
+            }
+          });
+
+          if (!rowData.email || !rowData.username) {
+            errors.push(`Row ${i + 1}: Missing required email or username`);
+            continue;
+          }
+
+          // Generate user data based on CSV type
+          let userData;
+          if (csvType === 'patreon') {
+            const amountCents = parseInt(rowData.amount?.replace(/[€$,]/g, '') || '0') * 100;
+            userData = {
+              id: `patreon_${rowData.username.replace(/\s+/g, '_').toLowerCase()}`,
+              email: rowData.email,
+              username: rowData.username,
+              subscriptionTier: mapPatreonTier(amountCents),
+              subscriptionStatus: rowData.status?.toLowerCase() === 'active' ? 'active' : 'inactive',
+              subscriptionSource: 'patreon',
+              subscriptionStartDate: rowData.startDate ? new Date(rowData.startDate) : null,
+              subscriptionExpiry: rowData.renewsOn ? new Date(rowData.renewsOn) : null,
+              pledgeAmount: amountCents,
+              cancelDate: rowData.cancelledOn ? new Date(rowData.cancelledOn) : null,
+              patreonTier: rowData.tier || null,
+              preferences: {},
+              lastLoginAt: null
+            };
+          } else { // bmac
+            const amountCents = parseInt(rowData.amount || '0');
+            userData = {
+              id: `bmac_${rowData.username.replace(/\s+/g, '_').toLowerCase()}`,
+              email: rowData.email,
+              username: rowData.username,
+              subscriptionTier: mapBmacTier(amountCents / 100), // Convert cents to euros
+              subscriptionStatus: rowData.status?.toLowerCase() === 'active' ? 'active' : 'inactive',
+              subscriptionSource: 'buymeacoffee',
+              subscriptionStartDate: rowData.startDate ? new Date(rowData.startDate) : null,
+              subscriptionExpiry: rowData.expiry ? new Date(rowData.expiry) : null,
+              pledgeAmount: amountCents,
+              cancelDate: rowData.cancelledOn ? new Date(rowData.cancelledOn) : null,
+              notes: rowData.notes || null,
+              preferences: {},
+              lastLoginAt: null
+            };
+          }
+
+          // Check if user exists and create/update
+          const existingUser = await storage.getUser(userData.id);
+          
+          if (existingUser) {
+            await storage.updateUser(userData.id, userData);
+            updated++;
+          } else {
+            await storage.createUser(userData);
+            imported++;
+          }
+
+        } catch (rowError) {
+          console.error(`Error processing row ${i + 1}:`, rowError);
+          errors.push(`Row ${i + 1}: ${(rowError as Error).message}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        csvType,
+        imported,
+        updated,
+        errors,
+        message: `Successfully processed ${imported + updated} users from ${csvType} CSV (${imported} new, ${updated} updated)`
+      });
+
+    } catch (error) {
+      console.error('CSV import error:', error);
+      res.status(500).json({
+        success: false,
+        error: (error as Error).message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

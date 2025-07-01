@@ -198,9 +198,9 @@ const PatreonManagementPage: React.FC = () => {
 
   const downloadTemplate = () => {
     const templateData = [
-      ['Name', 'Email', 'Current Tier', 'Pledge Amount (cents)', 'Status', 'Join Date', 'Notes', 'Cancel Date', 'Access Expiration'],
-      ['John Doe', 'john@example.com', 'dhr1', '300', 'active', '2024-01-15', 'VIP patron', '', '2025-01-15'],
-      ['Jane Smith', 'jane@example.com', 'vip', '1000', 'active', '2024-02-20', 'Long-time supporter', '', '2025-02-20']
+      ['Member Email', 'Member Name', 'Membership renews on', 'Membership start date', 'Membership amount', 'Membership amount currency', 'Subscription status', 'Subscription cancelled on'],
+      ['john@example.com', 'John Doe', '2025-02-15', '2024-02-15', '€5', 'EUR', 'active', ''],
+      ['jane@example.com', 'Jane Smith', '2025-03-20', '2024-03-20', '€10', 'EUR', 'active', '']
     ].map(row => row.join(',')).join('\n');
 
     const blob = new Blob([templateData], { type: 'text/csv' });
