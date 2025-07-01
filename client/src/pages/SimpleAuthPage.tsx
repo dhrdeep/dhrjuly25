@@ -32,8 +32,8 @@ export default function SimpleAuthPage() {
       const result = await response.json();
       console.log("Authentication successful:", result);
 
-      // Redirect to home page
-      setLocation("/");
+      // Force page refresh to pick up session and redirect to home
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.message || "Authentication failed");
     } finally {

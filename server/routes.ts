@@ -471,6 +471,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current session user (for simple auth)
+  app.get("/api/auth/session-user", async (req, res) => {
+    try {
+      if (req.session && (req.session as any).user) {
+        const sessionUser = (req.session as any).user;
+        res.json({
+          user: sessionUser,
+          authenticated: true
+        });
+      } else {
+        res.status(401).json({
+          user: null,
+          authenticated: false
+        });
+      }
+    } catch (error) {
+      console.error("Session user error:", error);
+      res.status(500).json({ message: "Failed to get session user" });
+    }
+  });
+
   // Patreon OAuth endpoint to replace Supabase edge function
   app.post("/api/patreon-oauth", async (req, res) => {
     try {

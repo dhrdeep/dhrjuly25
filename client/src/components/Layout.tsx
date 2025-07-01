@@ -188,7 +188,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </button>
               ) : (
                 <Link
-                  to="/login"
+                  to="/simple-auth"
                   className="flex items-center space-x-2 p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 transition-all duration-200 border border-orange-400/20"
                   title="Sign In"
                 >

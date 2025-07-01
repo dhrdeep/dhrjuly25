@@ -75,10 +75,10 @@ export function ProtectedRoute({ children, requiredTier, pageName }: ProtectedRo
               Please log in to access {pageName}
             </p>
             <button 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/simple-auth'}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
-              Login with Replit
+              Sign In with Email
             </button>
           </div>
         </div>
