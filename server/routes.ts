@@ -415,8 +415,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = await storage.getUserByEmail(normalizedEmail);
       
       if (!user) {
-        // Create new user
+        // Create new user with generated ID
+        const userId = `simple-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         user = await storage.createUser({
+          id: userId,
           email: normalizedEmail,
           username: normalizedEmail.split('@')[0], // Use email prefix as username
           subscriptionTier: subscriptionInfo.tier,
