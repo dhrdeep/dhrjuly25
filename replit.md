@@ -25,12 +25,13 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - **DHR2 Streaming URLs Updated**: Configured authentic DHR2 streaming infrastructure using ports 1560/1565
   - **Multiple Tune-In Formats**: Added support for WindowsMedia, Winamp, iTunes, RealPlayer, and WebPlayer
   - **Direct Stream Access**: Implemented HTTP (1560) and HTTPS (1565) streaming endpoints for DHR2
-  - **Beach Party Silhouette Background**: Created animated SVG background with people dancing around bonfire at 30 BPM
-  - **DHR Orange Color Scheme**: Matched sunset gradient and fire colors to website branding (#f79e02)
-  - **Dancing Silhouettes**: 7 animated figures in various dancing poses with synchronized movement
-  - **Bonfire Animation**: Multi-layered fire with pulsing flames and floating sparks effects
-  - **Beach Atmosphere**: Ocean waves, distant view perspective, young free-spirited after-party vibe
-  - **Enhanced Visual Experience**: Added floating orbs, ambient particles, and gradient overlays
+  - **Sunset Dance Video Background**: Created seamless 18-second looping animation based on user's uploaded sunset photo
+  - **Perfect 30 BPM Synchronization**: All dancing silhouettes move in precise 2-second intervals matching deep house rhythm
+  - **Authentic DHR Orange Sunset**: Gradient perfectly recreates uploaded image colors from #f79e02 to warm sunset tones
+  - **Dancing Couples & Groups**: Multiple silhouettes positioned exactly like the uploaded photo with synchronized bounce animations
+  - **Sun & Water Effects**: Animated sun disc at 65% right, 45% down with gentle water ripples and reflections
+  - **Atmospheric Particles**: Floating light particles creating immersive sunset beach party atmosphere
+  - **Seamless Loop Design**: 18-second cycle ensures smooth continuous playback without jarring transitions
   - **Backdrop Blur Effects**: Enhanced content visibility with backdrop-blur-xl for cards and components
   - Integrated on DHR1 and DHR2 premium player pages alongside existing LiveTrackWidget components
 - **June 30, 2025**: Complete Ultra-Ethereal DHR Logo Animation System
