@@ -6,6 +6,7 @@ import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
+import SunsetDanceBackground from '../components/SunsetDanceBackground';
 import SharedBackground from '../components/SharedBackground';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
