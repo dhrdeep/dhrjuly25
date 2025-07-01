@@ -492,6 +492,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current authenticated user (for useAuth hook)
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      if (req.session && (req.session as any).user) {
+        const sessionUser = (req.session as any).user;
+        
+        // Return user data in the format expected by the frontend
+        res.json({
+          id: sessionUser.id,
+          email: sessionUser.email,
+          username: sessionUser.username,
+          subscriptionTier: sessionUser.subscriptionTier,
+          subscriptionStatus: sessionUser.subscriptionStatus,
+          subscriptionExpiry: sessionUser.subscriptionExpiry,
+          isAdmin: sessionUser.isAdmin || false,
+          firstName: sessionUser.firstName,
+          lastName: sessionUser.lastName,
+          profileImageUrl: sessionUser.profileImageUrl
+        });
+      } else {
+        res.status(401).json({ message: "Not authenticated" });
+      }
+    } catch (error) {
+      console.error("Get current user error:", error);
+      res.status(500).json({ message: "Failed to get user data" });
+    }
+  });
+
   // Patreon OAuth endpoint to replace Supabase edge function
   app.post("/api/patreon-oauth", async (req, res) => {
     try {
