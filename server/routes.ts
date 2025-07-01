@@ -189,9 +189,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Create new user with subscription info
+        const username = normalizedEmail.split('@')[0]; // Generate username from email
         user = await storage.createUser({
           id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           email: normalizedEmail,
+          username: username,
           subscriptionTier: subscriptionInfo.tier,
           subscriptionStatus: 'active',
           subscriptionSource: subscriptionInfo.source,
