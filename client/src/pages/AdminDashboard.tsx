@@ -30,6 +30,30 @@ interface SystemStats {
   lastSync: string;
 }
 
+interface ExpiredAccounts {
+  expiredToday: number;
+  expiredInRange: number;
+  totalExpired: number;
+  accounts: {
+    today: Array<{
+      id: string;
+      email: string;
+      username: string;
+      subscriptionTier: string;
+      subscriptionSource: string;
+      subscriptionExpiry: string;
+    }>;
+    past: Array<{
+      id: string;
+      email: string;
+      username: string;
+      subscriptionTier: string;
+      subscriptionSource: string;
+      subscriptionExpiry: string;
+    }>;
+  };
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<SystemStats>({
     totalUsers: 0,
@@ -39,10 +63,17 @@ export default function AdminDashboard() {
     storageUsed: '0 GB',
     lastSync: 'Never'
   });
+  const [expiredAccounts, setExpiredAccounts] = useState<ExpiredAccounts>({
+    expiredToday: 0,
+    expiredInRange: 0,
+    totalExpired: 0,
+    accounts: { today: [], past: [] }
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchSystemStats();
+    fetchExpiredAccounts();
   }, []);
 
   const fetchSystemStats = async () => {
@@ -56,6 +87,18 @@ export default function AdminDashboard() {
       console.error('Failed to fetch system stats:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchExpiredAccounts = async () => {
+    try {
+      const response = await fetch('/api/admin/expired-accounts?days=30');
+      if (response.ok) {
+        const data = await response.json();
+        setExpiredAccounts(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch expired accounts:', error);
     }
   };
 
@@ -173,6 +216,68 @@ export default function AdminDashboard() {
             <div className="text-xs text-slate-400">Last Sync</div>
           </div>
         </div>
+
+        {/* Expired Accounts Notifications */}
+        {(expiredAccounts.expiredToday > 0 || expiredAccounts.expiredInRange > 0) && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-6 w-6 text-red-500" />
+              Expired Account Notifications
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Today's Expired Accounts */}
+              {expiredAccounts.expiredToday > 0 && (
+                <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                    <h3 className="text-lg font-semibold text-red-400">
+                      Expired Today ({expiredAccounts.expiredToday})
+                    </h3>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {expiredAccounts.accounts.today.map((account, index) => (
+                      <div key={index} className="bg-red-900/30 rounded p-3 text-sm">
+                        <div className="text-white font-medium">{account.username || account.email}</div>
+                        <div className="text-red-300 text-xs">
+                          {account.subscriptionTier.toUpperCase()} • {account.subscriptionSource} • 
+                          Expired: {new Date(account.subscriptionExpiry).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Past 30 Days Expired Accounts */}
+              {expiredAccounts.expiredInRange > 0 && (
+                <div className="bg-orange-900/20 border border-orange-700/50 rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Calendar className="h-5 w-5 text-orange-500" />
+                    <h3 className="text-lg font-semibold text-orange-400">
+                      Expired Past 30 Days ({expiredAccounts.expiredInRange})
+                    </h3>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {expiredAccounts.accounts.past.slice(0, 10).map((account, index) => (
+                      <div key={index} className="bg-orange-900/30 rounded p-3 text-sm">
+                        <div className="text-white font-medium">{account.username || account.email}</div>
+                        <div className="text-orange-300 text-xs">
+                          {account.subscriptionTier.toUpperCase()} • {account.subscriptionSource} • 
+                          Expired: {new Date(account.subscriptionExpiry).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                    {expiredAccounts.accounts.past.length > 10 && (
+                      <div className="text-orange-400 text-xs text-center pt-2">
+                        ...and {expiredAccounts.accounts.past.length - 10} more
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* High Priority Actions */}
         <div className="mb-8">

@@ -28,7 +28,7 @@ import {
   type ArticleComment,
   type InsertArticleComment
 } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql, lte, gte } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -61,6 +61,7 @@ export interface IStorage {
   
   // Admin methods
   getAllUsers(): Promise<User[]>;
+  getExpiredAccounts(daysRange?: number): Promise<User[]>;
   
   // Track identification methods
   saveIdentifiedTrack(track: InsertIdentifiedTrack): Promise<IdentifiedTrack>;
@@ -236,6 +237,20 @@ export class DrizzleStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async getExpiredAccounts(daysRange: number = 30): Promise<User[]> {
+    const now = new Date();
+    const rangeStart = new Date(now.getTime() - (daysRange * 24 * 60 * 60 * 1000));
+    
+    // Get users whose subscriptions expired today or in the past 30 days
+    return await db.select().from(users).where(
+      and(
+        eq(users.subscriptionStatus, 'expired'),
+        lte(users.subscriptionExpiry, now),
+        gte(users.subscriptionExpiry, rangeStart)
+      )
+    );
   }
 
   // Track identification methods

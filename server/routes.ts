@@ -1179,16 +1179,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let status = 'active';
           
           if (supporter.is_recurring) {
-            // For recurring subscriptions, extend expiry to 30 days from now (ongoing support)
-            subscriptionExpiry = new Date(now);
-            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 30);
-            status = 'active'; // Recurring subscriptions are always active
-            console.log(`Recurring subscription detected - extending expiry to ${subscriptionExpiry.toISOString()}`);
+            // For recurring subscriptions, check if subscription is still active
+            const subscriptionEndDate = supporter.subscription_current_period_end ? 
+              new Date(supporter.subscription_current_period_end) : 
+              new Date(supportDate.getTime() + (30 * 24 * 60 * 60 * 1000)); // Default 30 days
+              
+            subscriptionExpiry = subscriptionEndDate;
+            
+            // Check if subscription is cancelled or expired
+            const isCancelled = supporter.subscription_is_cancelled || supporter.subscription_cancelled_on;
+            const isExpired = now > subscriptionEndDate;
+            
+            if (isCancelled || isExpired) {
+              status = 'expired';
+              console.log(`Recurring subscription expired/cancelled - expiry: ${subscriptionExpiry.toISOString()}`);
+            } else {
+              status = 'active';
+              console.log(`Active recurring subscription - expiry: ${subscriptionExpiry.toISOString()}`);
+            }
           } else {
-            // For one-time support, give 90 days from support date
+            // For one-time support, give 90 days from support date (no extensions)
             subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 90);
-            const isActive = now <= subscriptionExpiry;
-            status = isActive ? 'active' : 'expired';
+            const isExpired = now > subscriptionExpiry;
+            status = isExpired ? 'expired' : 'active';
+            console.log(`One-time support - ${status} - expiry: ${subscriptionExpiry.toISOString()}`);
           }
 
           console.log(`Tier: ${tier}, Status: ${status}, Days since support: ${daysSinceSupport}, Expires: ${subscriptionExpiry.toISOString()}`);
@@ -1551,6 +1565,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Failed to fetch admin stats:', error);
       res.status(500).json({ 
         error: 'Failed to fetch system statistics' 
+      });
+    }
+  });
+
+  // Admin expired accounts endpoint for dashboard notifications
+  app.get('/api/admin/expired-accounts', async (req, res) => {
+    try {
+      const { days = '30' } = req.query;
+      const daysRange = parseInt(days as string, 10);
+      
+      const expiredAccounts = await storage.getExpiredAccounts(daysRange);
+      
+      // Separate today's expirations from past expirations
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const expiredToday = expiredAccounts.filter(user => {
+        if (!user.subscriptionExpiry) return false;
+        const expiryDate = new Date(user.subscriptionExpiry);
+        expiryDate.setHours(0, 0, 0, 0);
+        return expiryDate >= today && expiryDate < tomorrow;
+      });
+      
+      const expiredInRange = expiredAccounts.filter(user => {
+        if (!user.subscriptionExpiry) return false;
+        const expiryDate = new Date(user.subscriptionExpiry);
+        expiryDate.setHours(0, 0, 0, 0);
+        return expiryDate < today;
+      });
+      
+      res.json({
+        expiredToday: expiredToday.length,
+        expiredInRange: expiredInRange.length,
+        totalExpired: expiredAccounts.length,
+        accounts: {
+          today: expiredToday,
+          past: expiredInRange.slice(0, 20) // Limit past results for performance
+        }
+      });
+    } catch (error) {
+      console.error('Failed to fetch expired accounts:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch expired accounts' 
       });
     }
   });
