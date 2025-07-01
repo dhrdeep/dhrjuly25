@@ -10,7 +10,7 @@ const VIPPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('all');
   const [access, setAccess] = useState<VipAccess>({
-    canView: true,
+    canView: false,
     canPlay: false,
     canDownload: false,
     remainingDownloads: 0,
@@ -32,13 +32,46 @@ const VIPPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Demo user with VIP access for testing
-    const mockUser = { id: 'demo_user', username: 'Demo User', subscriptionTier: 'vip' };
-    setCurrentUser(mockUser);
-    vipService.setCurrentUser(mockUser);
+    // Check real user authentication and permissions
+    const checkUserAccess = async () => {
+      try {
+        // Get current user from auth endpoint
+        const userResponse = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+        
+        if (!userResponse.ok) {
+          // User not authenticated
+          setAccess({
+            canView: false,
+            canPlay: false,
+            canDownload: false,
+            remainingDownloads: 0,
+            subscriptionTier: 'free'
+          });
+          return;
+        }
+        
+        const user = await userResponse.json();
+        setCurrentUser(user);
+        vipService.setCurrentUser(user);
+        
+        // Check access permissions based on real user
+        const accessData = await vipService.checkAccess(user.id);
+        setAccess(accessData);
+      } catch (error) {
+        console.error('Error checking user access:', error);
+        setAccess({
+          canView: false,
+          canPlay: false,
+          canDownload: false,
+          remainingDownloads: 0,
+          subscriptionTier: 'free'
+        });
+      }
+    };
     
-    // Check access permissions
-    vipService.checkAccess(mockUser.id).then(setAccess);
+    checkUserAccess();
   }, []);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {

@@ -35,11 +35,8 @@ export default function SimpleAuthPage() {
       const result = await response.json();
       console.log("Authentication successful:", result);
 
-      // Invalidate all queries to force fresh data after authentication
-      await queryClient.invalidateQueries();
-      
-      // Redirect to home page after successful authentication
-      setLocation("/");
+      // Force a full page reload to ensure session is properly recognized
+      window.location.href = "/";
     } catch (err: any) {
       setError(err.message || "Authentication failed");
     } finally {
