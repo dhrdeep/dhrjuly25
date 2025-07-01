@@ -6,7 +6,7 @@ import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
-import SunsetDanceBackground from '../components/SunsetDanceBackground';
+
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
@@ -61,15 +61,11 @@ const DHR1Page: React.FC = () => {
 
   return (
     <>
-      <SunsetDanceBackground 
-        opacity={0.5}
-        className="fixed inset-0"
-      />
       <AmbientMoodGenerator 
         currentTrack={currentTrack || undefined} 
         isPlaying={isPlaying}
       />
-      <SubscriptionGate requiredTier="premium" contentType="dhr1">
+      <SubscriptionGate requiredTier="dhr1" contentType="dhr1">
         <div className="min-h-screen text-white py-8 px-4 relative z-10">
           <div className="max-w-6xl mx-auto">
           {/* Header */}

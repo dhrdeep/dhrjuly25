@@ -5,7 +5,7 @@ import SubscriptionGate from '../components/SubscriptionGate';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
-import SunsetDanceBackground from '../components/SunsetDanceBackground';
+
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
@@ -81,11 +81,7 @@ const DHR2Page: React.FC = () => {
 
   return (
     <>
-      <SunsetDanceBackground 
-        opacity={0.7}
-        className="fixed inset-0"
-      />
-      <SubscriptionGate requiredTier="premium" contentType="dhr2">
+      <SubscriptionGate requiredTier="dhr2" contentType="dhr2">
         <div className="min-h-screen text-white py-8 px-4 relative z-10">
           <div className="max-w-6xl mx-auto">
           {/* Header */}

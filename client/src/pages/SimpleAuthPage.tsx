@@ -23,6 +23,7 @@ export default function SimpleAuthPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include', // Important for session cookies
         body: JSON.stringify({ email }),
       });
 
