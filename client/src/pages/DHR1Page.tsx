@@ -1,59 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Crown, Play, Download, Star, Clock, Users, Lock, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Crown, Play, Download, Star, Clock, Users } from 'lucide-react';
+import SubscriptionGate from '../components/SubscriptionGate';
+import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
-
+import SunsetDanceBackground from '../components/SunsetDanceBackground';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
 const DHR1Page: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [canAccess, setCanAccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:2750/api/v2/current', isPlaying);
-
-  useEffect(() => {
-    const checkAccess = async () => {
-      try {
-        // Check authentication
-        const userResponse = await fetch('/api/auth/me', {
-          credentials: 'include'
-        });
-        
-        if (!userResponse.ok) {
-          setCanAccess(false);
-          setIsLoading(false);
-          return;
-        }
-
-        const user = await userResponse.json();
-        setCurrentUser(user);
-
-        // Check if user can access DHR1
-        const hasAccess = user.subscriptionTier === 'dhr1' || 
-                         user.subscriptionTier === 'dhr2' || 
-                         user.subscriptionTier === 'vip';
-        setCanAccess(hasAccess && user.subscriptionStatus === 'active');
-      } catch (error) {
-        console.error('Error checking access:', error);
-        setCanAccess(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAccess();
-  }, []);
+  const canAccess = subscriptionService.canAccessContent('dhr1');
+  const canDownload = subscriptionService.canDownload();
+  const currentUser = subscriptionService.getCurrentUser();
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
   };
-
-  const canDownload = currentUser?.subscriptionTier === 'vip' || currentUser?.subscriptionTier === 'dhr2';
 
   const features = [
     {
@@ -92,59 +59,18 @@ const DHR1Page: React.FC = () => {
 
 
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-400 mx-auto mb-4"></div>
-          <p>Loading DHR1 Premium...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show access denied if user cannot access
-  if (!canAccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/30 text-center">
-          <div className="mb-6">
-            <Crown className="h-16 w-16 text-orange-400 mx-auto mb-4" />
-            <Lock className="h-8 w-8 text-gray-400 mx-auto" />
-          </div>
-          
-          <h2 className="text-2xl font-bold text-white mb-4">
-            DHR1 Premium Access Required
-          </h2>
-          
-          <p className="text-gray-300 mb-6">
-            Access DHR1 Premium with high-quality streaming and exclusive content.
-          </p>
-
-          <div className="space-y-4">
-            <button 
-              onClick={() => window.location.href = '/simple-auth'}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-colors"
-            >
-              Sign In To Access
-            </button>
-            <p className="text-sm text-gray-400">
-              Use emails containing 'dhr1', 'dhr2', or 'vip' to test different access levels
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
+      <SunsetDanceBackground 
+        opacity={0.5}
+        className="fixed inset-0"
+      />
       <AmbientMoodGenerator 
         currentTrack={currentTrack || undefined} 
         isPlaying={isPlaying}
       />
-      <div className="min-h-screen text-white py-8 px-4 relative z-10">
+      <SubscriptionGate requiredTier="premium" contentType="dhr1">
+        <div className="min-h-screen text-white py-8 px-4 relative z-10">
           <div className="max-w-6xl mx-auto">
           {/* Header */}
           <header className="text-center mb-12">
@@ -297,8 +223,9 @@ const DHR1Page: React.FC = () => {
               </div>
             </section>
           )}
+          </div>
         </div>
-      </div>
+      </SubscriptionGate>
     </>
   );
 };

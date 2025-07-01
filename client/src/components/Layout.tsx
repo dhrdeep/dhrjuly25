@@ -19,7 +19,6 @@ import {
   Music,
   User,
   LogIn,
-  LogOut,
   ShoppingBag,
   Settings
 } from 'lucide-react';
@@ -28,7 +27,7 @@ import ChatRoom from './ChatRoom';
 import UserProfile from './UserProfile';
 import AuthModal from './AuthModal';
 import SharedBackground from './SharedBackground';
-import { useAuth } from '../hooks/useAuth';
+import { subscriptionService } from '../services/subscriptionService';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -44,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [showSocialShare, setShowSocialShare] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { user: currentUser, signOut } = useAuth();
+  const [currentUser, setCurrentUser] = useState(subscriptionService.getCurrentUser());
   const location = useLocation();
 
   const navigation = [
@@ -70,11 +69,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const handleAuthSuccess = () => {
-    // User data will automatically update via the useAuth hook
+    setCurrentUser(subscriptionService.getCurrentUser());
   };
 
   const handleLogout = () => {
-    signOut.mutate();
+    subscriptionService.logout();
+    setCurrentUser(null);
     setShowUserProfile(false);
   };
 
@@ -103,7 +103,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     window.open(shareUrl, '_blank', 'width=600,height=400');
   };
 
-
+  const getUserTierColor = () => {
+    if (!currentUser) return 'text-gray-400';
+    switch (currentUser.subscriptionTier) {
+      case 'vip': return 'text-orange-400';
+      case 'dhr2': return 'text-amber-400';
+      case 'dhr1': return 'text-yellow-400';
+      default: return 'text-gray-400';
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
@@ -166,28 +174,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-2">
               {/* User Profile/Login */}
               {currentUser ? (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setShowUserProfile(true)}
-                    className="flex items-center space-x-2 p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 transition-all duration-200 border border-orange-400/20"
-                    title={`${currentUser.email} (${currentUser.subscriptionTier.toUpperCase()})`}
-                  >
-                    <div className={`w-6 h-6 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white`}>
-                      {currentUser.email?.charAt(0).toUpperCase()}
-                    </div>
-                    <span className={`text-xs font-medium text-orange-300`}>
-                      {currentUser.subscriptionTier.toUpperCase()}
-                    </span>
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center space-x-1 p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 transition-all duration-200 border border-red-400/20"
-                    title="Sign Out"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span className="text-xs hidden sm:inline">Sign Out</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowUserProfile(true)}
+                  className="flex items-center space-x-2 p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 transition-all duration-200 border border-orange-400/20"
+                  title={`${currentUser.username} (${currentUser.subscriptionTier.toUpperCase()})`}
+                >
+                  <div className={`w-6 h-6 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-xs font-bold text-white`}>
+                    {currentUser.username.charAt(0).toUpperCase()}
+                  </div>
+                  <span className={`text-xs font-medium ${getUserTierColor()}`}>
+                    {currentUser.subscriptionTier.toUpperCase()}
+                  </span>
+                </button>
               ) : (
                 <Link
                   to="/simple-auth"

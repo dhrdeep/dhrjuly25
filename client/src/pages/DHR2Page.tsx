@@ -1,43 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Star, Play, Download, Zap, Clock, Users, Crown, Lock, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, Play, Download, Zap, Clock, Users } from 'lucide-react';
 import MediaPlayer from '../components/MediaPlayer';
+import SubscriptionGate from '../components/SubscriptionGate';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
+import SunsetDanceBackground from '../components/SunsetDanceBackground';
+import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
-import { useAuth } from '../hooks/useAuth';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
 const DHR2Page: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:1560/api/v2/current', isPlaying);
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const [userPermissions, setUserPermissions] = useState<any>(null);
-  const [permissionsLoading, setPermissionsLoading] = useState(true);
-
-  // Check user permissions
-  useEffect(() => {
-    const checkPermissions = async () => {
-      try {
-        const response = await fetch('/api/user/permissions');
-        if (response.ok) {
-          const permissions = await response.json();
-          setUserPermissions(permissions);
-        }
-      } catch (error) {
-        console.error('Error checking permissions:', error);
-      } finally {
-        setPermissionsLoading(false);
-      }
-    };
-
-    checkPermissions();
-  }, [user, isAuthenticated]);
-
-  const canAccess = userPermissions?.canAccessDHR2 || false;
-  const canDownload = userPermissions?.canDownload || false;
+  const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:1480/api/v2/current', isPlaying);
+  const canAccess = subscriptionService.canAccessContent('dhr2');
+  const canDownload = subscriptionService.canDownload();
+  const currentUser = subscriptionService.getCurrentUser();
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -99,83 +79,39 @@ const DHR2Page: React.FC = () => {
     alert(`Starting download: ${setTitle}`);
   };
 
-  // Show loading spinner while checking authentication
-  if (isLoading || permissionsLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-400 mx-auto mb-4" />
-          <p className="text-gray-300">Checking access permissions...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show upgrade prompt if not authenticated or no access
-  if (!isAuthenticated || !canAccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-900">
-        <div className="max-w-md w-full bg-gray-800/40 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/30 text-center">
-          <div className="mb-6">
-            <Crown className="h-16 w-16 text-orange-400 mx-auto mb-4" />
-            <Lock className="h-8 w-8 text-gray-400 mx-auto" />
-          </div>
-          
-          <h2 className="text-2xl font-bold text-white mb-4">
-            DHR2 Premium Access Required
-          </h2>
-          
-          <p className="text-gray-300 mb-6">
-            Access DHR2 Premium featuring exclusive DJ sets and extended mixes. 
-            Requires DHR2 subscription (€5/month) or higher.
-          </p>
-
-          <div className="space-y-4">
-            <a
-              href="/simple-auth"
-              className="block w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200"
-            >
-              Sign In To Access
-            </a>
-            
-            <div className="text-sm text-gray-400 mt-4 p-4 bg-gray-700/30 rounded-lg">
-              <p className="font-medium mb-2">Demo Access Available:</p>
-              <p>Use email containing 'dhr2' or 'vip' to test premium features</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="min-h-screen text-white py-8 px-4 relative z-10">
-        <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="text-center mb-12">
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="relative">
-              <img 
-                src={DHR_LOGO_URL} 
-                alt="DHR Logo"
-                className="h-20 w-20 rounded-2xl shadow-2xl border-2 border-orange-400/50"
-                onError={handleArtworkError}
-              />
-              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full p-2">
-                <Star className="h-4 w-4 text-white" />
+      <SunsetDanceBackground 
+        opacity={0.7}
+        className="fixed inset-0"
+      />
+      <SubscriptionGate requiredTier="premium" contentType="dhr2">
+        <div className="min-h-screen text-white py-8 px-4 relative z-10">
+          <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <header className="text-center mb-12">
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              <div className="relative">
+                <img 
+                  src={DHR_LOGO_URL} 
+                  alt="DHR Logo"
+                  className="h-20 w-20 rounded-2xl shadow-2xl border-2 border-orange-400/50"
+                  onError={handleArtworkError}
+                />
+                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full p-2">
+                  <Star className="h-4 w-4 text-white" />
+                </div>
               </div>
-            </div>
-            <div>
-              <h1 className="text-5xl font-black bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">
-                DHR2 Premium
-              </h1>
-              <p className="text-xl text-gray-300 mt-2">Exclusive DJ Sets & Extended Mixes</p>
-              {user && (
-                <p className="text-sm text-orange-300 mt-1">
-                  Welcome back, {user.email}!
-                </p>
-              )}
+              <div>
+                <h1 className="text-5xl font-black bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">
+                  DHR2 Premium
+                </h1>
+                <p className="text-xl text-gray-300 mt-2">Exclusive DJ Sets & Extended Mixes</p>
+                {currentUser && (
+                  <p className="text-sm text-orange-300 mt-1">
+                    Welcome back, {currentUser.username}!
+                  </p>
+                )}
               </div>
             </div>
             
@@ -335,8 +271,9 @@ const DHR2Page: React.FC = () => {
               </div>
             </section>
           )}
+          </div>
         </div>
-      </div>
+      </SubscriptionGate>
     </>
   );
 };

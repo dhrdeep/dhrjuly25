@@ -23,7 +23,6 @@ export default function SimpleAuthPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: 'include', // Important for session cookies
         body: JSON.stringify({ email }),
       });
 
@@ -35,8 +34,11 @@ export default function SimpleAuthPage() {
       const result = await response.json();
       console.log("Authentication successful:", result);
 
-      // Force a full page reload to ensure session is properly recognized
-      window.location.href = "/";
+      // Invalidate all queries to force fresh data after authentication
+      await queryClient.invalidateQueries();
+      
+      // Redirect to home page after successful authentication
+      setLocation("/");
     } catch (err: any) {
       setError(err.message || "Authentication failed");
     } finally {
