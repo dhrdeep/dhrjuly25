@@ -19,9 +19,9 @@ interface Comment {
 }
 
 export default function ScrollingNewsBanner() {
-  // Fetch latest news from RSS feeds
+  // Fetch prioritized articles (commented articles first, then newest)
   const { data: newsItems = [] } = useQuery({
-    queryKey: ['/api/rss/latest'],
+    queryKey: ['/api/articles/prioritized'],
     staleTime: 15 * 60 * 1000, // 15 minutes
   });
 

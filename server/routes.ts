@@ -2649,6 +2649,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get prioritized articles (with comments first, then by date)
+  app.get('/api/articles/prioritized', async (req, res) => {
+    try {
+      const [rssItems, crawledItems, recentComments] = await Promise.all([
+        rssService.getAllFeeds(),
+        webCrawlerService.getAllCrawledItems(),
+        storage.getRecentComments(100)
+      ]);
+
+      // Combine all articles
+      const allArticles = [
+        ...rssItems.map(item => ({ ...item, type: 'rss' as const })),
+        ...crawledItems.map(item => ({ ...item, type: 'crawled' as const }))
+      ];
+
+      // Get articles with recent comments (last 24 hours)
+      const articleIds = recentComments
+        .filter(comment => {
+          const commentAge = Date.now() - new Date(comment.createdAt).getTime();
+          return commentAge < 24 * 60 * 60 * 1000; // 24 hours
+        })
+        .map(comment => comment.articleId);
+
+      // Sort articles: commented articles first, then by date
+      const prioritizedArticles = allArticles.sort((a, b) => {
+        const aHasComments = articleIds.includes(a.id);
+        const bHasComments = articleIds.includes(b.id);
+        
+        if (aHasComments && !bHasComments) return -1;
+        if (!aHasComments && bHasComments) return 1;
+        
+        // If both have comments or both don't, sort by date
+        return b.pubDate.getTime() - a.pubDate.getTime();
+      });
+
+      res.json(prioritizedArticles.slice(0, 100));
+    } catch (error) {
+      console.error('Error fetching prioritized articles:', error);
+      res.status(500).json({ error: 'Failed to fetch prioritized articles' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -106,7 +106,7 @@ class WebCrawlerService {
       
       let match;
       let count = 0;
-      while ((match = articlePattern.exec(html)) !== null && count < 10) {
+      while ((match = articlePattern.exec(html)) !== null && count < 3) {
         const articleHtml = match[0];
         const titleMatch = titlePattern.exec(articleHtml);
         const linkMatch = linkPattern.exec(articleHtml);

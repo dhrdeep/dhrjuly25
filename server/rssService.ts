@@ -186,7 +186,12 @@ class RSSService {
       }
 
       const rssItems = items
-        .slice(0, 10) // Limit to 10 items per feed
+        .sort((a, b) => {
+          const dateA = new Date(a.pubDate || a.published || 0);
+          const dateB = new Date(b.pubDate || b.published || 0);
+          return dateB.getTime() - dateA.getTime();
+        })
+        .slice(0, 3) // Take only 3 newest items per feed
         .map(item => this.parseRSSItem(item, feed.name))
         .filter(item => item.title && item.link);
 
@@ -218,8 +223,21 @@ class RSSService {
       }
     }
 
-    // Sort by publication date (newest first)
-    return allItems.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+    // Remove duplicates based on title and link
+    const uniqueItems = allItems.reduce((acc, current) => {
+      const isDuplicate = acc.some(item => 
+        item.title === current.title || item.link === current.link
+      );
+      if (!isDuplicate) {
+        acc.push(current);
+      }
+      return acc;
+    }, [] as RSSItem[]);
+
+    // Sort by publication date (newest first) and limit to 100 items
+    return uniqueItems
+      .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
+      .slice(0, 100);
   }
 
   async getLatestNews(limit: number = 20): Promise<RSSItem[]> {
