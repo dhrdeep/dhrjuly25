@@ -179,15 +179,17 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="text-white">
-      {/* Page-wide scattered orbs - 15 BPM pulsing */}
-      <div className="fixed top-1/4 left-5 w-12 h-12 bg-orange-400/8 rounded-full blur-lg animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '0.2s' }}></div>
-      <div className="fixed top-1/2 right-8 w-16 h-16 bg-orange-500/6 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.4s' }}></div>
-      <div className="fixed bottom-1/3 left-12 w-20 h-20 bg-orange-300/5 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.6s' }}></div>
-      <div className="fixed top-3/4 right-1/4 w-14 h-14 bg-orange-600/10 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '3.8s' }}></div>
-      <div className="fixed top-16 left-1/3 w-18 h-18 bg-orange-400/7 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '0.6s' }}></div>
-      <div className="fixed bottom-20 right-16 w-22 h-22 bg-orange-500/4 rounded-full blur-3xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.2s' }}></div>
-      <div className="fixed top-2/3 left-8 w-16 h-16 bg-orange-300/9 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.8s' }}></div>
-      <div className="fixed bottom-1/2 right-12 w-14 h-14 bg-orange-600/7 rounded-full blur-lg animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '3.4s' }}></div>
+      {/* Page-wide scattered orbs - 15 BPM pulsing - spread far apart */}
+      <div className="fixed top-8 left-4 w-12 h-12 bg-orange-400/8 rounded-full blur-lg animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '0.2s' }}></div>
+      <div className="fixed top-1/3 right-4 w-16 h-16 bg-orange-500/6 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.4s' }}></div>
+      <div className="fixed bottom-32 left-8 w-20 h-20 bg-orange-300/5 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.6s' }}></div>
+      <div className="fixed top-3/4 right-1/5 w-14 h-14 bg-orange-600/10 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '3.8s' }}></div>
+      <div className="fixed top-20 left-1/4 w-18 h-18 bg-orange-400/7 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '0.6s' }}></div>
+      <div className="fixed bottom-16 right-8 w-22 h-22 bg-orange-500/4 rounded-full blur-3xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.2s' }}></div>
+      <div className="fixed top-1/2 left-2 w-16 h-16 bg-orange-300/9 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.8s' }}></div>
+      <div className="fixed bottom-1/4 right-2 w-14 h-14 bg-orange-600/7 rounded-full blur-lg animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '3.4s' }}></div>
+      <div className="fixed top-2/3 right-3/4 w-24 h-24 bg-orange-400/4 rounded-full blur-3xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.2s' }}></div>
+      <div className="fixed bottom-2/3 left-3/4 w-18 h-18 bg-orange-500/8 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
       {/* Hero Section - Redesigned */}
       <section className="relative min-h-screen flex items-center justify-center px-4 py-8">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
@@ -333,28 +335,28 @@ const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Floating Elements - 15 BPM synchronized stationary orbs */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-orange-500/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s' }}></div>
-            <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-orange-600/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
-            <div className="absolute top-1/2 -left-6 w-12 h-12 bg-orange-400/15 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
-            <div className="absolute top-1/4 -right-3 w-14 h-14 bg-orange-500/25 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3s' }}></div>
-            <div className="absolute top-3/4 right-1/3 w-18 h-18 bg-orange-300/18 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
-            <div className="absolute top-1/3 left-1/4 w-22 h-22 bg-orange-600/12 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.5s' }}></div>
-            <div className="absolute bottom-1/3 right-1/2 w-14 h-14 bg-orange-400/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.5s' }}></div>
-            <div className="absolute top-10 left-1/2 w-16 h-16 bg-orange-500/15 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.5s' }}></div>
+            {/* Floating Elements - 15 BPM synchronized stationary orbs - spread further */}
+            <div className="absolute top-8 right-16 w-20 h-20 bg-orange-500/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+            <div className="absolute bottom-12 left-20 w-16 h-16 bg-orange-600/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
+            <div className="absolute top-1/2 left-4 w-12 h-12 bg-orange-400/15 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
+            <div className="absolute top-16 right-8 w-14 h-14 bg-orange-500/25 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3s' }}></div>
+            <div className="absolute bottom-20 right-1/4 w-18 h-18 bg-orange-300/18 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
+            <div className="absolute top-24 left-1/5 w-22 h-22 bg-orange-600/12 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.5s' }}></div>
+            <div className="absolute bottom-16 right-2/3 w-14 h-14 bg-orange-400/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.5s' }}></div>
+            <div className="absolute top-32 left-3/5 w-16 h-16 bg-orange-500/15 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.5s' }}></div>
           </div>
         </div>
       </section>
 
       {/* Immersive Features Section */}
       <section className="py-20 px-4 relative">
-        {/* Additional floating elements for depth - 15 BPM synchronized */}
-        <div className="absolute top-10 left-10 w-18 h-18 bg-orange-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
-        <div className="absolute bottom-20 right-20 w-24 h-24 bg-orange-500/15 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.5s' }}></div>
-        <div className="absolute top-1/3 right-10 w-20 h-20 bg-orange-300/12 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.2s' }}></div>
-        <div className="absolute bottom-1/4 left-1/3 w-16 h-16 bg-orange-600/18 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.2s' }}></div>
-        <div className="absolute top-2/3 left-20 w-14 h-14 bg-orange-400/14 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.8s' }}></div>
-        <div className="absolute top-20 right-1/3 w-22 h-22 bg-orange-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
+        {/* Additional floating elements for depth - 15 BPM synchronized - spread wide */}
+        <div className="absolute top-24 left-16 w-18 h-18 bg-orange-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
+        <div className="absolute bottom-32 right-24 w-24 h-24 bg-orange-500/15 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.5s' }}></div>
+        <div className="absolute top-20 right-12 w-20 h-20 bg-orange-300/12 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.2s' }}></div>
+        <div className="absolute bottom-16 left-1/4 w-16 h-16 bg-orange-600/18 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.2s' }}></div>
+        <div className="absolute top-3/4 left-32 w-14 h-14 bg-orange-400/14 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.8s' }}></div>
+        <div className="absolute top-12 right-1/4 w-22 h-22 bg-orange-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
@@ -507,13 +509,13 @@ const HomePage: React.FC = () => {
 
       {/* Community & Support Section */}
       <section className="py-20 px-4 relative">
-        {/* More atmospheric floating elements - 15 BPM */}
-        <div className="absolute top-5 right-1/4 w-16 h-16 bg-orange-300/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.5s' }}></div>
-        <div className="absolute bottom-10 left-1/3 w-20 h-20 bg-orange-600/12 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.5s' }}></div>
-        <div className="absolute top-1/2 right-12 w-18 h-18 bg-orange-400/10 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.8s' }}></div>
-        <div className="absolute bottom-1/3 left-12 w-14 h-14 bg-orange-500/16 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
-        <div className="absolute top-3/4 left-2/3 w-22 h-22 bg-orange-300/6 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.2s' }}></div>
-        <div className="absolute top-16 left-1/5 w-16 h-16 bg-orange-600/14 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.2s' }}></div>
+        {/* More atmospheric floating elements - 15 BPM - maximally spread */}
+        <div className="absolute top-8 right-1/5 w-16 h-16 bg-orange-300/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.5s' }}></div>
+        <div className="absolute bottom-24 left-1/4 w-20 h-20 bg-orange-600/12 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.5s' }}></div>
+        <div className="absolute top-1/3 right-20 w-18 h-18 bg-orange-400/10 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.8s' }}></div>
+        <div className="absolute bottom-20 left-16 w-14 h-14 bg-orange-500/16 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
+        <div className="absolute top-2/3 left-3/4 w-22 h-22 bg-orange-300/6 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.2s' }}></div>
+        <div className="absolute top-28 left-1/6 w-16 h-16 bg-orange-600/14 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.2s' }}></div>
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Support Column */}
@@ -652,13 +654,13 @@ const HomePage: React.FC = () => {
 
       {/* Final Call to Action */}
       <section className="py-32 px-4 relative">
-        {/* Final atmospheric elements - 15 BPM rhythm */}
-        <div className="absolute top-20 left-1/4 w-22 h-22 bg-orange-400/6 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.8s' }}></div>
-        <div className="absolute bottom-32 right-1/5 w-18 h-18 bg-orange-500/10 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
-        <div className="absolute top-1/3 right-1/3 w-16 h-16 bg-orange-300/12 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.6s' }}></div>
-        <div className="absolute bottom-1/4 left-1/5 w-20 h-20 bg-orange-600/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.6s' }}></div>
-        <div className="absolute top-2/3 left-1/3 w-14 h-14 bg-orange-400/18 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.4s' }}></div>
-        <div className="absolute top-10 right-1/4 w-24 h-24 bg-orange-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.4s' }}></div>
+        {/* Final atmospheric elements - 15 BPM rhythm - maximum spread */}
+        <div className="absolute top-32 left-1/6 w-22 h-22 bg-orange-400/6 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.8s' }}></div>
+        <div className="absolute bottom-40 right-1/6 w-18 h-18 bg-orange-500/10 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
+        <div className="absolute top-16 right-1/4 w-16 h-16 bg-orange-300/12 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.6s' }}></div>
+        <div className="absolute bottom-20 left-1/6 w-20 h-20 bg-orange-600/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.6s' }}></div>
+        <div className="absolute top-3/4 left-1/4 w-14 h-14 bg-orange-400/18 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.4s' }}></div>
+        <div className="absolute top-12 right-1/5 w-24 h-24 bg-orange-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.4s' }}></div>
         <div className="max-w-6xl mx-auto">
           {/* Main CTA Container */}
           <div className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-3xl p-16 backdrop-blur-xl border border-orange-400/30">
