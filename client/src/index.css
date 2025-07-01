@@ -106,13 +106,13 @@
 
 @keyframes ghostlyPulse30bpm {
   0%, 100% {
-    opacity: 1;
-    filter: blur(3px) brightness(0.3) contrast(0.2);
+    opacity: 0;
+    filter: blur(3px) brightness(0) contrast(0);
     transform: scale(1);
   }
   50% {
-    opacity: 0.3;
-    filter: blur(6px) brightness(0.8) contrast(0.6);
+    opacity: 0.15;
+    filter: blur(6px) brightness(0.4) contrast(0.3);
     transform: scale(1.08);
   }
 }
@@ -134,13 +134,13 @@
 
 @keyframes ghostlyPulse15bpm {
   0%, 100% {
-    opacity: 1;
-    filter: blur(4px) brightness(0.2) contrast(0.1);
+    opacity: 0;
+    filter: blur(4px) brightness(0) contrast(0);
     transform: scale(1);
   }
   50% {
-    opacity: 0.2;
-    filter: blur(8px) brightness(1.2) contrast(0.8);
+    opacity: 0.1;
+    filter: blur(8px) brightness(0.6) contrast(0.4);
     transform: scale(1.12);
   }
 }

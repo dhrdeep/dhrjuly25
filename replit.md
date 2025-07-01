@@ -36,10 +36,10 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
   - Integrated on DHR1 and DHR2 premium player pages alongside existing LiveTrackWidget components
 - **June 30, 2025**: Complete Ultra-Ethereal DHR Logo Animation System
   - **Professional Image-Based Logos**: Replaced text with authentic DHR logo images from official branding
-  - **Ultra-Ghostly Transparency**: 0.005-0.008 opacity (99.5% transparent) for ethereal atmospheric effect
+  - **Ultra-Ghostly Transparency**: Pulse from completely transparent (0 opacity) to half brightness for subtle effect
   - **Deep Atmospheric Filtering**: 3-5px blur, reduced brightness (0.3-0.6), low contrast/saturation
   - **Advanced Blend Modes**: soft-light, overlay, luminosity for seamless background integration
-  - **Multi-Speed Rhythmic Pulsing**: 30 BPM (2s) and 15 BPM (4s) breathing effects with scaling
+  - **Multi-Speed Rhythmic Pulsing**: 30 BPM (2s) and 15 BPM (4s) breathing effects pulsing from nothing to 0.15/0.1 opacity
   - **Slow Rotation Animation**: Individual spinning at 120s, 150s, 180s intervals for hypnotic movement  
   - **Opening Sequence**: Logos start centered, gracefully spread to positions over 3 seconds
   - **Size Variation**: 300px, 250px, 350px logos for visual depth and layering
