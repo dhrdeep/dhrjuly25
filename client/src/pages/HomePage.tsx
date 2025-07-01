@@ -31,7 +31,6 @@ import {
 import ScrollingNewsBanner from '../components/ScrollingNewsBanner';
 import SharedBackground from '../components/SharedBackground';
 import FeaturedDJSets from '../components/FeaturedDJSets';
-import TrackWidget from '../components/TrackWidget';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -683,7 +682,7 @@ const HomePage: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
                 <Link
-                  to="/track-ident"
+                  to="/dhr1"
                   className="group flex items-center space-x-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-12 py-6 rounded-2xl text-xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-300"
                 >
                   <Headphones className="h-7 w-7 group-hover:scale-110 transition-transform" />
@@ -721,21 +720,26 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Track Widgets Section */}
+      {/* Google Ads Banner */}
       <section className="relative z-10 py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-black mb-4 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
-              Live Track Identification
-            </h2>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              Real-Time Track Recognition From Our Live Streams With AI-Powered Identification Technology.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            <TrackWidget channel="dhr1" className="backdrop-blur-xl" />
-            <TrackWidget channel="dhr2" className="backdrop-blur-xl" />
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-3xl p-8 border border-orange-400/20">
+            <div className="text-center mb-4">
+              <span className="text-gray-400 text-sm uppercase tracking-wide">Advertisement</span>
+            </div>
+            <div className="bg-gray-800/30 rounded-2xl h-32 flex items-center justify-center border border-gray-700/30">
+              <div className="text-center space-y-2">
+                <div className="w-16 h-16 bg-orange-400/20 rounded-lg flex items-center justify-center mx-auto">
+                  <span className="text-orange-400 text-2xl font-bold">AD</span>
+                </div>
+                <p className="text-gray-400 text-sm">
+                  Premium Advertisement Space - 728x90
+                </p>
+                <p className="text-gray-500 text-xs">
+                  Contact Us For Advertising Opportunities
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
