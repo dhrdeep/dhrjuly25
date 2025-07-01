@@ -11,6 +11,17 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **July 1, 2025**: Comprehensive Tier-Based Access Control System Implemented
+  - **Four-Tier Subscription System**: Free (€0), DHR1 (€3), DHR2 (€5), VIP (€10) with specific access permissions
+  - **Route Protection**: Protected DHR1, DHR2, and VIP pages with ProtectedRoute component using subscription verification
+  - **Access Control Utilities**: Complete accessControl.ts with tier validation, subscription checking, and permission management
+  - **User Permissions Hook**: useUserPermissions() hook for frontend subscription state management and authentication
+  - **Automatic Benefits Assignment**: DHR1 gets page access + chat auto-login, DHR2 gets DHR2 access + all DHR1 benefits, VIP gets full access + download privileges (2/day)
+  - **Subscription Upgrade Prompts**: Professional upgrade prompts with Patreon redirect for non-subscribers attempting to access premium content
+  - **Backend Middleware**: Server-side tier validation and user access verification for API endpoints
+  - **Database Integration**: PostgreSQL user permissions tracking with subscription tier and status management
+  - **Frontend UI**: Elegant access denial pages with subscription tier information and upgrade options
+  - **BMAC API Error Handling**: Enhanced Buy Me a Coffee API integration with proper JSON parsing and error reporting
 - **July 1, 2025**: Complete Patreon & BMAC Management System With CSV Import/Export
   - **Enhanced Database Schema**: Added comprehensive user fields including pledgeAmount, joinDate, cancelDate, notes, privateUrls, accessHistory, lifetimeSupport, lastChargeDate, nextChargeDate for detailed subscriber tracking
   - **Dedicated Patreon Management Page**: Full subscriber management interface at /patreon-management with search, filtering, editing, and private URL management for individual patrons

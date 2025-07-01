@@ -1004,13 +1004,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('BMAC API Error Response:', errorText);
         return res.status(500).json({ 
           success: false, 
-          error: `Buy Me a Coffee API error: ${response.status}` 
+          error: `Buy Me a Coffee API error: ${response.status}. This usually means the API key is invalid or the endpoint has changed.` 
         });
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        const responseText = await response.text();
+        console.log('BMAC API Response:', responseText.substring(0, 200));
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('BMAC JSON Parse Error:', parseError);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Invalid JSON response from Buy Me a Coffee API. This usually means the API key is incorrect or the endpoint has changed.` 
+        });
+      }
+      
       const supporters = data.data || [];
 
       syncResults.totalSupporters = supporters.length;

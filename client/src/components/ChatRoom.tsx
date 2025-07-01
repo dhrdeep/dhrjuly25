@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Users, MessageSquare, Minimize2, Maximize2, Hash } from 'lucide-react';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 
 interface ChatMessage {
   id: string;
@@ -18,6 +19,7 @@ interface ChatRoomProps {
 }
 
 const ChatRoom: React.FC<ChatRoomProps> = ({ isOpen, onClose, onMinimize, isMinimized }) => {
+  const { permissions, isAuthenticated } = useUserPermissions();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -65,6 +67,24 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ isOpen, onClose, onMinimize, isMini
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-sign-in subscribers with chat privileges
+  useEffect(() => {
+    if (isAuthenticated && permissions.canAutoSignInChat && !isUsernameSet) {
+      setUsername(`Subscriber${Math.floor(Math.random() * 1000)}`);
+      setIsUsernameSet(true);
+      
+      // Add welcome message for auto-signed-in subscribers
+      const welcomeMessage: ChatMessage = {
+        id: `auto-${Date.now()}`,
+        username: 'DHR System',
+        message: '🎵 Welcome back, subscriber! You have been automatically signed into the chat. Enjoy the deep house vibes!',
+        timestamp: new Date(),
+        isSystem: true
+      };
+      setMessages(prev => [...prev, welcomeMessage]);
+    }
+  }, [isAuthenticated, permissions.canAutoSignInChat, isUsernameSet]);
 
   // Simulate incoming messages from other users
   useEffect(() => {
