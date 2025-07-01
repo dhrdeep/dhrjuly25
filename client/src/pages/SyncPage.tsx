@@ -20,7 +20,6 @@ function SyncPage() {
   const [patreonResult, setPatreonResult] = useState<any>(null);
   const [bmacResult, setBmacResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [bmacApiKey, setBmacApiKey] = useState('');
 
   const handleSync = async () => {
     setIsLoading(true);
@@ -77,11 +76,6 @@ function SyncPage() {
   };
 
   const handleBmacSync = async () => {
-    if (!bmacApiKey.trim()) {
-      setError('Please enter your Buy Me a Coffee API key');
-      return;
-    }
-
     setIsBmacLoading(true);
     setError(null);
     setBmacResult(null);
@@ -92,7 +86,6 @@ function SyncPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ apiKey: bmacApiKey }),
       });
 
       const data = await response.json();
@@ -188,21 +181,11 @@ function SyncPage() {
             </div>
           </div>
 
-          <div className="mb-4">
-            <input
-              type="password"
-              value={bmacApiKey}
-              onChange={(e) => setBmacApiKey(e.target.value)}
-              placeholder="Enter Buy Me a Coffee API Key"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
-            />
-          </div>
-
           <button
             onClick={handleBmacSync}
-            disabled={isBmacLoading || !bmacApiKey.trim()}
+            disabled={isBmacLoading}
             className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
-              isBmacLoading || !bmacApiKey.trim()
+              isBmacLoading
                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-500 hover:bg-blue-600 text-white'
             }`}

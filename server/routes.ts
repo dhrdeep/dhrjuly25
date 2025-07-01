@@ -980,7 +980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Starting Buy Me a Coffee sync...");
       
-      const apiKey = process.env.BUYMEACOFFEE_API_KEY;
+      const apiKey = process.env.BMAC_API_KEY;
       if (!apiKey || apiKey === 'YOUR_BMAC_KEY_HERE') {
         return res.status(400).json({ 
           success: false, 
