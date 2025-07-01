@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types/subscription';
-import { Search, Download, Edit, Plus, RefreshCw, Users, DollarSign, Coffee } from 'lucide-react';
+import { Search, Download, Edit, Plus, RefreshCw, Users, DollarSign, Coffee, Upload, FileText } from 'lucide-react';
 import SharedBackground from '../components/SharedBackground';
 
 interface BmacStats {
@@ -33,6 +33,9 @@ const BmacManagementPage: React.FC = () => {
   const [newUrl, setNewUrl] = useState({ name: '', url: '' });
   const [bmacApiKey, setBmacApiKey] = useState('');
   const [notifications, setNotifications] = useState<string[]>([]);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     fetchSupporters();
@@ -166,6 +169,55 @@ const BmacManagementPage: React.FC = () => {
     }
   };
 
+  const handleImportCSV = async () => {
+    if (!importFile) {
+      showNotification("Please select a CSV file");
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('csvFile', importFile);
+      formData.append('subscriptionSource', 'bmac');
+
+      const response = await fetch('/api/admin/import-csv', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        showNotification(`Successfully imported ${result.imported} supporters, updated ${result.updated} existing supporters`);
+        fetchSupporters();
+        setShowImportModal(false);
+        setImportFile(null);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : "Import failed");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    const templateData = [
+      ['Name', 'Email', 'Current Tier', 'Total Support (cents)', 'Status', 'Join Date', 'Notes', 'Cancel Date', 'Access Expiration'],
+      ['John Doe', 'john@example.com', 'dhr1', '500', 'active', '2024-01-15', 'BMAC supporter', '', '2025-01-15'],
+      ['Jane Smith', 'jane@example.com', 'vip', '1000', 'active', '2024-02-20', 'Premium supporter', '', '2025-02-20']
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([templateData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bmac-import-template.csv';
+    a.click();
+  };
+
   const exportData = () => {
     const csvContent = [
       ['Name', 'Email', 'Current Tier', 'Total Support', 'Status', 'Join Date', 'Notes', 'Cancel Date', 'Access Expiration', 'Subscription Source'],
@@ -231,6 +283,13 @@ const BmacManagementPage: React.FC = () => {
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                 {isSyncing ? 'Syncing...' : 'Sync BMAC'}
+              </button>
+              <button 
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+              >
+                <Upload className="w-4 h-4" />
+                Import CSV
               </button>
               <button 
                 onClick={exportData}
@@ -559,6 +618,59 @@ const BmacManagementPage: React.FC = () => {
                     >
                       Add URL
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CSV Import Modal */}
+          {showImportModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-xl font-bold text-white mb-4">Import CSV File</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Select CSV File</label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                      className="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded-lg"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    <p className="mb-2">Expected CSV format:</p>
+                    <p className="font-mono text-xs bg-gray-700 p-2 rounded">
+                      Name, Email, Current Tier, Total Support (cents), Status, Join Date, Notes, Cancel Date, Access Expiration
+                    </p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={downloadTemplate}
+                      className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Download Template
+                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setShowImportModal(false);
+                          setImportFile(null);
+                        }}
+                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleImportCSV}
+                        disabled={!importFile || isImporting}
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 text-white rounded"
+                      >
+                        {isImporting ? 'Importing...' : 'Import'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
