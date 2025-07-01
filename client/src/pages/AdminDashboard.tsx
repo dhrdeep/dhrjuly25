@@ -19,7 +19,7 @@ import {
   FileText,
   HardDrive
 } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 
 interface SystemStats {
   totalUsers: number;
@@ -217,6 +217,42 @@ export default function AdminDashboard() {
                   <div className="flex-1">
                     <h3 className="text-white font-semibold mb-2">User Management</h3>
                     <p className="text-slate-400 text-sm">View and manage subscribers</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-slate-500" />
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Subscription Management */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Subscription Management</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Link to="/patreon-management">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                    <DollarSign className="h-6 w-6 text-orange-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">Patreon Management</h3>
+                    <p className="text-slate-400 text-sm">Manage Patreon subscribers and access</p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-slate-500" />
+                </div>
+              </div>
+            </Link>
+            
+            <Link to="/bmac-management">
+              <div className="bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-800/70 transition-all cursor-pointer h-full p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-slate-700/50 rounded-lg">
+                    <DollarSign className="h-6 w-6 text-yellow-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-2">BMAC Management</h3>
+                    <p className="text-slate-400 text-sm">Manage Buy Me A Coffee supporters</p>
                   </div>
                   <ExternalLink className="h-4 w-4 text-slate-500" />
                 </div>
