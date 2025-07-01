@@ -13,6 +13,7 @@ import UploadPage from './pages/UploadPage';
 import ShopPage from './pages/ShopPage';
 import SimpleAdminPage from './pages/SimpleAdminPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminTestPage from './pages/AdminTestPage';
 import VIPAdminPage from './pages/VIPAdminPage';
 import BulkImportPage from './pages/BulkImportPage';
 import StorageSetupPage from './pages/StorageSetupPage';
@@ -42,6 +43,7 @@ function App() {
             <Route path="/shop" element={<ShopPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-test" element={<AdminTestPage />} />
             <Route path="/vip-admin" element={<VIPAdminPage />} />
             <Route path="/bulk-import" element={<BulkImportPage />} />
             <Route path="/storage-setup" element={<StorageSetupPage />} />

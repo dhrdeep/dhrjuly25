@@ -124,69 +124,22 @@ const AdminPage: React.FC = () => {
     setBmcConfigStatus(bmcStatus);
   };
 
-  const loadUsers = () => {
-    // In a real app, this would fetch from your backend
-    const mockUsers: User[] = [
-      {
-        id: 'user_1',
-        email: 'john@example.com',
-        username: 'John Doe',
-        subscriptionTier: 'vip',
-        subscriptionStatus: 'active',
-        subscriptionSource: 'patreon',
-        subscriptionStartDate: '2024-01-15T00:00:00Z',
-        patreonTier: 'dhr_vip',
-        preferences: {
-          emailNotifications: true,
-          newReleaseAlerts: true,
-          eventNotifications: true,
-          autoPlay: true,
-          preferredGenres: ['deep-house']
-        },
-        createdAt: '2024-01-15T00:00:00Z',
-        lastLoginAt: '2024-01-20T10:30:00Z'
-      },
-      {
-        id: 'user_2',
-        email: 'sarah@example.com',
-        username: 'Sarah Wilson',
-        subscriptionTier: 'dhr2',
-        subscriptionStatus: 'active',
-        subscriptionSource: 'patreon',
-        subscriptionStartDate: '2024-01-10T00:00:00Z',
-        patreonTier: 'dhr2',
-        preferences: {
-          emailNotifications: true,
-          newReleaseAlerts: true,
-          eventNotifications: false,
-          autoPlay: true,
-          preferredGenres: ['deep-house', 'tech-house']
-        },
-        createdAt: '2024-01-10T00:00:00Z',
-        lastLoginAt: '2024-01-19T15:45:00Z'
-      },
-      {
-        id: 'user_3',
-        email: 'mike@example.com',
-        username: 'Mike Johnson',
-        subscriptionTier: 'free',
-        subscriptionStatus: 'active',
-        subscriptionSource: 'direct',
-        subscriptionStartDate: '2024-01-18T00:00:00Z',
-        preferences: {
-          emailNotifications: false,
-          newReleaseAlerts: true,
-          eventNotifications: false,
-          autoPlay: true,
-          preferredGenres: ['deep-house']
-        },
-        createdAt: '2024-01-18T00:00:00Z',
-        lastLoginAt: '2024-01-20T09:15:00Z'
+  const loadUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      if (response.ok) {
+        const realUsers = await response.json();
+        setUsers(realUsers);
+        calculateStats(realUsers);
+      } else {
+        console.error('Failed to fetch users:', response.statusText);
+        // Show message to user that data loading failed
+        setNotifications(prev => [...prev, 'Failed to load user data. Please check API connection.']);
       }
-    ];
-
-    setUsers(mockUsers);
-    calculateStats(mockUsers);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      setNotifications(prev => [...prev, 'Error connecting to user database. Please refresh.']);
+    }
   };
 
   const calculateStats = (userList: User[]) => {
@@ -224,43 +177,39 @@ const AdminPage: React.FC = () => {
   };
 
   const handleSyncPatreon = async () => {
-    if (!patreonService.isAuthenticated()) {
-      setSyncStatus('Please authenticate with Patreon first');
-      return;
-    }
-
     setIsLoading(true);
-    setSyncStatus('Fetching all Patreon members (this may take a moment)...');
+    setSyncStatus('Syncing Patreon subscribers...');
 
     try {
-      const result = await patreonService.syncPatreonSubscribers();
-      setSyncStatus(`Full sync completed: ${result.success} users synced, ${result.errors} errors (${result.users.length} total members processed)`);
+      const response = await fetch('/api/sync-patreon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const result = await response.json();
       
-      // Replace all users with fresh Patreon data
-      setUsers(result.users);
-      calculateStats(result.users);
-      
-      // Update stats with accurate counts
-      const activeUsers = result.users.filter(u => u.subscriptionStatus === 'active');
-      const vipUsers = result.users.filter(u => u.subscriptionTier === 'vip');
-      const dhr2Users = result.users.filter(u => u.subscriptionTier === 'dhr2');
-      const dhr1Users = result.users.filter(u => u.subscriptionTier === 'dhr1');
-      const totalRevenue = result.users.reduce((sum, user) => sum + (user.amount || 0), 0) / 100;
-      
-      setStats(prev => ({
-        ...prev,
-        totalUsers: result.users.length,
-        activeSubscribers: activeUsers.length,
-        patreonSubscribers: result.users.length,
-        vipUsers: vipUsers.length,
-        dhr2Users: dhr2Users.length,
-        dhr1Users: dhr1Users.length,
-        freeUsers: result.users.filter(u => u.subscriptionTier === 'free').length,
-        monthlyRevenue: totalRevenue
-      }));
+      if (response.ok) {
+        setSyncStatus(`Patreon sync completed: ${result.totalPatrons || 0} patrons processed`);
+        
+        // Refresh user list with updated data
+        await loadUsers();
+        
+        const newNotifications: string[] = [
+          `Successfully synced ${result.totalPatrons || 0} Patreon subscribers`,
+          `Active subscribers: ${result.activeSubscribers || 0}`,
+          `Subscription tiers automatically mapped to access permissions`
+        ];
+        
+        setNotifications(prev => [...prev, ...newNotifications]);
+        
+      } else {
+        setSyncStatus(`Patreon sync failed: ${result.error}`);
+        setNotifications(prev => [...prev, 'Patreon sync failed - check API credentials']);
+      }
       
     } catch (error) {
       setSyncStatus(`Sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setNotifications(prev => [...prev, 'Patreon sync error - check connection']);
     } finally {
       setIsLoading(false);
     }
@@ -279,7 +228,7 @@ const AdminPage: React.FC = () => {
       setUsers(updatedUsers);
       calculateStats(updatedUsers);
       
-      const newNotifications = [];
+      const newNotifications: string[] = [];
       if (result.success > 0) {
         newNotifications.push(`Successfully synced ${result.success} Buy Me a Coffee supporters`);
         
@@ -324,7 +273,7 @@ const AdminPage: React.FC = () => {
       setUsers(updatedUsers);
       calculateStats(updatedUsers);
       
-      const notifications = [
+      const newNotifications: string[] = [
         `Imported ${newUsers.length} new Buy Me a Coffee supporters from CSV`,
         `Skipped ${csvUsers.length - newUsers.length} duplicates`,
         `Total users now: ${updatedUsers.length}`
@@ -336,12 +285,12 @@ const AdminPage: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
       
-      if (tierCounts.vip) notifications.push(`${tierCounts.vip} VIP members imported (€10+) - Full access`);
-      if (tierCounts.dhr2) notifications.push(`${tierCounts.dhr2} DHR2 members imported (€5+) - DHR1 + DHR2 access`);
-      if (tierCounts.dhr1) notifications.push(`${tierCounts.dhr1} DHR1 members imported (€3+) - DHR1 access`);
-      if (tierCounts.free) notifications.push(`${tierCounts.free} Free members imported - Limited access`);
+      if (tierCounts.vip) newNotifications.push(`${tierCounts.vip} VIP members imported (€10+) - Full access`);
+      if (tierCounts.dhr2) newNotifications.push(`${tierCounts.dhr2} DHR2 members imported (€5+) - DHR1 + DHR2 access`);
+      if (tierCounts.dhr1) newNotifications.push(`${tierCounts.dhr1} DHR1 members imported (€3+) - DHR1 access`);
+      if (tierCounts.free) newNotifications.push(`${tierCounts.free} Free members imported - Limited access`);
       
-      setNotifications(prev => [...prev, ...notifications]);
+      setNotifications(prev => [...prev, ...newNotifications]);
       setShowCsvModal(false);
       setCsvContent('');
       
