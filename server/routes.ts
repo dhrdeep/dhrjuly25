@@ -3561,10 +3561,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Support both Replit auth and simple session auth
       const userId = req.user?.claims?.sub || req.session?.user?.id || req.headers['x-user-id'];
       
-      console.log('Permissions check - Session exists:', !!req.session);
-      console.log('Permissions check - Session user:', !!req.session?.user);
-      console.log('Permissions check - User ID found:', userId);
-      
       if (!userId) {
         return res.json({
           canAccessDHR1: false,
