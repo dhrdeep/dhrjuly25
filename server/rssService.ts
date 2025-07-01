@@ -20,97 +20,73 @@ export interface RSSFeed {
 }
 
 const RSS_FEEDS: RSSFeed[] = [
-  // Major Electronic Music Publications
+  // Working Electronic Music Publications
   {
-    name: 'Resident Advisor',
-    url: 'https://ra.co/feed.xml',
-    category: 'Electronic Music News',
+    name: 'Mixmag',
+    url: 'https://www.mixmag.net/rss.xml',
+    category: 'Dance Music News',
     active: true
   },
   {
     name: 'DJ Mag',
-    url: 'https://djmag.com/rss.xml',
+    url: 'https://djmag.com/content/rss.xml',
     category: 'DJ & Festival News',
     active: true
   },
   {
-    name: 'Decoded Magazine',
-    url: 'https://decodedmagazine.com/feed/',
-    category: 'Underground Music',
+    name: 'Resident Advisor News',
+    url: 'https://ra.co/news.xml',
+    category: 'Electronic Music News',
     active: true
   },
   {
-    name: 'Electronic Beats',
-    url: 'https://www.electronicbeats.net/feed/',
-    category: 'Electronic Culture',
+    name: 'Attack Magazine',
+    url: 'https://attackmagazine.com/feed',
+    category: 'Electronic Music Production',
     active: true
   },
   {
-    name: 'Mixmag',
-    url: 'https://mixmag.net/feed',
-    category: 'Dance Music News',
+    name: 'Dancing Astronaut',
+    url: 'https://dancingastronaut.com/feed/',
+    category: 'Electronic Music News',
     active: true
   },
   
-  // Specialized House Music Sources
+  // Additional Electronic Music Sources
   {
-    name: 'FreshNewTracks House',
-    url: 'https://freshnewtracks.com/category/house-music/feed/',
-    category: 'House Music',
+    name: 'Your EDM',
+    url: 'https://www.youredm.com/feed/',
+    category: 'Electronic Dance Music',
     active: true
   },
   {
-    name: '5 Magazine',
-    url: 'https://5mag.net/category/news/feed/',
-    category: 'Chicago House',
+    name: 'We Rave You',
+    url: 'https://weraveyou.com/feed/',
+    category: 'Electronic Music Events',
     active: true
   },
   {
-    name: 'Deep House Amsterdam',
-    url: 'https://deephouseamsterdam.com/feed/',
+    name: 'Electronic Groove',
+    url: 'https://electronicgroove.com/feed/',
+    category: 'Techno & House',
+    active: true
+  },
+  {
+    name: 'DJ Times',
+    url: 'https://djtimes.com/feed/',
+    category: 'DJ Industry News',
+    active: true
+  },
+  {
+    name: 'Magnetic Magazine',
+    url: 'https://magneticmag.com/feed/',
+    category: 'Electronic Music Culture',
+    active: true
+  },
+  {
+    name: 'Deep House Blog',
+    url: 'https://deephouseblog.com/feed/',
     category: 'Deep House',
-    active: true
-  },
-  {
-    name: 'Soundplate',
-    url: 'https://soundplate.com/feed/',
-    category: 'House & Electronic',
-    active: true
-  },
-  {
-    name: 'HAUS Mag',
-    url: 'https://haushaus.org/feed/',
-    category: 'House Music News',
-    active: true
-  },
-  {
-    name: 'Bolo House Music',
-    url: 'https://bolohousemusic.com/feed/',
-    category: 'South African House',
-    active: true
-  },
-  {
-    name: 'House Music Co',
-    url: 'https://house-music.co/feed/',
-    category: 'House Music News',
-    active: true
-  },
-  {
-    name: 'Spirit of House',
-    url: 'https://spiritofhouse.com/?format=feed',
-    category: 'Soulful House',
-    active: true
-  },
-  {
-    name: 'Knights of the Turntable',
-    url: 'https://knightsoftheturntable.co.uk/feed/',
-    category: 'House & Techno',
-    active: true
-  },
-  {
-    name: 'Acid Ted',
-    url: 'https://acidted.wordpress.com/feed/',
-    category: 'Dance Music Blog',
     active: true
   }
 ];

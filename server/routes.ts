@@ -10,6 +10,7 @@ import { fileHostingService } from "./fileHostingService";
 import { streamMonitor } from "./streamMonitor";
 import { rssService } from "./rssService";
 import { redditService } from "./redditService";
+import { webCrawlerService } from "./webCrawlerService";
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
@@ -2530,6 +2531,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error refreshing Reddit feeds:', error);
       res.status(500).json({ error: 'Failed to refresh Reddit feeds' });
+    }
+  });
+
+  // Web Crawler API Endpoints for Additional Music Content
+  app.get('/api/crawler/sources', async (req, res) => {
+    try {
+      const sources = webCrawlerService.getActiveSources();
+      res.json(sources);
+    } catch (error) {
+      console.error('Error getting crawler sources:', error);
+      res.status(500).json({ error: 'Failed to get crawler sources' });
+    }
+  });
+
+  app.get('/api/crawler/all', async (req, res) => {
+    try {
+      const items = await webCrawlerService.getAllCrawledItems();
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching crawled items:', error);
+      res.status(500).json({ error: 'Failed to fetch crawled content' });
+    }
+  });
+
+  app.get('/api/crawler/:type', async (req, res) => {
+    try {
+      const type = req.params.type as 'news' | 'event' | 'release';
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      if (!['news', 'event', 'release'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid type. Must be: news, event, or release' });
+      }
+      
+      const items = await webCrawlerService.getNewsByType(type, limit);
+      res.json(items);
+    } catch (error) {
+      console.error(`Error fetching ${req.params.type} items:`, error);
+      res.status(500).json({ error: `Failed to fetch ${req.params.type} content` });
+    }
+  });
+
+  app.post('/api/crawler/refresh', async (req, res) => {
+    try {
+      webCrawlerService.clearCache();
+      const items = await webCrawlerService.getAllCrawledItems();
+      res.json({ success: true, itemCount: items.length });
+    } catch (error) {
+      console.error('Error refreshing web crawler:', error);
+      res.status(500).json({ error: 'Failed to refresh web crawler' });
     }
   });
 
