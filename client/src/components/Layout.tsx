@@ -187,14 +187,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </span>
                 </button>
               ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
+                <Link
+                  to="/login"
                   className="flex items-center space-x-2 p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 transition-all duration-200 border border-orange-400/20"
                   title="Sign In"
                 >
                   <LogIn className="h-5 w-5" />
                   <span className="text-sm hidden sm:inline">Sign In</span>
-                </button>
+                </Link>
               )}
 
               {/* Social Share Button */}

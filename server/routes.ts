@@ -96,6 +96,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to check email against Patreon and BMAC subscriptions
+  async function checkEmailInSubscriptions(email: string) {
+    try {
+      // Check existing users in database first
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.subscriptionStatus === 'active' && existingUser.subscriptionExpiry && existingUser.subscriptionExpiry > new Date()) {
+        return {
+          hasActiveSubscription: true,
+          tier: existingUser.subscriptionTier,
+          source: existingUser.subscriptionSource || 'existing',
+          expiry: existingUser.subscriptionExpiry,
+          amount: existingUser.pledgeAmount || 0
+        };
+      }
+
+      // For now, return basic tier assignment based on simple email check
+      // This will be enhanced with actual Patreon/BMAC API calls
+      
+      // Simple demo - check if email contains specific patterns for testing
+      if (email.includes('dhr1') || email.includes('test1')) {
+        return {
+          hasActiveSubscription: true,
+          tier: 'dhr1',
+          source: 'demo',
+          expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          amount: 300 // €3
+        };
+      }
+      
+      if (email.includes('dhr2') || email.includes('test2')) {
+        return {
+          hasActiveSubscription: true,
+          tier: 'dhr2',
+          source: 'demo',
+          expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          amount: 500 // €5
+        };
+      }
+      
+      if (email.includes('vip') || email.includes('test3')) {
+        return {
+          hasActiveSubscription: true,
+          tier: 'vip',
+          source: 'demo',
+          expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          amount: 1000 // €10
+        };
+      }
+
+      return {
+        hasActiveSubscription: false,
+        tier: 'free',
+        source: 'none',
+        expiry: null,
+        amount: 0
+      };
+    } catch (error) {
+      console.error("Error checking email subscriptions:", error);
+      return {
+        hasActiveSubscription: false,
+        tier: 'free',
+        source: 'error',
+        expiry: null,
+        amount: 0
+      };
+    }
+  }
+
+  // Email-based authentication - check if email has active subscription
+  app.post('/api/auth/email-login', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // Check if user already exists in our database
+      let user = await storage.getUserByEmail(normalizedEmail);
+      
+      // If user doesn't exist, check Patreon and BMAC for active subscriptions
+      if (!user) {
+        const subscriptionInfo = await checkEmailInSubscriptions(normalizedEmail);
+        
+        if (!subscriptionInfo.hasActiveSubscription) {
+          return res.status(404).json({ 
+            message: "Email not found in active subscriptions. Please check your Patreon or Buy Me a Coffee account." 
+          });
+        }
+
+        // Create new user with subscription info
+        user = await storage.createUser({
+          id: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          email: normalizedEmail,
+          subscriptionTier: subscriptionInfo.tier,
+          subscriptionStatus: 'active',
+          subscriptionSource: subscriptionInfo.source,
+          subscriptionExpiry: subscriptionInfo.expiry,
+          subscriptionStartDate: new Date(),
+          pledgeAmount: subscriptionInfo.amount || 0,
+        });
+      } else {
+        // Update existing user subscription status
+        const subscriptionInfo = await checkEmailInSubscriptions(normalizedEmail);
+        
+        if (!subscriptionInfo.hasActiveSubscription) {
+          return res.status(403).json({ 
+            message: "Your subscription has expired or is no longer active." 
+          });
+        }
+
+        // Update user with latest subscription info
+        user = await storage.updateUser(user.id, {
+          subscriptionTier: subscriptionInfo.tier,
+          subscriptionStatus: 'active',
+          subscriptionSource: subscriptionInfo.source,
+          subscriptionExpiry: subscriptionInfo.expiry,
+          pledgeAmount: subscriptionInfo.amount || 0,
+          lastLoginAt: new Date(),
+        });
+      }
+
+      // Create session manually
+      (req as any).login = (user: any, callback: (err?: any) => void) => {
+        (req as any).user = {
+          claims: {
+            sub: user.id,
+            email: user.email,
+            first_name: user.firstName || '',
+            last_name: user.lastName || '',
+            profile_image_url: user.profileImageUrl || ''
+          },
+          access_token: 'email_login_token',
+          expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        };
+        callback();
+      };
+
+      (req as any).login(user, (err: any) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+
+        res.json({
+          message: "Login successful",
+          tier: user.subscriptionTier,
+          user: {
+            id: user.id,
+            email: user.email,
+            subscriptionTier: user.subscriptionTier,
+            subscriptionStatus: user.subscriptionStatus,
+            subscriptionExpiry: user.subscriptionExpiry
+          }
+        });
+      });
+
+    } catch (error) {
+      console.error("Email login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
   // Patreon OAuth endpoint to replace Supabase edge function
   app.post("/api/patreon-oauth", async (req, res) => {
     try {
