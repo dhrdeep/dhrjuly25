@@ -11,6 +11,17 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **July 1, 2025**: Subscriber-Only Article Comment System With Scrolling News Banner
+  - **Complete Comment Database Schema**: Added article_comments table with user authentication and subscription tier validation
+  - **Tier-Based Access Control**: Only paid subscribers (DHR1/DHR2/VIP) can post comments on articles
+  - **Professional Comment UI**: ArticleComments component with user tier badges, colored indicators, and modern design
+  - **Comment API Endpoints**: Full CRUD operations with subscription verification and proper error handling
+  - **ScrollingNewsBanner Component**: Dynamic news ticker combining RSS feeds and recent user comments
+  - **DHR Branding Integration**: Orange-themed scrolling animation positioned between hero and features sections
+  - **Community Engagement**: Real-time display of latest news articles and subscriber discussions
+  - **Database Integration**: Comments stored permanently with user tier tracking and timestamp management
+  - **Visual Hierarchy**: Tier badges (DHR1=orange, DHR2=amber, VIP=gold) with appropriate icons for subscriber status
+  - **Homepage Enhancement**: News banner seamlessly integrated into homepage layout with 15 BPM synchronized animations
 - **July 1, 2025**: Complete Forum News System With RSS & Web Crawler Integration
   - **Working RSS Feeds**: Successfully implemented feeds from Mixmag, Attack Magazine, Dancing Astronaut, We Rave You, Electronic Groove, DJ Times, and Magnetic Magazine
   - **Web Crawler Service**: Built automated crawling system for Beatport News, Traxsource News, and other music industry sources
