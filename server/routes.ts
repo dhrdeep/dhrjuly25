@@ -980,11 +980,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Starting Buy Me a Coffee sync...");
       
-      const apiKey = process.env.BMAC_API_KEY;
+      // Try environment variable first, then fallback to configured value
+      let apiKey = process.env.BMAC_API_KEY;
+      
+      // Production fallback for authenticated API key
       if (!apiKey || apiKey === 'YOUR_BMAC_KEY_HERE') {
+        apiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI5MTI5ZDIwMC1kYTdkLTRjY2MtOWQzZC01ODA0MTU0ZTgyMjYiLCJqdGkiOiJiYTZmZDI4NjkzZWU4YTUyMTQ1MTQzMmExZmQxODY1MmUyYTA2NDYxNDBlMDhkMTkzNjE2N2NlYTViYjJjMmI3MTNjZTI3YmM0MzdmZDY3ZCIsImlhdCI6MTc1MDc5NjA5NCwibmJmIjoxNzUwNzk2MDk0LCJleHAiOjE3NjY2MDcyOTQsInN1YiI6IjY4NDM1ODQiLCJzY29wZXMiOlsicmVhZC1vbmx5Il19.vurkvE6WBmmQCdTCUgcJdgb1z918bRtH7J6K3-fNglh23g_CT0AMeqmZLesyssyZfVMTwUZ4i6ldNjiEeAylGhyNJHDqcoTaU4k7dBOkXbn5JZjZPYBSDl3HL5Xj06Owe0U_tZSGE16CFNqy6wW_1snGmo-8afY2mVmxVatWWpJuEEZVDlF0lwMXzLIr0i62atRPkKvtq-aA1z2HtVX8WSgZqCow58fxRFOTOGS2z87fASiGkObQU8jpTIb3MPfS3KQPX63bce2uZ_u2IebSOiawyL2VjsVr0qUxlOk4ElcKRFGqdrVbT2dWHJvYi-t8Uue38Qk1uOj5WYpAP-zOwbzepI-tKeEgnOjC2dJctm1Do40u-3MQnzZbzb5RCusiiZQ4qE5Jw4RH_5883YcJlVf0A_HKusyh2cFaROkGC08i81PLKtDd7bC70omttMSuUcQEfggZxzLHnEuyZ_UXZ-03JuxozrHUX-Zx79DXfZdkt6tQbJiu0l4GkS7Jfs8ffAvuqGv5EcaoqQK99p4SFDvvji54uAYqOFCMhiuNdosTkgi6rwl4pKaox-FVFq1198-wa7pRDSJqpj8taDCsjTvQDYX0aicGOvX1TuOZzSB5RUXTTuChqek2iP18j4eo9B7H5kEZVtv4_StyVoKEYDsyypw2G5DZBcZYtyz76ac";
+      }
+      
+      if (!apiKey) {
         return res.status(400).json({ 
           success: false, 
-          error: "Buy Me a Coffee API key not configured in environment" 
+          error: "Buy Me a Coffee API key not configured" 
         });
       }
 
