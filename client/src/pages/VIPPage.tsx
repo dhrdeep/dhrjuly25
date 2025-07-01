@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Crown, Loader2, Play, Download, Star, Clock, Users, Lock, Music, Headphones } from 'lucide-react';
-import SunsetDanceBackground from '../components/SunsetDanceBackground';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -113,10 +112,7 @@ const VIPPage: React.FC = () => {
   }
 
   return (
-    <>
-      <SunsetDanceBackground className="z-0" opacity={0.4} />
-      
-      <div className="min-h-screen text-white py-8 px-4 relative z-10">
+    <div className="min-h-screen text-white py-8 px-4 relative z-10">
         <div className="max-w-6xl mx-auto">
           <header className="text-center mb-12">
             <div className="flex items-center justify-center space-x-4 mb-6">
@@ -234,7 +230,6 @@ const VIPPage: React.FC = () => {
           )}
         </div>
       </div>
-    </>
   );
 };
 
