@@ -2705,6 +2705,212 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Access control middleware and endpoints
+  // Middleware to check user access permissions
+  const requireAccessTier = (tier: 'dhr1' | 'dhr2' | 'vip') => {
+    return async (req: any, res: any, next: any) => {
+      try {
+        const userId = req.user?.claims?.sub || req.headers['x-user-id'];
+        
+        if (!userId) {
+          return res.status(401).json({ 
+            error: 'Authentication required',
+            requiredTier: tier 
+          });
+        }
+
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(401).json({ 
+            error: 'User not found',
+            requiredTier: tier 
+          });
+        }
+
+        // Check if subscription is active and not expired
+        const isActiveSubscription = user.subscriptionStatus === 'active' && 
+          (!user.subscriptionExpiry || new Date(user.subscriptionExpiry) > new Date());
+
+        if (!isActiveSubscription) {
+          return res.status(403).json({ 
+            error: 'Subscription expired or inactive',
+            requiredTier: tier,
+            currentTier: user.subscriptionTier,
+            subscriptionStatus: user.subscriptionStatus
+          });
+        }
+
+        // Check tier-specific access
+        let hasAccess = false;
+        switch (tier) {
+          case 'dhr1':
+            hasAccess = ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier);
+            break;
+          case 'dhr2':
+            hasAccess = ['dhr2', 'vip'].includes(user.subscriptionTier);
+            break;
+          case 'vip':
+            hasAccess = user.subscriptionTier === 'vip';
+            break;
+        }
+
+        if (!hasAccess) {
+          return res.status(403).json({ 
+            error: 'Insufficient subscription tier',
+            requiredTier: tier,
+            currentTier: user.subscriptionTier
+          });
+        }
+
+        req.userAccess = {
+          user,
+          canAccessDHR1: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
+          canAccessDHR2: ['dhr2', 'vip'].includes(user.subscriptionTier),
+          canAccessVIP: user.subscriptionTier === 'vip',
+          canComment: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
+          canDownload: user.subscriptionTier === 'vip',
+          canAutoSignInChat: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
+          dailyDownloadLimit: user.subscriptionTier === 'vip' ? 2 : 0
+        };
+
+        next();
+      } catch (error) {
+        console.error('Access control error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    };
+  };
+
+  // Check daily download limits for VIP users
+  const checkDownloadLimit = async (req: any, res: any, next: any) => {
+    try {
+      const userId = req.userAccess?.user?.id;
+      if (!userId || !req.userAccess?.canDownload) {
+        return res.status(403).json({ 
+          error: 'Download permission required',
+          requiredTier: 'vip'
+        });
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const downloadLimit = await storage.getDailyDownloadLimit(userId);
+      
+      if (downloadLimit && downloadLimit.downloadDate === today) {
+        if (downloadLimit.downloadsUsed >= downloadLimit.maxDownloads) {
+          return res.status(429).json({ 
+            error: 'Daily download limit reached',
+            limit: downloadLimit.maxDownloads,
+            used: downloadLimit.downloadsUsed,
+            resetsAt: 'midnight'
+          });
+        }
+      }
+
+      next();
+    } catch (error) {
+      console.error('Download limit check error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+  // User access permissions endpoint
+  app.get('/api/user/permissions', async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.headers['x-user-id'];
+      
+      if (!userId) {
+        return res.json({
+          canAccessDHR1: false,
+          canAccessDHR2: false,
+          canAccessVIP: false,
+          canComment: false,
+          canDownload: false,
+          canAutoSignInChat: false,
+          dailyDownloadLimit: 0,
+          authenticated: false
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.json({
+          canAccessDHR1: false,
+          canAccessDHR2: false,
+          canAccessVIP: false,
+          canComment: false,
+          canDownload: false,
+          canAutoSignInChat: false,
+          dailyDownloadLimit: 0,
+          authenticated: false
+        });
+      }
+
+      // Check if subscription is active and not expired
+      const isActiveSubscription = user.subscriptionStatus === 'active' && 
+        (!user.subscriptionExpiry || new Date(user.subscriptionExpiry) > new Date());
+
+      if (!isActiveSubscription) {
+        return res.json({
+          canAccessDHR1: false,
+          canAccessDHR2: false,
+          canAccessVIP: false,
+          canComment: false,
+          canDownload: false,
+          canAutoSignInChat: false,
+          dailyDownloadLimit: 0,
+          authenticated: true,
+          subscriptionExpired: true,
+          subscriptionStatus: user.subscriptionStatus
+        });
+      }
+
+      const permissions = {
+        canAccessDHR1: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
+        canAccessDHR2: ['dhr2', 'vip'].includes(user.subscriptionTier),
+        canAccessVIP: user.subscriptionTier === 'vip',
+        canComment: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
+        canDownload: user.subscriptionTier === 'vip',
+        canAutoSignInChat: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
+        dailyDownloadLimit: user.subscriptionTier === 'vip' ? 2 : 0,
+        authenticated: true,
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionExpiry: user.subscriptionExpiry
+      };
+
+      // Get remaining downloads for VIP users
+      if (permissions.canDownload) {
+        const remainingDownloads = await storage.getRemainingDownloads(userId);
+        permissions.remainingDownloads = remainingDownloads;
+      }
+
+      res.json(permissions);
+    } catch (error) {
+      console.error('Error fetching user permissions:', error);
+      res.status(500).json({ error: 'Failed to fetch user permissions' });
+    }
+  });
+
+  // Auto-chatroom sign-in endpoint for subscribers
+  app.post('/api/chatroom/auto-signin', requireAccessTier('dhr1'), async (req, res) => {
+    try {
+      const user = req.userAccess.user;
+      
+      // This would integrate with your chatroom system
+      // For now, return the necessary data for auto sign-in
+      res.json({
+        success: true,
+        username: user.username || user.email,
+        userTier: user.subscriptionTier,
+        autoSignIn: true,
+        chatToken: `chat_${user.id}_${Date.now()}` // Generate a chat session token
+      });
+    } catch (error) {
+      console.error('Error with auto chatroom sign-in:', error);
+      res.status(500).json({ error: 'Failed to auto sign-in to chatroom' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

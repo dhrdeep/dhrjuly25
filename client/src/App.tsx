@@ -28,6 +28,7 @@ import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
 import PatreonManagementPage from './pages/PatreonManagementPage';
 import BmacManagementPage from './pages/BmacManagementPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -37,9 +38,21 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
 
-            <Route path="/dhr1" element={<DHR1Page />} />
-            <Route path="/dhr2" element={<DHR2Page />} />
-            <Route path="/vip" element={<VIPPage />} />
+            <Route path="/dhr1" element={
+              <ProtectedRoute requiredTier="dhr1">
+                <DHR1Page />
+              </ProtectedRoute>
+            } />
+            <Route path="/dhr2" element={
+              <ProtectedRoute requiredTier="dhr2">
+                <DHR2Page />
+              </ProtectedRoute>
+            } />
+            <Route path="/vip" element={
+              <ProtectedRoute requiredTier="vip">
+                <VIPPage />
+              </ProtectedRoute>
+            } />
             <Route path="/forum" element={<ForumPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/shop" element={<ShopPage />} />
