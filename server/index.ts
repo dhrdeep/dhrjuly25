@@ -1,6 +1,26 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import fileUpload from "express-fileupload";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+
+// Extend Express session type to include user
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      id: string;
+      email: string;
+      username?: string;
+      subscriptionTier: string;
+      subscriptionStatus: string;
+      subscriptionExpiry?: Date;
+      isAdmin: boolean;
+      firstName?: string;
+      lastName?: string;
+      profileImageUrl?: string;
+    };
+  }
+}
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { streamMonitor } from "./streamMonitor";
@@ -8,6 +28,25 @@ import { streamMonitor } from "./streamMonitor";
 const app = express();
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: false, limit: "100mb" }));
+
+// Configure session middleware for simple authentication
+const PostgresSessionStore = connectPg(session);
+app.set("trust proxy", 1);
+app.use(session({
+  store: new PostgresSessionStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    tableName: "sessions",
+  }),
+  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    httpOnly: true,
+    secure: false, // Set to true in production with HTTPS
+  },
+}));
 
 // Add file upload support for CSV imports
 app.use(fileUpload({

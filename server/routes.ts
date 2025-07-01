@@ -22,8 +22,8 @@ import { execSync } from 'child_process';
 ffmpeg.setFfmpegPath(ffmpegPath.path);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize Replit authentication
-  await setupAuth(app);
+  // Note: Replit authentication disabled for simple email auth
+  // await setupAuth(app);
 
   // Firebase Authentication endpoints
   app.post('/api/auth/firebase-login', async (req, res) => {
@@ -441,18 +441,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Store user in session (simplified session structure)
+      console.log('Setting session user:', user.email);
       req.session.user = {
         id: user.id,
         email: user.email,
-        username: user.username,
+        username: user.username || '',
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiry: user.subscriptionExpiry,
+        subscriptionExpiry: user.subscriptionExpiry || undefined,
         isAdmin: user.isAdmin || false,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl
+        firstName: user.firstName || undefined,
+        lastName: user.lastName || undefined,
+        profileImageUrl: user.profileImageUrl || undefined
       };
+
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+        } else {
+          console.log('Session saved successfully');
+        }
+      });
+
+      console.log('Session ID:', req.sessionID);
+      console.log('Session user set:', !!req.session.user);
 
       res.json({
         message: "Authentication successful",
@@ -3545,7 +3558,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User access permissions endpoint
   app.get('/api/user/permissions', async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub || req.headers['x-user-id'];
+      // Support both Replit auth and simple session auth
+      const userId = req.user?.claims?.sub || req.session?.user?.id || req.headers['x-user-id'];
+      
+      console.log('Permissions check - Session exists:', !!req.session);
+      console.log('Permissions check - Session user:', !!req.session?.user);
+      console.log('Permissions check - User ID found:', userId);
       
       if (!userId) {
         return res.json({
