@@ -324,15 +324,20 @@ const HomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-orange-500/20 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-orange-600/20 rounded-full blur-xl"></div>
+            {/* Floating Elements - 15 BPM synchronized */}
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-orange-500/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+            <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-orange-600/20 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
+            <div className="absolute top-1/2 -left-6 w-12 h-12 bg-orange-400/15 rounded-full blur-lg animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
+            <div className="absolute top-1/4 -right-3 w-14 h-14 bg-orange-500/25 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3s' }}></div>
           </div>
         </div>
       </section>
 
       {/* Immersive Features Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 relative">
+        {/* Additional floating elements for depth - 15 BPM synchronized */}
+        <div className="absolute top-10 left-10 w-18 h-18 bg-orange-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
+        <div className="absolute bottom-20 right-20 w-24 h-24 bg-orange-500/15 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.5s' }}></div>
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
@@ -484,7 +489,10 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Community & Support Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 relative">
+        {/* More atmospheric floating elements - 15 BPM */}
+        <div className="absolute top-5 right-1/4 w-16 h-16 bg-orange-300/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1.5s' }}></div>
+        <div className="absolute bottom-10 left-1/3 w-20 h-20 bg-orange-600/12 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '3.5s' }}></div>
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Support Column */}
@@ -622,14 +630,17 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Final Call to Action */}
-      <section className="py-32 px-4">
+      <section className="py-32 px-4 relative">
+        {/* Final atmospheric elements - 15 BPM rhythm */}
+        <div className="absolute top-20 left-1/4 w-22 h-22 bg-orange-400/6 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '0.8s' }}></div>
+        <div className="absolute bottom-32 right-1/5 w-18 h-18 bg-orange-500/10 rounded-full blur-xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
         <div className="max-w-6xl mx-auto">
           {/* Main CTA Container */}
           <div className="relative overflow-hidden bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-3xl p-16 backdrop-blur-xl border border-orange-400/30">
             {/* Background Elements */}
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-600/5"></div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '2s' }}></div>
             
             {/* Content */}
             <div className="relative text-center space-y-8">
