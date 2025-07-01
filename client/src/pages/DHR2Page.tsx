@@ -5,7 +5,7 @@ import SubscriptionGate from '../components/SubscriptionGate';
 import LiveTrackWidget from '../components/LiveTrackWidget';
 import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
-import VideoBackground from '../components/VideoBackground';
+import BeachPartyBackground from '../components/BeachPartyBackground';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
@@ -81,10 +81,8 @@ const DHR2Page: React.FC = () => {
 
   return (
     <>
-      <VideoBackground 
-        opacity={0.4}
-        overlay="gradient"
-        silhouette={true}
+      <BeachPartyBackground 
+        opacity={0.6}
         className="fixed inset-0"
       />
       <SubscriptionGate requiredTier="premium" contentType="dhr2">
