@@ -26,6 +26,8 @@ import GoogleAdsAdminPage from './pages/GoogleAdsAdminPage';
 
 import PatreonCallbackPage from './pages/PatreonCallbackPage';
 import SyncPage from './pages/SyncPage';
+import PatreonManagementPage from './pages/PatreonManagementPage';
+import BmacManagementPage from './pages/BmacManagementPage';
 
 function App() {
   return (
@@ -55,6 +57,8 @@ function App() {
             <Route path="/google-ads-admin" element={<GoogleAdsAdminPage />} />
 
             <Route path="/sync" element={<SyncPage />} />
+            <Route path="/patreon-management" element={<PatreonManagementPage />} />
+            <Route path="/bmac-management" element={<BmacManagementPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
           </Routes>
         </Layout>

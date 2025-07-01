@@ -11,6 +11,18 @@ Deep House Radio is a premium music streaming platform specializing in deep hous
 - **Deployment**: Replit environment
 
 ## Recent Changes
+- **July 1, 2025**: Dedicated Patreon & BMAC Management System With Enhanced Database Schema
+  - **Enhanced Database Schema**: Added comprehensive user fields including pledgeAmount, joinDate, cancelDate, notes, privateUrls, accessHistory, lifetimeSupport, lastChargeDate, nextChargeDate for detailed subscriber tracking
+  - **Dedicated Patreon Management Page**: Full subscriber management interface at /patreon-management with search, filtering, editing, and private URL management for individual patrons
+  - **Dedicated BMAC Management Page**: Complete Buy Me A Coffee supporter management at /bmac-management with API key integration and supporter tracking
+  - **Individual User Profile Management**: Each subscriber gets personal admin section with notes, private URLs, access history, and custom access controls
+  - **Enhanced User API Endpoints**: Added PATCH /api/admin/users/:userId for individual user updates and comprehensive user data management
+  - **Real-time Statistics**: Dashboard showing total patrons/supporters, active counts, revenue tracking, average pledges, and monthly growth metrics
+  - **CSV Export Functionality**: Export filtered subscriber data with all columns including Name, Email, Tier, Pledge/Support, Status, Join Date, Notes, Cancel Date, Access Expiration, Source
+  - **Admin Navigation Integration**: Both pages accessible through dedicated routes with professional UI matching DHR branding
+  - **Private URL System**: Admin can add custom private URLs for individual subscribers with name/URL tracking
+  - **Subscription Source Tracking**: Clear separation between Patreon, BMAC, and other subscription sources
+  - **Access Expiration Management**: Track and manage subscription expiry dates with visual indicators
 - **July 1, 2025**: Complete Site Redesign With Shared Background System And Featured DJ Sets
   - **SharedBackground Component**: Ultra-deep pulsating background with orange vein networks, multiple atmospheric layers, and ghostly transparency effects applied across all pages
   - **Featured DJ Sets System**: Randomized VIP mix selection with subscription-based playback, professional UI with progress bars, genre tags, and streaming platform integration

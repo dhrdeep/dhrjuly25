@@ -6,18 +6,26 @@ export interface User {
   subscriptionStatus: SubscriptionStatus;
   subscriptionSource: SubscriptionSource;
   subscriptionStartDate: string;
-  subscriptionEndDate?: string;
+  subscriptionExpiry?: string;
   patreonTier?: string;
-  buyMeCoffeeSupporter?: boolean;
-  wixSubscriberId?: string;
+  pledgeAmount?: number; // Amount in cents
+  joinDate?: string;
+  cancelDate?: string;
+  notes?: string;
+  privateUrls?: Record<string, string>; // Store private URLs for this user
+  accessHistory?: any[]; // Track access patterns
+  lifetimeSupport?: number; // Total lifetime contribution in cents
+  lastChargeDate?: string;
+  nextChargeDate?: string;
+  totalDownloads?: number;
   preferences: UserPreferences;
   createdAt: string;
   lastLoginAt: string;
-  // Additional Patreon-specific fields
+  // Legacy fields for compatibility
+  subscriptionEndDate?: string;
+  buyMeCoffeeSupporter?: boolean;
+  wixSubscriberId?: string;
   amount?: number;
-  lastChargeDate?: string;
-  nextChargeDate?: string;
-  lifetimeSupport?: number;
 }
 
 export interface UserPreferences {
@@ -32,7 +40,7 @@ export type SubscriptionTier = 'free' | 'dhr1' | 'dhr2' | 'vip';
 
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending';
 
-export type SubscriptionSource = 'patreon' | 'buymeacoffee' | 'wix' | 'direct' | 'manual';
+export type SubscriptionSource = 'patreon' | 'buymeacoffee' | 'bmac' | 'wix' | 'direct' | 'manual';
 
 export interface SubscriptionFeatures {
   canAccessDHR1: boolean;

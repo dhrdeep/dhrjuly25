@@ -6,12 +6,21 @@ export const users = pgTable("users", {
   id: text("id").primaryKey(), // Support both local IDs and Patreon IDs like "patreon_123"
   email: text("email").notNull().unique(),
   username: text("username").notNull(),
-  subscriptionTier: text("subscription_tier").notNull().default('free'), // 'free', 'premium', 'vip'
+  subscriptionTier: text("subscription_tier").notNull().default('free'), // 'free', 'dhr1', 'dhr2', 'vip'
   subscriptionStatus: text("subscription_status").notNull().default('active'), // 'active', 'inactive', 'cancelled'
-  subscriptionSource: text("subscription_source").default('local'), // 'local', 'patreon', 'stripe'
+  subscriptionSource: text("subscription_source").default('local'), // 'local', 'patreon', 'bmac', 'stripe'
   subscriptionStartDate: timestamp("subscription_start_date"),
   subscriptionExpiry: timestamp("subscription_expiry"),
   patreonTier: text("patreon_tier"),
+  pledgeAmount: integer("pledge_amount").default(0), // Amount in cents
+  joinDate: timestamp("join_date"),
+  cancelDate: timestamp("cancel_date"),
+  notes: text("notes"),
+  privateUrls: jsonb("private_urls").default({}), // Store private URLs for this user
+  accessHistory: jsonb("access_history").default([]), // Track access patterns
+  lifetimeSupport: integer("lifetime_support").default(0), // Total lifetime contribution in cents
+  lastChargeDate: timestamp("last_charge_date"),
+  nextChargeDate: timestamp("next_charge_date"),
   totalDownloads: integer("total_downloads").default(0),
   preferences: jsonb("preferences").default({}),
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -1334,6 +1334,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update individual user endpoint
+  app.patch('/api/admin/users/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      const updatedUser = await storage.updateUser(userId, updates);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ error: 'Failed to update user' });
+    }
+  });
+
   // Admin system stats
   app.get('/api/admin/stats', async (req, res) => {
     try {
