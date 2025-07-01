@@ -8,6 +8,8 @@ import { storage } from "./storage";
 import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
 import { fileHostingService } from "./fileHostingService";
 import { streamMonitor } from "./streamMonitor";
+import { rssService } from "./rssService";
+import { redditService } from "./redditService";
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
@@ -2440,6 +2442,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return [];
     }
   }
+
+  // RSS Feed Endpoints for Forum News
+  app.get('/api/rss/feeds', async (req, res) => {
+    try {
+      const feeds = rssService.getAvailableFeeds();
+      res.json(feeds);
+    } catch (error) {
+      console.error('Error getting RSS feeds:', error);
+      res.status(500).json({ error: 'Failed to get RSS feeds' });
+    }
+  });
+
+  app.get('/api/rss/latest', async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const items = await rssService.getLatestNews(limit);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching latest RSS items:', error);
+      res.status(500).json({ error: 'Failed to fetch latest news' });
+    }
+  });
+
+  app.get('/api/rss/category/:category', async (req, res) => {
+    try {
+      const category = req.params.category;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const items = await rssService.getNewsByCategory(category, limit);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching RSS items by category:', error);
+      res.status(500).json({ error: 'Failed to fetch news by category' });
+    }
+  });
+
+  app.post('/api/rss/refresh', async (req, res) => {
+    try {
+      rssService.clearCache();
+      const items = await rssService.getLatestNews(10);
+      res.json({ success: true, itemCount: items.length });
+    } catch (error) {
+      console.error('Error refreshing RSS feeds:', error);
+      res.status(500).json({ error: 'Failed to refresh RSS feeds' });
+    }
+  });
+
+  // Reddit API Endpoints for Forum Content
+  app.get('/api/reddit/subreddits', async (req, res) => {
+    try {
+      const subreddits = redditService.getAvailableSubreddits();
+      res.json(subreddits);
+    } catch (error) {
+      console.error('Error getting subreddits:', error);
+      res.status(500).json({ error: 'Failed to get subreddits' });
+    }
+  });
+
+  app.get('/api/reddit/posts', async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const posts = await redditService.getAllPosts(limit);
+      res.json(posts);
+    } catch (error) {
+      console.error('Error fetching Reddit posts:', error);
+      res.status(500).json({ error: 'Failed to fetch Reddit posts' });
+    }
+  });
+
+  app.get('/api/reddit/top/:subreddit?', async (req, res) => {
+    try {
+      const subreddit = req.params.subreddit;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const posts = await redditService.getTopPosts(subreddit, limit);
+      res.json(posts);
+    } catch (error) {
+      console.error('Error fetching top Reddit posts:', error);
+      res.status(500).json({ error: 'Failed to fetch top posts' });
+    }
+  });
+
+  app.post('/api/reddit/refresh', async (req, res) => {
+    try {
+      redditService.clearCache();
+      const posts = await redditService.getAllPosts(10);
+      res.json({ success: true, postCount: posts.length });
+    } catch (error) {
+      console.error('Error refreshing Reddit feeds:', error);
+      res.status(500).json({ error: 'Failed to refresh Reddit feeds' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

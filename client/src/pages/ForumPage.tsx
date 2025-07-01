@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MessageSquare, TrendingUp, Calendar, Music, Users, Search, Filter, ExternalLink, Clock, Heart, MessageCircle, Share2 } from 'lucide-react';
+import ForumNews from '@/components/ForumNews';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -198,6 +199,11 @@ const ForumPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Live Music News & Community Updates */}
+        <section className="mb-8">
+          <ForumNews />
         </section>
 
         {/* Forum Stats */}
