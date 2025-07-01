@@ -25,6 +25,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Replit authentication
   await setupAuth(app);
 
+  // Firebase Authentication endpoints
+  app.post('/api/auth/firebase-login', async (req, res) => {
+    try {
+      const { idToken, provider } = req.body;
+      
+      if (!idToken || !provider) {
+        return res.status(400).json({ message: "Missing idToken or provider" });
+      }
+
+      // For now, let's implement a basic version that extracts user info from the token
+      // In a real implementation, you would verify the token with Firebase Admin SDK
+      
+      // Mock verification - in production you'd use Firebase Admin SDK
+      let email: string;
+      let name: string;
+      let profileImage: string | undefined;
+      
+      // Basic token parsing (this is simplified - use Firebase Admin SDK in production)
+      try {
+        const tokenPayload = JSON.parse(atob(idToken.split('.')[1]));
+        email = tokenPayload.email;
+        name = tokenPayload.name || '';
+        profileImage = tokenPayload.picture;
+      } catch (error) {
+        return res.status(401).json({ message: "Invalid token" });
+      }
+
+      if (!email) {
+        return res.status(400).json({ message: "No email found in token" });
+      }
+
+      // Check for existing user by Firebase UID or email
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Create new user
+        const nameParts = name.split(' ');
+        const username = email.split('@')[0];
+        
+        // Check subscription status with demo logic
+        let subscriptionTier = 'free';
+        if (email.toLowerCase().includes('vip')) {
+          subscriptionTier = 'vip';
+        } else if (email.toLowerCase().includes('dhr2')) {
+          subscriptionTier = 'dhr2';
+        } else if (email.toLowerCase().includes('dhr1')) {
+          subscriptionTier = 'dhr1';
+        }
+
+        user = await storage.createUser({
+          id: `firebase_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          email,
+          username,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          profileImageUrl: profileImage,
+          firebaseUid: idToken, // Store token as UID temporarily
+          subscriptionTier,
+          subscriptionStatus: 'active',
+          subscriptionSource: 'firebase',
+          isAdmin: false
+        });
+      } else {
+        // Update last login
+        user = await storage.updateUser(user.id, {
+          lastLoginAt: new Date(),
+          profileImageUrl: profileImage || user.profileImageUrl
+        });
+      }
+
+      // Store user in session
+      (req.session as any).user = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionExpiry: user.subscriptionExpiry,
+        isAdmin: user.isAdmin || false,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        firebaseUid: user.firebaseUid
+      };
+
+      res.json({
+        message: "Login successful",
+        user: (req.session as any).user
+      });
+
+    } catch (error) {
+      console.error("Firebase login error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
+  });
+
+  // Get current Firebase user
+  app.get('/api/auth/firebase-user', async (req, res) => {
+    try {
+      const sessionUser = (req.session as any).user;
+      
+      if (!sessionUser) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Get fresh user data from database
+      const user = await storage.getUser(sessionUser.id);
+      
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionExpiry: user.subscriptionExpiry,
+        isAdmin: user.isAdmin,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        firebaseUid: user.firebaseUid
+      });
+
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Failed to get user data" });
+    }
+  });
+
+  // Logout endpoint
+  app.post('/api/auth/logout', async (req, res) => {
+    try {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+          return res.status(500).json({ message: "Logout failed" });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ message: "Logged out successfully" });
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {

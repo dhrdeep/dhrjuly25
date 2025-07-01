@@ -30,6 +30,7 @@ import PatreonManagementPage from './pages/PatreonManagementPage';
 import BmacManagementPage from './pages/BmacManagementPage';
 import AdminUserManagement from './pages/AdminUserManagement';
 import LoginPage from './pages/LoginPage';
+import UniversalAuthPage from './pages/UniversalAuthPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
             <Route path="/bmac-management" element={<BmacManagementPage />} />
             <Route path="/admin-user-management" element={<AdminUserManagement />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth" element={<UniversalAuthPage />} />
             <Route path="/auth/patreon/callback" element={<PatreonCallbackPage />} />
           </Routes>
         </Layout>

@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   username: text("username"),
+  firebaseUid: varchar("firebase_uid").unique(),
   subscriptionTier: text("subscription_tier").notNull().default('free'), // 'free', 'dhr1', 'dhr2', 'vip'
   subscriptionStatus: text("subscription_status").notNull().default('active'), // 'active', 'inactive', 'cancelled'
   subscriptionSource: text("subscription_source").default('replit'), // 'replit', 'patreon', 'bmac', 'admin'
