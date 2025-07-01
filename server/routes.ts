@@ -397,6 +397,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple email authentication (bypasses Firebase for now)
+  app.post("/api/auth/simple-login", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+      
+      // Check subscription status
+      const subscriptionInfo = await checkEmailInSubscriptions(normalizedEmail);
+      
+      // Create or update user
+      let user = await storage.getUserByEmail(normalizedEmail);
+      
+      if (!user) {
+        // Create new user
+        user = await storage.createUser({
+          email: normalizedEmail,
+          username: normalizedEmail.split('@')[0], // Use email prefix as username
+          subscriptionTier: subscriptionInfo.tier,
+          subscriptionStatus: subscriptionInfo.hasActiveSubscription ? 'active' : 'cancelled',
+          subscriptionSource: subscriptionInfo.source,
+          subscriptionExpiry: subscriptionInfo.expiry,
+          subscriptionStartDate: new Date(),
+          pledgeAmount: subscriptionInfo.amount || 0,
+        });
+      } else {
+        // Update existing user
+        user = await storage.updateUser(user.id, {
+          subscriptionTier: subscriptionInfo.tier,
+          subscriptionStatus: subscriptionInfo.hasActiveSubscription ? 'active' : 'cancelled',
+          subscriptionSource: subscriptionInfo.source,
+          subscriptionExpiry: subscriptionInfo.expiry,
+          pledgeAmount: subscriptionInfo.amount || 0,
+          lastLoginAt: new Date(),
+        });
+      }
+
+      // Store user in session (simplified session structure)
+      req.session.user = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        subscriptionTier: user.subscriptionTier,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionExpiry: user.subscriptionExpiry,
+        isAdmin: user.isAdmin || false,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl
+      };
+
+      res.json({
+        message: "Authentication successful",
+        tier: user.subscriptionTier,
+        user: {
+          id: user.id,
+          email: user.email,
+          subscriptionTier: user.subscriptionTier,
+          subscriptionStatus: user.subscriptionStatus
+        }
+      });
+
+    } catch (error) {
+      console.error("Simple login error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
+  });
+
   // Patreon OAuth endpoint to replace Supabase edge function
   app.post("/api/patreon-oauth", async (req, res) => {
     try {
