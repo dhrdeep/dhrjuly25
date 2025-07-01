@@ -26,6 +26,7 @@ import ChatBox from './ChatBox';
 import ChatRoom from './ChatRoom';
 import UserProfile from './UserProfile';
 import AuthModal from './AuthModal';
+import SharedBackground from './SharedBackground';
 import { subscriptionService } from '../services/subscriptionService';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
@@ -114,16 +115,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-900">
+      {/* Shared Deep Background System */}
+      <SharedBackground intensity="normal" />
+
       {/* Dual Ultra-Ghostly DHR Background */}
       <div className="dhr-floating-bg">
         <div className="floating-dhr-logo"></div>
         <div className="floating-dhr-logo"></div>
-      </div>
-
-      {/* Main Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900" />
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-900/5 via-transparent to-orange-900/5" />
       </div>
 
       {/* Navigation */}

@@ -31,6 +31,8 @@ import { patreonService, DHR_PATREON_TIERS } from '../services/patreonService';
 import { subscriptionService } from '../services/subscriptionService';
 import { buyMeCoffeeService } from '../services/buyMeCoffeeService';
 import { User, SubscriptionTier } from '../types/subscription';
+import SharedBackground from '../components/SharedBackground';
+import FeaturedDJSets from '../components/FeaturedDJSets';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -47,7 +49,7 @@ interface AdminStats {
 }
 
 const AdminPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'patreon' | 'analytics' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'patreon' | 'analytics' | 'settings' | 'featured'>('dashboard');
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -70,6 +72,8 @@ const AdminPage: React.FC = () => {
   const [notifications, setNotifications] = useState<string[]>([]);
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [csvContent, setCsvContent] = useState('');
+  const [featuredDjSets, setFeaturedDjSets] = useState<any[]>([]);
+  const [vipMixes, setVipMixes] = useState<any[]>([]);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -79,7 +83,20 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     loadUsers();
     checkPatreonConfig();
+    loadVipMixes();
   }, []);
+
+  const loadVipMixes = async () => {
+    try {
+      const response = await fetch('/api/vip/mixes');
+      if (response.ok) {
+        const data = await response.json();
+        setVipMixes(data);
+      }
+    } catch (error) {
+      console.error('Failed to load VIP mixes:', error);
+    }
+  };
 
   // Filter users based on search and tier
   useEffect(() => {
@@ -412,8 +429,9 @@ const AdminPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen text-white py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen text-white py-8 px-4 relative">
+      <SharedBackground intensity="subtle" />
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Header */}
         <header className="text-center mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">
@@ -472,6 +490,7 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
                 { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
                 { id: 'users', label: 'Users', icon: Users },
                 { id: 'patreon', label: 'Patreon', icon: Crown },
+                { id: 'featured', label: 'Featured DJ Sets', icon: Music },
                 { id: 'analytics', label: 'Analytics', icon: TrendingUp },
                 { id: 'settings', label: 'Settings', icon: Settings }
               ].map(tab => {
@@ -936,6 +955,80 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
           </div>
         )}
 
+        {/* Featured DJ Sets Tab */}
+        {activeTab === 'featured' && (
+          <div className="space-y-6">
+            <div className="bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 border border-orange-400/20">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">Featured DJ Sets Management</h3>
+                <button className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-400/30 rounded-lg transition-all">
+                  Add Random Featured Set
+                </button>
+              </div>
+              
+              {/* VIP Mixes Grid for Selection */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-white mb-4">Available VIP Mixes (Random Selection Source)</h4>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                  {vipMixes.slice(0, 12).map((mix, index) => (
+                    <div key={mix.id || index} className="bg-gray-700/30 rounded-lg p-4 border border-orange-400/20">
+                      <h5 className="font-medium text-white text-sm mb-2 capitalize">{mix.title || 'Unknown Title'}</h5>
+                      <p className="text-gray-400 text-xs mb-3 capitalize">{mix.artist || 'Unknown Artist'}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-orange-400 text-xs">{mix.genre || 'Deep House'}</span>
+                        <button 
+                          onClick={() => {
+                            const randomMix = vipMixes[Math.floor(Math.random() * vipMixes.length)];
+                            setFeaturedDjSets(prev => [...prev, { ...randomMix, featured: true, dateAdded: new Date().toISOString() }]);
+                          }}
+                          className="px-2 py-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-xs rounded transition-all"
+                        >
+                          Feature
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Currently Featured Sets */}
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-4">Currently Featured DJ Sets</h4>
+                {featuredDjSets.length === 0 ? (
+                  <div className="bg-gray-700/30 rounded-lg p-8 text-center border border-orange-400/20">
+                    <Music className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+                    <p className="text-gray-400">No Featured DJ Sets Currently Selected</p>
+                    <p className="text-gray-500 text-sm mt-2">Add Sets From The VIP Collection Above To Populate The Homepage Featured Section</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {featuredDjSets.map((set, index) => (
+                      <div key={index} className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-lg p-4 border border-orange-400/30">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h5 className="font-medium text-white capitalize">{set.title}</h5>
+                            <p className="text-orange-300 text-sm capitalize">{set.artist}</p>
+                            <p className="text-gray-400 text-xs">{set.genre} • VIP Only</p>
+                          </div>
+                          <button 
+                            onClick={() => setFeaturedDjSets(prev => prev.filter((_, i) => i !== index))}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Featured: {new Date(set.dateAdded).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-6">
@@ -943,8 +1036,8 @@ VITE_PATREON_REDIRECT_URI=${window.location.origin}/auth/patreon/callback`}
               <Settings className="h-16 w-16 text-orange-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Admin Settings</h3>
               <p className="text-gray-400">
-                Configuration options for DHR admin panel, API keys, webhook settings, 
-                and system preferences will be available here.
+                Configuration Options For DHR Admin Panel, API Keys, Webhook Settings, 
+                And System Preferences Will Be Available Here.
               </p>
             </div>
           </div>

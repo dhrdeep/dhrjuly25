@@ -29,7 +29,7 @@ export default function TrackWidget({ channel, className = '' }: TrackWidgetProp
   const [recommendedTracks, setRecommendedTracks] = useState<Track[]>([]);
 
   // Fetch last 10 tracks for this channel
-  const { data: tracks = [], isLoading } = useQuery({
+  const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ['/api/tracks/recent', channel],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -65,11 +65,11 @@ export default function TrackWidget({ channel, className = '' }: TrackWidgetProp
   };
 
   const getChannelColor = (channel: string) => {
-    return channel === 'dhr1' ? 'text-orange-400' : 'text-pink-400';
+    return channel === 'dhr1' ? 'text-orange-400' : 'text-amber-400';
   };
 
   const getChannelBorder = (channel: string) => {
-    return channel === 'dhr1' ? 'border-orange-400/20' : 'border-pink-400/20';
+    return channel === 'dhr1' ? 'border-orange-400/20' : 'border-amber-400/20';
   };
 
   const openExternalLink = (url: string, platform: string) => {
@@ -91,14 +91,14 @@ export default function TrackWidget({ channel, className = '' }: TrackWidgetProp
             {channel.toUpperCase()} Recent Tracks
           </h3>
           <span className="bg-white/10 text-white text-xs px-2 py-1 rounded-full">
-            {tracks.length || 0}
+            {(tracks as Track[]).length || 0}
           </span>
         </div>
         
         <div className="flex items-center space-x-2">
-          {!isExpanded && tracks.length > 0 && (
+          {!isExpanded && (tracks as Track[]).length > 0 && (
             <div className="text-white/60 text-sm">
-              Latest: {tracks[0]?.title.substring(0, 20)}...
+              Latest: {(tracks as Track[])[0]?.title.substring(0, 20)}...
             </div>
           )}
           <div className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
@@ -117,14 +117,14 @@ export default function TrackWidget({ channel, className = '' }: TrackWidgetProp
               <div className="animate-spin w-6 h-6 border-2 border-orange-400 border-t-transparent rounded-full mx-auto mb-2"></div>
               <p className="text-white/60">Loading tracks...</p>
             </div>
-          ) : tracks.length === 0 ? (
+          ) : (tracks as Track[]).length === 0 ? (
             <div className="p-6 text-center text-white/60">
               <Music className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>No tracks identified yet</p>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">
-              {tracks.map((track: Track, index: number) => (
+              {(tracks as Track[]).map((track: Track, index: number) => (
                 <div
                   key={track.id}
                   className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
@@ -206,14 +206,14 @@ export default function TrackWidget({ channel, className = '' }: TrackWidgetProp
           )}
 
           {/* View All Tracks Button */}
-          {tracks.length > 0 && (
+          {(tracks as Track[]).length > 0 && (
             <div className="p-4 border-t border-white/10">
               <button
                 onClick={() => window.open('/track-history', '_blank')}
                 className={`w-full py-2 px-4 rounded-lg bg-gradient-to-r ${
                   channel === 'dhr1' 
                     ? 'from-orange-500/20 to-orange-600/20 text-orange-400 hover:from-orange-500/30 hover:to-orange-600/30' 
-                    : 'from-pink-500/20 to-pink-600/20 text-pink-400 hover:from-pink-500/30 hover:to-pink-600/30'
+                    : 'from-amber-500/20 to-amber-600/20 text-amber-400 hover:from-amber-500/30 hover:to-amber-600/30'
                 } border border-current/20 hover:border-current/30 transition-all`}
               >
                 View Full Track History

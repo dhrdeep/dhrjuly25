@@ -29,6 +29,9 @@ import {
   Maximize2
 } from 'lucide-react';
 import ScrollingNewsBanner from '../components/ScrollingNewsBanner';
+import SharedBackground from '../components/SharedBackground';
+import FeaturedDJSets from '../components/FeaturedDJSets';
+import TrackWidget from '../components/TrackWidget';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -179,20 +182,10 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="text-white">
-      {/* Page-wide scattered orbs - 15 BPM pulsing - spread far apart */}
-      <div className="fixed top-8 left-4 w-12 h-12 bg-orange-400/8 rounded-full blur-lg animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '0.2s' }}></div>
-      <div className="fixed top-1/3 right-4 w-16 h-16 bg-orange-500/6 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.4s' }}></div>
-      <div className="fixed bottom-32 left-8 w-20 h-20 bg-orange-300/5 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.6s' }}></div>
-      <div className="fixed top-3/4 right-1/5 w-14 h-14 bg-orange-600/10 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '3.8s' }}></div>
-      <div className="fixed top-20 left-1/4 w-18 h-18 bg-orange-400/7 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '0.6s' }}></div>
-      <div className="fixed bottom-16 right-8 w-22 h-22 bg-orange-500/4 rounded-full blur-3xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.2s' }}></div>
-      <div className="fixed top-1/2 left-2 w-16 h-16 bg-orange-300/9 rounded-full blur-xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.8s' }}></div>
-      <div className="fixed bottom-1/4 right-2 w-14 h-14 bg-orange-600/7 rounded-full blur-lg animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '3.4s' }}></div>
-      <div className="fixed top-2/3 right-3/4 w-24 h-24 bg-orange-400/4 rounded-full blur-3xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '1.2s' }}></div>
-      <div className="fixed bottom-2/3 left-3/4 w-18 h-18 bg-orange-500/8 rounded-full blur-2xl animate-pulse pointer-events-none z-10" style={{ animationDuration: '4s', animationDelay: '2.8s' }}></div>
+    <div className="text-white relative">
+      <SharedBackground intensity="normal" />
       {/* Hero Section - Redesigned */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 py-8">
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-8 z-10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Column - Content */}
           <div className="space-y-8">
@@ -712,6 +705,37 @@ const HomePage: React.FC = () => {
                 <p>Free forever • No registration required • Available worldwide</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Scrolling News Banner */}
+      <div className="relative z-10">
+        <ScrollingNewsBanner />
+      </div>
+
+      {/* Featured DJ Sets Section */}
+      <section className="relative z-10 py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <FeaturedDJSets maxSets={6} showTitle={true} />
+        </div>
+      </section>
+
+      {/* Track Widgets Section */}
+      <section className="relative z-10 py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-black mb-4 bg-gradient-to-r from-orange-300 to-orange-500 bg-clip-text text-transparent">
+              Live Track Identification
+            </h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Real-Time Track Recognition From Our Live Streams With AI-Powered Identification Technology.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <TrackWidget channel="dhr1" className="backdrop-blur-xl" />
+            <TrackWidget channel="dhr2" className="backdrop-blur-xl" />
           </div>
         </div>
       </section>

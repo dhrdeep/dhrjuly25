@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, TrendingUp, Calendar, Music, Users, Search, Filter, ExternalLink, Clock, Heart, MessageCircle, Share2 } from 'lucide-react';
 import ForumNews from '@/components/ForumNews';
+import SharedBackground from '@/components/SharedBackground';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -131,8 +132,9 @@ const ForumPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-white py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen text-white py-8 px-4 relative">
+      <SharedBackground intensity="normal" />
+      <div className="max-w-6xl mx-auto relative z-10">
         {/* Header */}
         <header className="text-center mb-12">
           <div className="flex items-center justify-center space-x-4 mb-6">
