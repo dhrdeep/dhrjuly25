@@ -1002,54 +1002,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errors: [] as string[]
       };
 
-      // Fetch supporters from Buy Me a Coffee API
-      const response = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('BMAC API Error Response:', errorText);
-        return res.status(500).json({ 
-          success: false, 
-          error: `Buy Me a Coffee API error: ${response.status}. This usually means the API key is invalid or the endpoint has changed.` 
-        });
-      }
-
-      let data;
-      try {
-        const responseText = await response.text();
-        console.log('BMAC API Response:', responseText.substring(0, 200));
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('BMAC JSON Parse Error:', parseError);
-        return res.status(500).json({ 
-          success: false, 
-          error: `Invalid JSON response from Buy Me a Coffee API. This usually means the API key is incorrect or the endpoint has changed.` 
-        });
-      }
+      // Fetch both supporters and subscriptions from Buy Me a Coffee API
+      let allSupporters = [];
       
-      const supporters = data.data || [];
+      // Fetch one-time supporters
+      try {
+        const supportersResponse = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (supportersResponse.ok) {
+          const supportersText = await supportersResponse.text();
+          const supportersData = JSON.parse(supportersText);
+          const oneTimeSupports = supportersData.data || [];
+          console.log(`Found ${oneTimeSupports.length} one-time supporters`);
+          allSupporters.push(...oneTimeSupports);
+        }
+      } catch (error) {
+        console.log('Error fetching one-time supporters:', error);
+      }
+
+      // Fetch recurring subscriptions
+      try {
+        const subscriptionsResponse = await fetch('https://developers.buymeacoffee.com/api/v1/subscriptions', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (subscriptionsResponse.ok) {
+          const subscriptionsText = await subscriptionsResponse.text();
+          const subscriptionsData = JSON.parse(subscriptionsText);
+          const recurringSupports = subscriptionsData.data || [];
+          console.log(`Found ${recurringSupports.length} recurring subscriptions`);
+          
+          // Transform subscription data to match supporter format
+          recurringSupports.forEach(sub => {
+            allSupporters.push({
+              ...sub,
+              support_id: sub.subscription_id || sub.id,
+              payer_email: sub.payer_email || sub.supporter_email,
+              payer_name: sub.payer_name || sub.supporter_name,
+              support_coffee_price: sub.subscription_coffee_price || sub.coffee_price,
+              support_coffees: sub.subscription_coffees || sub.coffees,
+              support_created_on: sub.subscription_created_on || sub.created_on,
+              is_recurring: true
+            });
+          });
+        }
+      } catch (error) {
+        console.log('Error fetching subscriptions:', error);
+      }
+
+      if (allSupporters.length === 0) {
+        return res.status(500).json({ 
+          success: false, 
+          error: `No supporters found from Buy Me a Coffee API. Please check your API key.` 
+        });
+      }
+
+      const supporters = allSupporters;
+      console.log(`Found ${supporters.length} total supporters/subscribers to process`);
+      console.log('Supporters array:', supporters);
 
       syncResults.totalSupporters = supporters.length;
 
       // Process each supporter
       for (const supporter of supporters) {
+        console.log(`Processing supporter:`, supporter);
         try {
-          const supporterId = supporter.supporter_id || supporter.id;
-          const email = supporter.supporter_email;
-          const name = supporter.supporter_name;
-          const amount = supporter.support_coffee_price || 3; // Default €3
+          const supporterId = supporter.support_id || supporter.supporter_id || supporter.id;
+          const email = supporter.payer_email || supporter.supporter_email; // Use payer_email from API
+          const name = supporter.payer_name || supporter.supporter_name || supporter.name;
+          const amount = parseFloat(supporter.support_coffee_price) || supporter.support_coffees * 3 || 3; // Parse as float
+          const supportDate = new Date(supporter.support_created_on);
 
-          if (!email) continue;
+          console.log(`Raw supporter data - payer_email: ${supporter.payer_email}, supporter_email: ${supporter.supporter_email}`);
+          console.log(`Processing BMAC supporter: ${name} (${email}) - €${amount} on ${supportDate.toISOString()}`);
 
-          // Determine tier based on support amount
+          if (!email) {
+            console.log(`Skipping supporter without email - payer_email: ${supporter.payer_email}`);
+            continue;
+          }
+
+          // Determine tier based on support amount AND date
           let tier = 'dhr1'; // Default for supporters
+          const now = new Date();
+          const daysSinceSupport = Math.floor((now.getTime() - supportDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          // Assign tier based on amount
           if (amount >= 10) tier = 'vip';
           else if (amount >= 5) tier = 'dhr2';
+
+          // Calculate subscription expiry based on type
+          let subscriptionExpiry = new Date(supportDate);
+          let status = 'active';
+          
+          if (supporter.is_recurring) {
+            // For recurring subscriptions, extend expiry to 30 days from now (ongoing support)
+            subscriptionExpiry = new Date(now);
+            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 30);
+            status = 'active'; // Recurring subscriptions are always active
+            console.log(`Recurring subscription detected - extending expiry to ${subscriptionExpiry.toISOString()}`);
+          } else {
+            // For one-time support, give 90 days from support date
+            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 90);
+            const isActive = now <= subscriptionExpiry;
+            status = isActive ? 'active' : 'expired';
+          }
+
+          console.log(`Tier: ${tier}, Status: ${status}, Days since support: ${daysSinceSupport}, Expires: ${subscriptionExpiry.toISOString()}`);
 
           // Check if user exists
           let user = await storage.getUserByEmail(email);
@@ -1058,22 +1124,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: supporterId.toString(),
             email: email,
             username: name || `supporter_${supporterId}`,
-            subscriptionTier: tier,
-            subscriptionStatus: 'active',
+            subscriptionTier: tier as any,
+            subscriptionStatus: status as any,
             subscriptionSource: 'bmac',
-            subscriptionStartDate: new Date(supporter.support_created_on || Date.now()),
+            subscriptionStartDate: supportDate,
+            subscriptionExpiry: subscriptionExpiry,
+            pledgeAmount: amount,
+            joinDate: supportDate,
+            lifetimeSupport: amount,
             patreonTier: null,
             preferences: {}
           };
 
           if (user) {
+            // Always update to ensure latest tier and expiry info
             await storage.updateUser(user.id, userData);
             syncResults.updatedUsers++;
+            console.log(`Updated existing user: ${email}`);
           } else {
             await storage.createUser(userData);
             syncResults.newUsers++;
+            console.log(`Created new user: ${email}`);
           }
         } catch (error) {
+          console.error(`Error processing supporter:`, error);
           syncResults.errors.push(`Error processing supporter ${supporter.id}: ${error}`);
         }
       }

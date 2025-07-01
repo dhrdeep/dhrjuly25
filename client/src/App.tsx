@@ -39,17 +39,17 @@ function App() {
             <Route path="/" element={<HomePage />} />
 
             <Route path="/dhr1" element={
-              <ProtectedRoute requiredTier="dhr1">
+              <ProtectedRoute requiredTier="dhr1" pageName="DHR1 Premium Channel">
                 <DHR1Page />
               </ProtectedRoute>
             } />
             <Route path="/dhr2" element={
-              <ProtectedRoute requiredTier="dhr2">
+              <ProtectedRoute requiredTier="dhr2" pageName="DHR2 Exclusive Channel">
                 <DHR2Page />
               </ProtectedRoute>
             } />
             <Route path="/vip" element={
-              <ProtectedRoute requiredTier="vip">
+              <ProtectedRoute requiredTier="vip" pageName="VIP Content Library">
                 <VIPPage />
               </ProtectedRoute>
             } />
