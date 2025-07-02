@@ -2,7 +2,7 @@ import { User, SubscriptionTier } from '../types/subscription';
 
 // Patreon API Configuration
 const PATREON_CONFIG = {
-  clientId: process.env.VITE_PATREON_CLIENT_ID || ''
+  clientId: process.env.VITE_PATREON_CLIENT_ID || '',
   clientSecret: process.env.VITE_PATREON_CLIENT_SECRET || '',
   redirectUri: `${window.location.origin}/auth/patreon/callback`,
   apiBaseUrl: 'https://www.patreon.com/api/oauth2/v2',
