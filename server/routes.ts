@@ -442,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           subscriptionTier: subscriptionInfo.tier,
           subscriptionStatus: subscriptionInfo.hasActiveSubscription ? 'active' : 'cancelled',
           subscriptionSource: subscriptionInfo.source,
-          subscriptionExpiry:.subscriptionInfo.expiry,
+          subscriptionExpiry: subscriptionInfo.expiry,
           pledgeAmount: subscriptionInfo.amount || 0,
           lastLoginAt: new Date(),
         });
