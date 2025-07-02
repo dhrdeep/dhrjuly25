@@ -11,7 +11,7 @@ import { streamMonitor } from "./streamMonitor";
 import { rssService } from "./rssService";
 import { redditService } from "./redditService";
 import { webCrawlerService } from "./webCrawlerService";
-import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
