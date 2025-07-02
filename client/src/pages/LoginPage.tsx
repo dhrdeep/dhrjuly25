@@ -1,44 +1,28 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import SharedBackground from "@/components/SharedBackground";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { emailSignIn, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   
   const showMessage = (title: string, description: string, isError = false) => {
     alert(`${title}: ${description}`);
   };
 
-  const loginMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await apiRequest('/api/auth/email-login', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      return response;
-    },
-    onSuccess: (data) => {
-      showMessage("Login Successful", `Welcome! You have ${data.tier} access.`);
-      setLocation("/");
-      window.location.reload(); // Refresh to update auth state
-    },
-    onError: (error: any) => {
-      showMessage("Login Failed", error.message || "Email not found in active subscriptions", true);
-    }
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       showMessage("Email Required", "Please enter your email address", true);
       return;
     }
-    loginMutation.mutate(email.trim().toLowerCase());
+    try {
+      await emailSignIn.mutateAsync({ email: email.trim().toLowerCase() });
+      showMessage("Login Successful", "Welcome back!");
+      setLocation("/");
+      window.location.reload(); // Refresh to update auth state
+    } catch (error: any) {
+      showMessage("Login Failed", error.message || "An unexpected error occurred.", true);
+    }
   };
 
   const handleGoogleSignIn = () => {
@@ -109,13 +93,13 @@ export default function LoginPage() {
                     border: '1px solid rgba(247, 158, 2, 0.5)',
                     color: 'white'
                   }}
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading}
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={loginMutation.isPending}
+                disabled={isLoading}
                 className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50"
                 style={{
                   width: '100%',
@@ -125,10 +109,10 @@ export default function LoginPage() {
                   color: 'black',
                   fontWeight: '600',
                   border: 'none',
-                  cursor: loginMutation.isPending ? 'not-allowed' : 'pointer'
+                  cursor: isLoading ? 'not-allowed' : 'pointer'
                 }}
               >
-                {loginMutation.isPending ? "Checking Subscription..." : "Sign In With Email"}
+                {isLoading ? "Checking Subscription..." : "Sign In With Email"}
               </button>
             </form>
 

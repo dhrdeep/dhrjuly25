@@ -50,7 +50,7 @@ export function useAuth() {
   // Simple email authentication
   const emailSignIn = useMutation({
     mutationFn: async ({ email }: { email: string }) => {
-      const response = await fetch("/api/auth/simple-login", {
+      const response = await fetch("/api/auth/email-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

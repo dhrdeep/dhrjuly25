@@ -2,8 +2,8 @@ import { User, SubscriptionTier } from '../types/subscription';
 
 // Patreon API Configuration
 const PATREON_CONFIG = {
-  clientId: '-tv-cVi3LfJC_gV3S1zJ7fjBPAubr2Nj1GXiVZODqBy-XC97Mf9FJIdayBn55iWS',
-  clientSecret: 'IbolNmgTLsoAZXH6dRQUb5JMrH2-AxaU8ou1RwYxyx2M7dVRb-ZG6lvSHeHZxjgY',
+  clientId: process.env.VITE_PATREON_CLIENT_ID || ''
+  clientSecret: process.env.VITE_PATREON_CLIENT_SECRET || '',
   redirectUri: `${window.location.origin}/auth/patreon/callback`,
   apiBaseUrl: 'https://www.patreon.com/api/oauth2/v2',
   scope: 'identity identity[email] campaigns campaigns.members'
@@ -128,11 +128,14 @@ export class PatreonService {
   }
 
   // Generate Patreon OAuth URL
-  getAuthUrl(): string {
+  async getAuthUrl(): Promise<string> {
+    const response = await fetch('/api/patreon-client-id');
+    const { clientId } = await response.json();
+
     const state = this.generateState();
     const params = new URLSearchParams({
       response_type: 'code',
-      client_id: PATREON_CONFIG.clientId,
+      client_id: clientId,
       redirect_uri: PATREON_CONFIG.redirectUri,
       scope: PATREON_CONFIG.scope,
       state: state

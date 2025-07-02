@@ -32,9 +32,9 @@ interface LiveTrackWidgetProps {
 export default function LiveTrackWidget({ className = '', compact = false, channel = 'dhr1' }: LiveTrackWidgetProps) {
   // Fetch current track from live monitoring
   const { data: currentData, isLoading } = useQuery<StreamData>({
-    queryKey: ['track-monitor-current'],
+    queryKey: ['track-monitor-current', channel],
     queryFn: async () => {
-      const response = await fetch('/api/track-monitor/current');
+      const response = await fetch(`/api/track-monitor/current?channel=${channel}`);
       if (!response.ok) throw new Error('Failed to fetch current track');
       return response.json();
     },

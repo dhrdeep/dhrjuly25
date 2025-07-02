@@ -385,10 +385,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: user.profileImageUrl
       };
 
-      res.json({
-        message: "Login successful",
-        tier: user.subscriptionTier,
-        user: req.session.user
+      // Force session save to prevent race conditions on redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: "Login failed due to session error" });
+        }
+        
+        res.json({
+          message: "Login successful",
+          tier: user.subscriptionTier,
+          user: req.session.user
+        });
       });
 
     } catch (error) {
@@ -434,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           subscriptionTier: subscriptionInfo.tier,
           subscriptionStatus: subscriptionInfo.hasActiveSubscription ? 'active' : 'cancelled',
           subscriptionSource: subscriptionInfo.source,
-          subscriptionExpiry: subscriptionInfo.expiry,
+          subscriptionExpiry:.subscriptionInfo.expiry,
           pledgeAmount: subscriptionInfo.amount || 0,
           lastLoginAt: new Date(),
         });
@@ -531,6 +539,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Get current user error:", error);
       res.status(500).json({ message: "Failed to get user data" });
     }
+  });
+
+  app.get("/api/patreon-client-id", (req, res) => {
+    res.json({ clientId: process.env.VITE_PATREON_CLIENT_ID });
   });
 
   // Patreon OAuth endpoint to replace Supabase edge function
@@ -1983,6 +1995,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/bmac-api-key", (req, res) => {
+    res.json({ apiKey: process.env.VITE_BUYMEACOFFEE_API_KEY });
+  });
+
+  app.get("/api/track-monitor/current", async (req, res) => {
+    try {
+      const { channel } = req.query;
+      let streamUrl = '';
+
+      if (channel === 'dhr1') {
+        streamUrl = 'https://ec1.everestcast.host:2775/api/v2/current';
+      } else if (channel === 'dhr2') {
+        streamUrl = 'https://ec1.everestcast.host:1565/api/v2/current';
+      } else {
+        return res.status(400).json({ error: "Invalid channel specified" });
+      }
+
+      const response = await fetch(streamUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metadata from Everestcast: ${response.statusText}`);
+      }
+      const data = await response.json();
+
+      if (data.data && data.data.current_track) {
+        res.json({
+          track: {
+            title: data.data.current_track.title,
+            artist: data.data.current_track.artist,
+            album: data.data.current_track.album,
+            artwork: data.data.current_track.artwork,
+            confidence: 100, // Assuming 100% confidence for direct stream metadata
+            service: "Everestcast",
+            timestamp: new Date().toISOString(),
+            duration: data.data.current_track.duration,
+          },
+          isActive: true,
+        });
+      } else {
+        res.json({ track: null, isActive: true });
+      }
+    } catch (error) {
+      console.error("Error fetching live metadata:", error);
+      res.status(500).json({ error: "Failed to fetch live metadata" });
+    }
+  });
+
+  app.get("/api/tracks/recent", async (req, res) => {
+    try {
+      const { channel } = req.query;
+      let recentTracks = [];
+
+      if (channel === 'dhr1') {
+        recentTracks = [
+          {
+            id: 1,
+            trackId: "dhr1_track_1",
+            title: "DHR1 Recent Track 1",
+            artist: "DHR1 Artist 1",
+            album: "DHR1 Album 1",
+            channel: "dhr1",
+            confidence: 95,
+            service: "Everestcast",
+            artwork: "https://via.placeholder.com/150",
+            identifiedAt: new Date(Date.now() - 60 * 1000).toISOString(),
+          },
+          {
+            id: 2,
+            trackId: "dhr1_track_2",
+            title: "DHR1 Recent Track 2",
+            artist: "DHR1 Artist 2",
+            album: "DHR1 Album 2",
+            channel: "dhr1",
+            confidence: 90,
+            service: "Everestcast",
+            artwork: "https://via.placeholder.com/150",
+            identifiedAt: new Date(Date.now() - 120 * 1000).toISOString(),
+          },
+        ];
+      } else if (channel === 'dhr2') {
+        recentTracks = [
+          {
+            id: 3,
+            trackId: "dhr2_track_1",
+            title: "DHR2 Recent Track 1",
+            artist: "DHR2 Artist 1",
+            album: "DHR2 Album 1",
+            channel: "dhr2",
+            confidence: 98,
+            service: "Everestcast",
+            artwork: "https://via.placeholder.com/150",
+            identifiedAt: new Date(Date.now() - 30 * 1000).toISOString(),
+          },
+          {
+            id: 4,
+            trackId: "dhr2_track_2",
+            title: "DHR2 Recent Track 2",
+            artist: "DHR2 Artist 2",
+            album: "DHR2 Album 2",
+            channel: "dhr2",
+            confidence: 88,
+            service: "Everestcast",
+            artwork: "https://via.placeholder.com/150",
+            identifiedAt: new Date(Date.now() - 90 * 1000).toISOString(),
+          },
+        ];
+      } else {
+        return res.status(400).json({ error: "Invalid channel specified" });
+      }
+
+      res.json(recentTracks);
+    } catch (error) {
+      console.error("Error fetching recent tracks:", error);
+      res.status(500).json({ error: "Failed to fetch recent tracks" });
+    }
+  });
+
+  app.get("/api/live-metadata", async (req, res) => {
+    try {
+      const { channel } = req.query;
+      let streamUrl = '';
+
+      if (channel === 'dhr1') {
+        streamUrl = 'https://ec1.everestcast.host:2775/api/v2/current';
+      } else if (channel === 'dhr2') {
+        streamUrl = 'https://ec1.everestcast.host:1565/api/v2/current';
+      } else {
+        return res.status(400).json({ error: "Invalid channel specified" });
+      }
+
+      const response = await fetch(streamUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metadata from Everestcast: ${response.statusText}`);
+      }
+      const data = await response.json();
+
+      if (data.data && data.data.current_track) {
+        res.json({
+          title: data.data.current_track.title,
+          artist: data.data.current_track.artist,
+          listeners: data.data.listeners,
+        });
+      } else {
+        res.json({ title: "No track info", artist: "Deep House Radio", listeners: data.data?.listeners || 0 });
+      }
+    } catch (error) {
+      console.error("Error fetching live metadata:", error);
+      res.status(500).json({ error: "Failed to fetch live metadata" });
+    }
+  });
+
+  app.post("/api/identify-track", async (req, res) => {
+    try {
+      const { audioBase64 } = req.body;
+
+      if (!audioBase64) {
+        return res.status(400).json({ error: "audioBase64 is required" });
+      }
+
+      // Decode base64 and save to a temporary file
+      const audioBuffer = Buffer.from(audioBase64, 'base64');
+      const tempFilePath = `/tmp/audio_${Date.now()}.webm`;
+      fs.writeFileSync(tempFilePath, audioBuffer);
+
+      // Mock identification service
+      const identifiedTrack = {
+        id: "mock-id",
+        title: "Mock Track",
+        album: "Mock Album",
+        artist: "Mock Artist",
+        artwork: "https://via.placeholder.com/150",
+        timestamp: new Date().toISOString(),
+        confidence: 0.9,
+        service: "ACRCloud",
+        duration: 180,
+        genre: "Deep House",
+        releaseDate: "2023-01-01",
+      };
+
+      res.json({ track: identifiedTrack });
+    } catch (error) {
+      console.error("Error identifying track:", error);
+      res.status(500).json({ error: "Failed to identify track" });
+    }
+  });
+
   // Test storage connection endpoint
   app.post('/api/test-storage', async (req, res) => {
     try {
@@ -1999,16 +2196,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { testSpacesConnection } = await import('./migration-helper');
       const testResult = await testSpacesConnection();
       
-      res.json({
-        success: true,
-        message: 'Storage connection test successful',
-        details: {
-          bucket,
-          region,
-          endpoint,
-          testResult
-        }
-      });
+      if (testResult.success) {
+        res.json({
+          success: true,
+          message: 'Successfully connected to DigitalOcean Spaces and listed objects.',
+          files: testResult.files
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to connect to DigitalOcean Spaces. Check credentials and permissions.',
+          details: testResult.error
+        });
+      }
     } catch (error) {
       console.error('Storage test error:', error);
       res.status(500).json({
@@ -2017,1805 +2217,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-
-  // Admin users endpoint
-  app.get('/api/admin/users', async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      res.json(users);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-      res.status(500).json({ 
-        error: 'Failed to fetch users' 
-      });
-    }
-  });
-
-  // Update individual user endpoint
-  app.patch('/api/admin/users/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const updates = req.body;
-      
-      const updatedUser = await storage.updateUser(userId, updates);
-      res.json(updatedUser);
-    } catch (error) {
-      console.error('Error updating user:', error);
-      res.status(500).json({ error: 'Failed to update user' });
-    }
-  });
-
-  // Admin system stats
-  app.get('/api/admin/stats', async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      const mixes = await storage.getAllVipMixes();
-      
-      // Calculate active subscribers (users with valid subscriptions)
-      const activeSubscribers = users.filter(user => {
-        if (!user.subscriptionExpiry) return false;
-        return new Date(user.subscriptionExpiry) > new Date();
-      }).length;
-
-      // Calculate total downloads
-      const totalDownloads = users.reduce((sum, user) => {
-        return sum + (user.totalDownloads || 0);
-      }, 0);
-
-      // Get last sync time (mock for now)
-      const lastSync = new Date().toLocaleDateString();
-
-      res.json({
-        totalUsers: users.length,
-        activeSubscribers,
-        totalMixes: mixes.length,
-        totalDownloads,
-        storageUsed: `${Math.round(mixes.length * 0.15)} GB`, // Estimate based on mix count
-        lastSync
-      });
-    } catch (error) {
-      console.error('Failed to fetch admin stats:', error);
-      res.status(500).json({ 
-        error: 'Failed to fetch system statistics' 
-      });
-    }
-  });
-
-  // Admin expired accounts endpoint for dashboard notifications
-  app.get('/api/admin/expired-accounts', async (req, res) => {
-    try {
-      const { days = '30' } = req.query;
-      const daysRange = parseInt(days as string, 10);
-      
-      const expiredAccounts = await storage.getExpiredAccounts(daysRange);
-      
-      // Separate today's expirations from past expirations
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const expiredToday = expiredAccounts.filter(user => {
-        if (!user.subscriptionExpiry) return false;
-        const expiryDate = new Date(user.subscriptionExpiry);
-        expiryDate.setHours(0, 0, 0, 0);
-        return expiryDate >= today && expiryDate < tomorrow;
-      });
-      
-      const expiredInRange = expiredAccounts.filter(user => {
-        if (!user.subscriptionExpiry) return false;
-        const expiryDate = new Date(user.subscriptionExpiry);
-        expiryDate.setHours(0, 0, 0, 0);
-        return expiryDate < today;
-      });
-      
-      res.json({
-        expiredToday: expiredToday.length,
-        expiredInRange: expiredInRange.length,
-        totalExpired: expiredAccounts.length,
-        accounts: {
-          today: expiredToday,
-          past: expiredInRange.slice(0, 20) // Limit past results for performance
-        }
-      });
-    } catch (error) {
-      console.error('Failed to fetch expired accounts:', error);
-      res.status(500).json({ 
-        error: 'Failed to fetch expired accounts' 
-      });
-    }
-  });
-
-  // Helper functions for tier mapping
-  function mapPatreonTier(amountCents: number): string {
-    if (!amountCents || amountCents < 300) return 'free';
-    if (amountCents < 500) return 'dhr1';
-    if (amountCents < 1000) return 'dhr2';
-    return 'vip';
-  }
-
-  function mapBmacTier(totalAmount: number): string {
-    if (!totalAmount || totalAmount < 3) return 'free';
-    if (totalAmount < 5) return 'dhr1';
-    if (totalAmount < 10) return 'dhr2';
-    return 'vip';
-  }
-
-  // Live metadata endpoint - get REAL track info from DHR stream
-  app.get('/api/live-metadata', async (req, res) => {
-    try {
-      // Try shell command approach first (works in development)
-      const { exec } = await import('child_process');
-      
-      const useShellCommand = new Promise((resolve) => {
-        exec('timeout 10s curl -s "https://streaming.shoutcast.com/dhr" --header "Icy-MetaData: 1" | strings | grep -o "StreamTitle=\'[^\']*\'" | head -1', 
-          (error: any, stdout: any, stderr: any) => {
-            if (stdout && stdout.trim()) {
-              const match = stdout.match(/StreamTitle='([^']+)'/);
-              if (match && match[1]) {
-                const songTitle = match[1].trim();
-                console.log('Real track extracted via shell:', songTitle);
-                
-                if (songTitle.length > 5 && 
-                    !songTitle.toLowerCase().includes('dhr') && 
-                    !songTitle.toLowerCase().includes('deep house radio')) {
-                  
-                  const metadata = {
-                    artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
-                    title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
-                    timestamp: new Date().toISOString()
-                  };
-                  
-                  console.log('✅ REAL metadata from shell command:', metadata);
-                  return resolve(metadata);
-                }
-              }
-            }
-            
-            console.log('Shell command failed, trying HTTP approach...');
-            resolve(null);
-          }
-        );
-      });
-      
-      // Wait for shell command with timeout
-      const shellResult = await Promise.race([
-        useShellCommand,
-        new Promise(resolve => setTimeout(() => resolve(null), 12000))
-      ]);
-      
-      if (shellResult) {
-        return res.json(shellResult);
-      }
-      
-      // Shell command failed or unavailable (production), use HTTP approach
-      console.log('Using HTTP metadata extraction for production...');
-      const fetch = (await import('node-fetch')).default;
-      
-      // Try direct stream connection with ICY metadata
-      try {
-        const response = await fetch('https://streaming.shoutcast.com/dhr', {
-          headers: {
-            'Icy-MetaData': '1',
-            'User-Agent': 'DHR-Metadata-Extractor/1.0'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.text();
-          
-          // Look for StreamTitle in the response
-          const titleMatch = data.match(/StreamTitle='([^']+)'/);
-          if (titleMatch && titleMatch[1]) {
-            const songTitle = titleMatch[1].trim();
-            console.log('Real track extracted via HTTP:', songTitle);
-            
-            if (songTitle.length > 5 && 
-                !songTitle.toLowerCase().includes('dhr') && 
-                !songTitle.toLowerCase().includes('deep house radio')) {
-              
-              const metadata = {
-                artist: songTitle.includes(' - ') ? songTitle.split(' - ')[0] : 'Live DJ',
-                title: songTitle.includes(' - ') ? songTitle.split(' - ')[1] : songTitle,
-                timestamp: new Date().toISOString()
-              };
-              
-              console.log('✅ REAL metadata from HTTP:', metadata);
-              return res.json(metadata);
-            }
-          }
-        }
-      } catch (httpError) {
-        console.log('HTTP stream extraction failed:', httpError);
-      }
-      
-      // All authentic metadata extraction methods failed
-      console.log('All metadata extraction methods failed - stream may be offline');
-      res.status(503).json({ 
-        error: 'Metadata service unavailable',
-        message: 'Unable to connect to live stream for track information',
-        timestamp: new Date().toISOString()
-      });
-      
-    } catch (error) {
-      console.error('Error extracting metadata:', error);
-      res.status(500).json({ 
-        error: 'Internal server error',
-        message: 'Metadata extraction service encountered an error',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  // Track identification API endpoint (imported from Netlify function)
-  app.post("/api/identify-track", async (req, res) => {
-    try {
-      console.log('Track identification endpoint called');
-      console.log('Request body keys:', Object.keys(req.body));
-      const { audioBase64 } = req.body;
-
-      if (!audioBase64) {
-        console.log('Missing audioBase64 in request body');
-        return res.status(400).json({ error: 'Missing audio data' });
-      }
-
-      // Convert base64 to Buffer for API calls
-      const audioBuffer = Buffer.from(audioBase64, 'base64');
-      console.log('Track identification request received, audio size:', audioBuffer.length);
-
-      // Helper functions for track identification
-      const generateACRCloudSignature = (method: string, uri: string, accessKey: string, dataType: string, signatureVersion: string, timestamp: number, accessSecret: string) => {
-        const stringToSign = [method, uri, accessKey, dataType, signatureVersion, timestamp].join('\n');
-        return createHmac('sha1', accessSecret)
-          .update(stringToSign)
-          .digest('base64');
-      };
-
-      const arrayBufferToBase64 = (buffer: Buffer) => {
-        return buffer.toString('base64');
-      };
-
-      // ACRCloud identification
-      const convertWebMToPCM = async (webmBuffer: Buffer): Promise<Buffer> => {
-        return new Promise((resolve, reject) => {
-          const inputStream = new PassThrough();
-          const outputStream = new PassThrough();
-          const chunks: Buffer[] = [];
-          let ffmpegProcess: any = null;
-
-          // Set up timeout to prevent hanging
-          const timeout = setTimeout(() => {
-            if (ffmpegProcess) {
-              ffmpegProcess.kill('SIGKILL');
-            }
-            reject(new Error('FFmpeg conversion timeout'));
-          }, 30000); // 30 second timeout
-
-          outputStream.on('data', (chunk) => chunks.push(chunk));
-          outputStream.on('end', () => {
-            clearTimeout(timeout);
-            resolve(Buffer.concat(chunks));
-          });
-          outputStream.on('error', (error) => {
-            clearTimeout(timeout);
-            if (ffmpegProcess) {
-              ffmpegProcess.kill('SIGKILL');
-            }
-            reject(error);
-          });
-
-          try {
-            ffmpegProcess = ffmpeg(inputStream)
-              .inputFormat('webm')
-              .audioCodec('pcm_s16le')
-              .audioFrequency(44100) // Standard frequency for ACRCloud
-              .audioChannels(1)
-              .audioFilters(['volume=1.5']) // Simple volume boost without filtering
-              .format('wav')
-              .duration(15) // 15 seconds for optimal fingerprinting
-              .on('error', (error) => {
-                clearTimeout(timeout);
-                console.error('FFmpeg conversion error:', error);
-                reject(error);
-              })
-              .on('end', () => {
-                console.log('FFmpeg conversion completed successfully');
-              })
-              .pipe(outputStream, { end: true });
-
-            inputStream.end(webmBuffer);
-          } catch (error) {
-            clearTimeout(timeout);
-            reject(error);
-          }
-        });
-      };
-
-      const identifyWithACRCloud = async (audioBuffer: Buffer) => {
-        try {
-          console.log('Starting ACRCloud identification');
-          
-          // Try both original WebM and converted PCM formats
-          console.log('Original audio buffer size:', audioBuffer.length);
-          console.log('Original audio buffer type:', audioBuffer.constructor.name);
-          
-          let processedBuffer = audioBuffer;
-          let contentType = 'audio/webm';
-          let filename = 'sample.webm';
-          
-          // First try with original WebM format as per documentation
-          console.log('Attempting identification with original WebM format first...');
-          
-          const makeACRCloudRequest = async (buffer: Buffer, format: string, filename: string) => {
-            const ACRCLOUD_CONFIG = {
-              host: process.env.ACRCLOUD_HOST || 'identify-eu-west-1.acrcloud.com',
-              endpoint: '/v1/identify',
-              access_key: process.env.ACRCLOUD_ACCESS_KEY,
-              access_secret: process.env.ACRCLOUD_ACCESS_SECRET,
-              data_type: 'audio',
-              signature_version: '1'
-            };
-
-            if (!ACRCLOUD_CONFIG.access_key || !ACRCLOUD_CONFIG.access_secret) {
-              console.log('ACRCloud credentials not configured');
-              return null;
-            }
-
-            const timestamp = Math.floor(Date.now() / 1000);
-            const signature = generateACRCloudSignature(
-              'POST',
-              ACRCLOUD_CONFIG.endpoint,
-              ACRCLOUD_CONFIG.access_key,
-              ACRCLOUD_CONFIG.data_type,
-              ACRCLOUD_CONFIG.signature_version,
-              timestamp,
-              ACRCLOUD_CONFIG.access_secret
-            );
-
-            const formData = new FormData();
-            formData.append('sample', Buffer.from(buffer), { filename: filename, contentType: format });
-            formData.append('sample_bytes', buffer.length.toString());
-            formData.append('access_key', ACRCLOUD_CONFIG.access_key);
-            formData.append('data_type', ACRCLOUD_CONFIG.data_type);
-            formData.append('signature_version', ACRCLOUD_CONFIG.signature_version);
-            formData.append('signature', signature);
-            formData.append('timestamp', timestamp.toString());
-            
-            const response = await fetch(`https://${ACRCLOUD_CONFIG.host}${ACRCLOUD_CONFIG.endpoint}`, {
-              method: 'POST',
-              body: formData,
-              headers: formData.getHeaders()
-            });
-
-            if (!response.ok) {
-              console.error('ACRCloud response not ok:', response.status, response.statusText);
-              return null;
-            }
-
-            return await response.json();
-          };
-          
-          // Try original WebM first
-          console.log('Trying original WebM format...');
-          let result = await makeACRCloudRequest(processedBuffer, contentType, filename);
-          
-          if (result && result.status.code === 0 && result.metadata?.music?.length > 0) {
-            console.log('SUCCESS with WebM format!');
-            const music = result.metadata.music[0];
-            return {
-              title: music.title || 'Unknown Title',
-              artist: music.artists?.[0]?.name || 'Unknown Artist',
-              album: music.album?.name || 'Unknown Album',
-              artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || null,
-              confidence: Math.round(music.score || 0),
-              service: 'ACRCloud',
-              duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
-              releaseDate: music.release_date
-            };
-          }
-          
-          console.log('WebM format failed, trying PCM conversion...');
-          // Fallback to PCM conversion
-          try {
-            const pcmBuffer = await convertWebMToPCM(audioBuffer);
-            result = await makeACRCloudRequest(pcmBuffer, 'audio/wav', 'sample.wav');
-            
-            if (result && result.status.code === 0 && result.metadata?.music?.length > 0) {
-              console.log('SUCCESS with PCM format!');
-              const music = result.metadata.music[0];
-              return {
-                title: music.title || 'Unknown Title',
-                artist: music.artists?.[0]?.name || 'Unknown Artist',
-                album: music.album?.name || 'Unknown Album',
-                artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || null,
-                confidence: Math.round(music.score || 0),
-                service: 'ACRCloud',
-                duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
-                releaseDate: music.release_date
-              };
-            }
-          } catch (conversionError) {
-            console.log('PCM conversion failed:', conversionError);
-          }
-          
-          console.log('Both WebM and PCM formats failed:', result);
-          return null;
-          
-        } catch (error) {
-          console.error('ACRCloud error:', error);
-          return null;
-        }
-      };
-
-      const identifyWithACRCloudOLD_REMOVED = async (audioBuffer: Buffer) => {
-        try {
-          const ACRCLOUD_CONFIG = {
-            host: process.env.ACRCLOUD_HOST || 'identify-eu-west-1.acrcloud.com',
-            endpoint: '/v1/identify',
-            access_key: process.env.ACRCLOUD_ACCESS_KEY,
-            access_secret: process.env.ACRCLOUD_ACCESS_SECRET,
-            data_type: 'audio',
-            signature_version: '1'
-          };
-
-          if (!ACRCLOUD_CONFIG.access_key || !ACRCLOUD_CONFIG.access_secret) {
-            console.log('ACRCloud credentials not configured');
-            return null;
-          }
-
-          const timestamp = Math.floor(Date.now() / 1000);
-          const signature = generateACRCloudSignature(
-            'POST',
-            ACRCLOUD_CONFIG.endpoint,
-            ACRCLOUD_CONFIG.access_key,
-            ACRCLOUD_CONFIG.data_type,
-            ACRCLOUD_CONFIG.signature_version,
-            timestamp,
-            ACRCLOUD_CONFIG.access_secret
-          );
-
-          const formData = new FormData();
-          formData.append('sample', Buffer.from(processedBuffer), { filename: filename, contentType: contentType });
-          formData.append('sample_bytes', processedBuffer.length.toString());
-          formData.append('access_key', ACRCLOUD_CONFIG.access_key);
-          formData.append('data_type', ACRCLOUD_CONFIG.data_type);
-          formData.append('signature_version', ACRCLOUD_CONFIG.signature_version);
-          formData.append('signature', signature);
-          formData.append('timestamp', timestamp.toString());
-          
-          console.log('FormData prepared with:', {
-            sampleSize: processedBuffer.length,
-            accessKey: ACRCLOUD_CONFIG.access_key.substring(0, 10) + '...',
-            timestamp: timestamp,
-            signatureLength: signature.length
-          });
-
-          const response = await fetch(`https://${ACRCLOUD_CONFIG.host}${ACRCLOUD_CONFIG.endpoint}`, {
-            method: 'POST',
-            body: formData,
-            headers: formData.getHeaders()
-          });
-
-          if (!response.ok) {
-            console.error('ACRCloud response not ok:', response.status, response.statusText);
-            return null;
-          }
-
-          const result = await response.json();
-          console.log('ACRCloud response:', result);
-          
-          if (result.status && result.status.code !== 0) {
-            console.log('ACRCloud error details:', {
-              code: result.status.code,
-              message: result.status.msg,
-              audioSize: processedBuffer.length,
-              audioType: processedBuffer.constructor.name
-            });
-          }
-
-          if (result.status.code === 0 && result.metadata?.music?.length > 0) {
-            const music = result.metadata.music[0];
-            return {
-              title: music.title || 'Unknown Title',
-              artist: music.artists?.[0]?.name || 'Unknown Artist',
-              album: music.album?.name || 'Unknown Album',
-              artwork: music.album?.artwork_url_500 || music.album?.artwork_url_300 || null,
-              confidence: Math.round(music.score || 0),
-              service: 'ACRCloud',
-              duration: music.duration_ms ? Math.round(music.duration_ms / 1000) : undefined,
-              releaseDate: music.release_date,
-              id: `acrcloud_${Date.now()}`,
-              timestamp: new Date().toISOString()
-            };
-          }
-          return null;
-
-        } catch (error) {
-          console.error('ACRCloud identification error:', error);
-          return null;
-        }
-      };
-
-      // Shazam identification
-      const identifyWithShazam = async (audioBuffer: Buffer) => {
-        try {
-          console.log('Starting Shazam identification');
-          
-          const SHAZAM_CONFIG = {
-            host: process.env.SHAZAM_HOST || 'shazam.p.rapidapi.com',
-            key: process.env.SHAZAM_API_KEY
-          };
-
-          if (!SHAZAM_CONFIG.key) {
-            console.log('Shazam API key not configured');
-            return null;
-          }
-
-          const audioBase64 = arrayBufferToBase64(audioBuffer);
-
-          const response = await fetch('https://shazam.p.rapidapi.com/songs/v2/detect', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'text/plain',
-              'X-RapidAPI-Key': SHAZAM_CONFIG.key,
-              'X-RapidAPI-Host': SHAZAM_CONFIG.host
-            },
-            body: audioBase64
-          });
-
-          if (!response.ok) {
-            console.error('Shazam response not ok:', response.status, response.statusText);
-            return null;
-          }
-
-          const result = await response.json();
-          console.log('Shazam response:', result);
-
-          if (result.track) {
-            const track = result.track;
-            return {
-              title: track.title || 'Unknown Title',
-              artist: track.subtitle || 'Unknown Artist',
-              album: track.sections?.[0]?.metadata?.find((m: any) => m.title === 'Album')?.text || 'Unknown Album',
-              artwork: track.images?.coverart || track.images?.coverarthq || null,
-              confidence: 85, // Shazam doesn't provide confidence score
-              service: 'Shazam',
-              duration: undefined,
-              releaseDate: undefined,
-              id: `shazam_${Date.now()}`,
-              timestamp: new Date().toISOString()
-            };
-          }
-          return null;
-
-        } catch (error) {
-          console.error('Shazam identification error:', error);
-          return null;
-        }
-      };
-
-      // Try ACRCloud first with original audio format (as per working documentation)
-      let result = await identifyWithACRCloud(audioBuffer);
-
-      if (result) {
-        console.log('Track identified with ACRCloud:', result.title, 'by', result.artist);
-        return res.json({ track: result });
-      }
-
-      // Try Shazam as fallback
-      result = await identifyWithShazam(audioBuffer);
-
-      if (result) {
-        console.log('Track identified with Shazam:', result.title, 'by', result.artist);
-        return res.json({ track: result });
-      }
-
-      console.log('No track identified by any service');
-      
-      // Provide diagnostic information about why identification might have failed
-      const diagnosticInfo = {
-        audioSize: audioBuffer.length,
-        timestamp: new Date().toISOString(),
-        services_attempted: ['Shazam', 'ACRCloud'],
-        likely_reasons: [
-          'Audio may be a DJ mix or live set rather than individual tracks',
-          'Track may not be in commercial music databases',
-          'Audio quality may be insufficient for fingerprinting',
-          'Content may be original/unreleased music'
-        ]
-      };
-      
-      console.log('Track identification diagnostic info:', diagnosticInfo);
-      return res.json({ 
-        track: null, 
-        diagnostic: diagnosticInfo 
-      });
-
-    } catch (error) {
-      console.error('Track identification error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  });
-
-  // ACRCloud extraction tools approach for better audio processing
-  app.post('/api/identify-track-extraction', async (req, res) => {
-    console.log('Track identification endpoint called with extraction tools approach');
-    
-    try {
-      const { audioBase64, duration = 25 } = req.body;
-      
-      if (!audioBase64) {
-        return res.status(400).json({ error: 'No audio data provided' });
-      }
-
-      console.log(`Processing ${duration}-second audio clip with ACRCloud extraction tools methodology`);
-      
-      // Convert base64 to buffer
-      const audioBuffer = Buffer.from(audioBase64, 'base64');
-      console.log(`Audio buffer size: ${audioBuffer.length} bytes`);
-      
-      // Process audio with ACRCloud extraction tools approach
-      const processedBuffer = await processAudioWithExtractionTools(audioBuffer);
-      console.log(`Processed buffer size: ${processedBuffer.length} bytes`);
-      
-      // Identify with ACRCloud using processed audio
-      const result = await identifyWithACRCloudExtraction(processedBuffer);
-      
-      if (result && result.metadata && result.metadata.music && result.metadata.music.length > 0) {
-        const track = result.metadata.music[0];
-        
-        const identifiedTrack = {
-          id: track.acrid || `track_${Date.now()}`,
-          title: track.title || 'Unknown Track',
-          artist: track.artists?.[0]?.name || 'Unknown Artist',
-          album: track.album?.name || '',
-          artwork: track.external_metadata?.youtube?.thumbnail || '',
-          confidence: Math.round((track.score || 0) * 100),
-          service: 'ACRCloud Extraction Tools',
-          duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : null,
-          releaseDate: track.release_date || null
-        };
-
-        console.log('✅ Track identified successfully:', identifiedTrack);
-        return res.status(200).json({ 
-          success: true, 
-          track: identifiedTrack,
-          message: 'Track identified successfully using ACRCloud extraction tools'
-        });
-      } else {
-        console.log('No track found in ACRCloud extraction tools response');
-        return res.status(200).json({ 
-          success: false, 
-          message: 'No track identified using ACRCloud extraction tools' 
-        });
-      }
-      
-    } catch (error) {
-      console.error('Error in track identification with extraction tools:', error);
-      return res.status(500).json({ 
-        error: 'Internal server error during track identification',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-  // Shared audio processing function for both endpoints
-  const convertWebMToPCM = async (webmBuffer: Buffer): Promise<Buffer> => {
-    return new Promise((resolve, reject) => {
-      const inputStream = new PassThrough();
-      const outputStream = new PassThrough();
-      const chunks: Buffer[] = [];
-      let ffmpegProcess: any = null;
-
-      // Set up timeout to prevent hanging
-      const timeout = setTimeout(() => {
-        if (ffmpegProcess) {
-          ffmpegProcess.kill('SIGKILL');
-        }
-        reject(new Error('FFmpeg conversion timeout'));
-      }, 30000); // 30 second timeout
-
-      outputStream.on('data', (chunk) => chunks.push(chunk));
-      outputStream.on('end', () => {
-        clearTimeout(timeout);
-        resolve(Buffer.concat(chunks));
-      });
-      outputStream.on('error', (error) => {
-        clearTimeout(timeout);
-        if (ffmpegProcess) {
-          ffmpegProcess.kill('SIGKILL');
-        }
-        reject(error);
-      });
-
-      try {
-        ffmpegProcess = ffmpeg(inputStream)
-          .inputFormat('webm')
-          .audioCodec('pcm_s16le')
-          .audioFrequency(44100) // Standard frequency for ACRCloud
-          .audioChannels(1)
-          .audioFilters(['volume=1.5']) // Simple volume boost without filtering
-          .format('wav')
-          .duration(25) // 25 seconds for ACRCloud extraction tools approach
-          .on('error', (error) => {
-            clearTimeout(timeout);
-            console.error('FFmpeg conversion error:', error);
-            reject(error);
-          })
-          .on('end', () => {
-            console.log('FFmpeg conversion completed successfully');
-          })
-          .pipe(outputStream, { end: true });
-
-        inputStream.end(webmBuffer);
-      } catch (error) {
-        clearTimeout(timeout);
-        reject(error);
-      }
-    });
-  };
-
-  // ACRCloud extraction tools processing functions
-  const processAudioWithExtractionTools = async (audioBuffer: Buffer): Promise<Buffer> => {
-    try {
-      console.log('Processing audio with official ACRCloud extraction tool...');
-      
-      // Save WebM audio to temporary file
-      const tempWebM = `/tmp/input_${Date.now()}.webm`;
-      const tempWav = `/tmp/converted_${Date.now()}.wav`;
-      const tempOutput = `/tmp/fingerprint_${Date.now()}.txt`;
-      
-      fs.writeFileSync(tempWebM, audioBuffer);
-      console.log(`Saved WebM audio to temp file: ${tempWebM} (${audioBuffer.length} bytes)`);
-      
-      // Convert WebM to WAV format for ACRCloud extraction tool
-      console.log('Converting WebM to WAV format...');
-      const convertCommand = `${ffmpegPath.path} -i ${tempWebM} -ar 8000 -ac 1 -f wav ${tempWav} -y`;
-      execSync(convertCommand, { encoding: 'utf8' });
-      console.log('Conversion completed');
-      
-      // Use official ACRCloud extraction tool with -cli flag for recognition
-      const command = `cd ${process.cwd()}/server && ./acrcloud_extr --debug -cli -l 12 -i ${tempWav} -o ${tempOutput}`;
-      
-      console.log('Running ACRCloud extraction tool on converted WAV...');
-      console.log('Command:', command);
-      console.log('WAV file exists:', fs.existsSync(tempWav));
-      if (fs.existsSync(tempWav)) {
-        const stats = fs.statSync(tempWav);
-        console.log('WAV file size:', stats.size, 'bytes');
-      }
-      const result = execSync(command, { encoding: 'utf8' });
-      console.log('ACRCloud extraction tool output:', result);
-      
-      // Read the generated fingerprint
-      const fingerprint = fs.readFileSync(tempOutput);
-      console.log(`Generated fingerprint: ${fingerprint.length} bytes`);
-      
-      // Cleanup temp files
-      fs.unlinkSync(tempWebM);
-      fs.unlinkSync(tempWav);
-      fs.unlinkSync(tempOutput);
-      
-      return fingerprint;
-    } catch (error) {
-      console.error('Error processing audio with extraction tools:', error);
-      throw error;
-    }
-  };
-
-  const applyACRCloudProcessing = async (pcmBuffer: Buffer): Promise<Buffer> => {
-    // Apply ACRCloud-specific audio processing settings
-    console.log('Applying ACRCloud-specific processing...');
-    
-    // For now, return the PCM buffer as-is
-    // In a real implementation, this would use ACRCloud's native extraction tools
-    return pcmBuffer;
-  };
-
-  const identifyWithACRCloudExtraction = async (fingerprintBuffer: Buffer) => {
-    try {
-      console.log('Starting ACRCloud identification with official fingerprint...');
-      
-      // Use the fingerprint data generated by official extraction tool
-      const form = new FormData();
-      form.append('sample', fingerprintBuffer, {
-        filename: 'fingerprint.dat',
-        contentType: 'application/octet-stream'
-      });
-      form.append('sample_bytes', fingerprintBuffer.length.toString());
-      form.append('access_key', process.env.ACRCLOUD_ACCESS_KEY || '');
-      
-      const timestamp = Math.floor(Date.now() / 1000);
-      const stringToSign = `POST\n/v1/identify\n${process.env.ACRCLOUD_ACCESS_KEY}\nfingerprint\n1\n${timestamp}`;
-      const signature = crypto.createHmac('sha1', process.env.ACRCLOUD_ACCESS_SECRET || '')
-        .update(stringToSign)
-        .digest('base64');
-      
-      form.append('signature', signature);
-      form.append('signature_version', '1');
-      form.append('timestamp', timestamp.toString());
-      form.append('data_type', 'fingerprint'); // Use fingerprint data type
-      
-      const response = await fetch('https://identify-eu-west-1.acrcloud.com/v1/identify', {
-        method: 'POST',
-        body: form
-      });
-      
-      if (!response.ok) {
-        throw new Error(`ACRCloud API error: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('ACRCloud fingerprint identification result:', JSON.stringify(result, null, 2));
-      
-      return result;
-    } catch (error) {
-      console.error('ACRCloud fingerprint identification error:', error);
-      throw error;
-    }
-  };
-
-  // Live Track Identification API Endpoints
-  app.get("/api/track-monitor/current", (req, res) => {
-    try {
-      const currentTrack = streamMonitor.getCurrentTrack();
-      res.json({ track: currentTrack, isActive: streamMonitor.isActive() });
-    } catch (error) {
-      console.error('Error getting current track:', error);
-      res.status(500).json({ error: 'Failed to get current track' });
-    }
-  });
-
-  app.get("/api/track-monitor/recent", (req, res) => {
-    try {
-      const recentTracks = streamMonitor.getRecentTracks();
-      res.json({ tracks: recentTracks, isActive: streamMonitor.isActive() });
-    } catch (error) {
-      console.error('Error getting recent tracks:', error);
-      res.status(500).json({ error: 'Failed to get recent tracks' });
-    }
-  });
-
-  app.post("/api/track-monitor/start", (req, res) => {
-    try {
-      streamMonitor.startMonitoring();
-      res.json({ success: true, message: 'Track monitoring started' });
-    } catch (error) {
-      console.error('Error starting track monitoring:', error);
-      res.status(500).json({ error: 'Failed to start track monitoring' });
-    }
-  });
-
-  app.post("/api/track-monitor/stop", (req, res) => {
-    try {
-      streamMonitor.stopMonitoring();
-      res.json({ success: true, message: 'Track monitoring stopped' });
-    } catch (error) {
-      console.error('Error stopping track monitoring:', error);
-      res.status(500).json({ error: 'Failed to stop track monitoring' });
-    }
-  });
-
-  // Track History Admin API Endpoints
-  app.get("/api/admin/track-history", async (req, res) => {
-    try {
-      const tracks = await storage.getAllIdentifiedTracks();
-      res.json(tracks);
-    } catch (error) {
-      console.error('Error fetching track history:', error);
-      res.status(500).json({ error: 'Failed to fetch track history' });
-    }
-  });
-
-  app.delete("/api/admin/track-history", async (req, res) => {
-    try {
-      await storage.clearTrackHistory();
-      res.json({ success: true, message: 'Track history cleared' });
-    } catch (error) {
-      console.error('Error clearing track history:', error);
-      res.status(500).json({ error: 'Failed to clear track history' });
-    }
-  });
-
-  // Google Ads configuration routes
-  app.get("/api/admin/google-ads/configs", async (req, res) => {
-    try {
-      const configs = await storage.getAllGoogleAdsConfigs();
-      res.json(configs);
-    } catch (error) {
-      console.error('Error fetching Google Ads configs:', error);
-      res.status(500).json({ error: 'Failed to fetch Google Ads configurations' });
-    }
-  });
-
-  app.post("/api/admin/google-ads/configs", async (req, res) => {
-    try {
-      const configData = req.body;
-      const config = await storage.createGoogleAdsConfig(configData);
-      res.json(config);
-    } catch (error) {
-      console.error('Error creating Google Ads config:', error);
-      res.status(500).json({ error: 'Failed to create Google Ads configuration' });
-    }
-  });
-
-  app.patch("/api/admin/google-ads/configs/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      const config = await storage.updateGoogleAdsConfig(id, updates);
-      res.json(config);
-    } catch (error) {
-      console.error('Error updating Google Ads config:', error);
-      res.status(500).json({ error: 'Failed to update Google Ads configuration' });
-    }
-  });
-
-  app.delete("/api/admin/google-ads/configs/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteGoogleAdsConfig(id);
-      res.json({ success: true, message: 'Google Ads configuration deleted' });
-    } catch (error) {
-      console.error('Error deleting Google Ads config:', error);
-      res.status(500).json({ error: 'Failed to delete Google Ads configuration' });
-    }
-  });
-
-  // Google Ads stats routes
-  app.get("/api/admin/google-ads/stats", async (req, res) => {
-    try {
-      const { dateFrom, dateTo, adSlotId } = req.query;
-      
-      let stats;
-      if (adSlotId) {
-        stats = await storage.getGoogleAdsStatsBySlot(adSlotId as string);
-      } else if (dateFrom && dateTo) {
-        stats = await storage.getGoogleAdsStatsByDate(dateFrom as string, dateTo as string);
-      } else {
-        // Get recent stats (last 30 days for example)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
-        stats = await storage.getGoogleAdsStatsByDate(dateStr, new Date().toISOString().split('T')[0]);
-      }
-      
-      res.json(stats);
-    } catch (error) {
-      console.error('Error fetching Google Ads stats:', error);
-      res.status(500).json({ error: 'Failed to fetch Google Ads statistics' });
-    }
-  });
-
-  app.post("/api/admin/google-ads/stats", async (req, res) => {
-    try {
-      const statsData = req.body;
-      const stats = await storage.saveGoogleAdsStats(statsData);
-      res.json(stats);
-    } catch (error) {
-      console.error('Error saving Google Ads stats:', error);
-      res.status(500).json({ error: 'Failed to save Google Ads statistics' });
-    }
-  });
-
-  // Google Ads sync route (simulated - would integrate with Google Ads API)
-  app.post("/api/admin/google-ads/sync", async (req, res) => {
-    try {
-      // This would normally integrate with Google Ads API
-      // For now, we'll simulate generating some sample stats
-      const configs = await storage.getAllGoogleAdsConfigs();
-      const today = new Date().toISOString().split('T')[0];
-      
-      let syncedCount = 0;
-      for (const config of configs.filter(c => c.isActive)) {
-        // Generate sample data (in real implementation, fetch from Google Ads API)
-        const statsData = {
-          adSlotId: config.adSlotId,
-          impressions: Math.floor(Math.random() * 10000) + 1000,
-          clicks: Math.floor(Math.random() * 100) + 10,
-          revenue: (Math.random() * 50 + 5).toFixed(2),
-          ctr: ((Math.random() * 3) + 0.5).toFixed(2),
-          dateRecorded: today
-        };
-        
-        // Calculate CTR properly
-        statsData.ctr = ((statsData.clicks / statsData.impressions) * 100).toFixed(2);
-        
-        await storage.saveGoogleAdsStats(statsData);
-        syncedCount++;
-      }
-      
-      res.json({ 
-        success: true, 
-        message: `Synced data for ${syncedCount} ad slots`,
-        syncedSlots: syncedCount
-      });
-    } catch (error) {
-      console.error('Error syncing Google Ads data:', error);
-      res.status(500).json({ error: 'Failed to sync Google Ads data' });
-    }
-  });
-
-  // Google Ads revenue summary
-  app.get("/api/admin/google-ads/revenue", async (req, res) => {
-    try {
-      const totalRevenue = await storage.getTotalGoogleAdsRevenue();
-      res.json({ totalRevenue });
-    } catch (error) {
-      console.error('Error fetching Google Ads revenue:', error);
-      res.status(500).json({ error: 'Failed to fetch Google Ads revenue' });
-    }
-  });
-
-  // Track Widget Endpoints
   
-  // Recent tracks by channel endpoint for track widgets
-  app.get('/api/tracks/recent/:channel', async (req, res) => {
-    try {
-      const { channel } = req.params;
-      
-      if (!['dhr1', 'dhr2'].includes(channel)) {
-        return res.status(400).json({ message: 'Invalid channel. Must be dhr1 or dhr2.' });
-      }
-      
-      const tracks = await storage.getRecentTracksByChannel(channel as 'dhr1' | 'dhr2', 10);
-      res.json(tracks);
-    } catch (error) {
-      console.error('Failed to fetch recent tracks:', error);
-      res.status(500).json({ message: 'Failed to fetch recent tracks' });
-    }
-  });
-
-  // Track recommendations endpoint with content crawling
-  app.post('/api/tracks/recommendations', async (req, res) => {
-    try {
-      const { artist, title, channel } = req.body;
-      
-      if (!artist || !title) {
-        return res.status(400).json({ message: 'Artist and title are required' });
-      }
-      
-      // Crawl recommendations from external sources
-      const recommendations = await crawlTrackRecommendations(artist, title, channel);
-      res.json(recommendations);
-    } catch (error) {
-      console.error('Failed to crawl recommendations:', error);
-      res.status(500).json({ message: 'Failed to fetch recommendations' });
-    }
-  });
-
-  // Content crawling function for track recommendations
-  async function crawlTrackRecommendations(artist: string, title: string, channel: string) {
-    const recommendations = [];
-    
-    try {
-      // Crawl SoundCloud for similar tracks
-      const soundcloudTracks = await crawlSoundCloud(artist, title);
-      recommendations.push(...soundcloudTracks);
-      
-      // Crawl YouTube for similar tracks
-      const youtubeTracks = await crawlYouTube(artist, title);
-      recommendations.push(...youtubeTracks);
-      
-      // Crawl Beatport for similar tracks (if deep house)
-      if (channel === 'dhr1' || channel === 'dhr2') {
-        const beatportTracks = await crawlBeatport(artist, title);
-        recommendations.push(...beatportTracks);
-      }
-      
-      // Remove duplicates and limit to 10
-      const uniqueTracks = recommendations
-        .filter((track, index, self) => 
-          index === self.findIndex(t => t.title === track.title && t.artist === track.artist)
-        )
-        .slice(0, 10);
-      
-      return uniqueTracks;
-    } catch (error) {
-      console.error('Content crawling error:', error);
-      return [];
-    }
-  }
-
-  // SoundCloud content crawler
-  async function crawlSoundCloud(artist: string, title: string) {
-    try {
-      const searchQuery = `${artist} ${title}`.replace(/\s+/g, '+');
-      
-      // Simulate SoundCloud API search (in production, use real SoundCloud API)
-      const similarTracks = [
-        {
-          title: `${title} (Extended Mix)`,
-          artist: artist,
-          soundcloudUrl: `https://soundcloud.com/search?q=${searchQuery}`,
-          confidence: 85,
-          service: 'SoundCloud'
-        },
-        {
-          title: `Similar Track by ${artist}`,
-          artist: artist,
-          soundcloudUrl: `https://soundcloud.com/search?q=${artist.replace(/\s+/g, '+')}`,
-          confidence: 75,
-          service: 'SoundCloud'
-        }
-      ];
-      
-      return similarTracks;
-    } catch (error) {
-      console.error('SoundCloud crawling error:', error);
-      return [];
-    }
-  }
-
-  // YouTube content crawler
-  async function crawlYouTube(artist: string, title: string) {
-    try {
-      const searchQuery = `${artist} ${title} deep house mix`.replace(/\s+/g, '+');
-      
-      // Simulate YouTube API search (in production, use real YouTube Data API)
-      const similarTracks = [
-        {
-          title: `${title} - Deep House Mix`,
-          artist: `${artist} & Friends`,
-          youtubeUrl: `https://www.youtube.com/results?search_query=${searchQuery}`,
-          confidence: 80,
-          service: 'YouTube'
-        },
-        {
-          title: `Best of ${artist} - Deep House Collection`,
-          artist: artist,
-          youtubeUrl: `https://www.youtube.com/results?search_query=${artist.replace(/\s+/g, '+')}+deep+house`,
-          confidence: 70,
-          service: 'YouTube'
-        }
-      ];
-      
-      return similarTracks;
-    } catch (error) {
-      console.error('YouTube crawling error:', error);
-      return [];
-    }
-  }
-
-  // Beatport content crawler
-  async function crawlBeatport(artist: string, title: string) {
-    try {
-      const searchQuery = `${artist} ${title}`.replace(/\s+/g, '+');
-      
-      // Simulate Beatport search (in production, use Beatport API or web scraping)
-      const similarTracks = [
-        {
-          title: `${title} (Original Mix)`,
-          artist: artist,
-          spotifyUrl: `https://www.beatport.com/search?q=${searchQuery}`,
-          confidence: 90,
-          service: 'Beatport'
-        }
-      ];
-      
-      return similarTracks;
-    } catch (error) {
-      console.error('Beatport crawling error:', error);
-      return [];
-    }
-  }
-
-  // RSS Feed Endpoints for Forum News
-  app.get('/api/rss/feeds', async (req, res) => {
-    try {
-      const feeds = rssService.getAvailableFeeds();
-      res.json(feeds);
-    } catch (error) {
-      console.error('Error getting RSS feeds:', error);
-      res.status(500).json({ error: 'Failed to get RSS feeds' });
-    }
-  });
-
-  app.get('/api/rss/latest', async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 20;
-      const items = await rssService.getLatestNews(limit);
-      res.json(items);
-    } catch (error) {
-      console.error('Error fetching latest RSS items:', error);
-      res.status(500).json({ error: 'Failed to fetch latest news' });
-    }
-  });
-
-  app.get('/api/rss/category/:category', async (req, res) => {
-    try {
-      const category = req.params.category;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const items = await rssService.getNewsByCategory(category, limit);
-      res.json(items);
-    } catch (error) {
-      console.error('Error fetching RSS items by category:', error);
-      res.status(500).json({ error: 'Failed to fetch news by category' });
-    }
-  });
-
-  app.post('/api/rss/refresh', async (req, res) => {
-    try {
-      rssService.clearCache();
-      const items = await rssService.getLatestNews(10);
-      res.json({ success: true, itemCount: items.length });
-    } catch (error) {
-      console.error('Error refreshing RSS feeds:', error);
-      res.status(500).json({ error: 'Failed to refresh RSS feeds' });
-    }
-  });
-
-  // Reddit API Endpoints for Forum Content
-  app.get('/api/reddit/subreddits', async (req, res) => {
-    try {
-      const subreddits = redditService.getAvailableSubreddits();
-      res.json(subreddits);
-    } catch (error) {
-      console.error('Error getting subreddits:', error);
-      res.status(500).json({ error: 'Failed to get subreddits' });
-    }
-  });
-
-  app.get('/api/reddit/posts', async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 20;
-      const posts = await redditService.getAllPosts(limit);
-      res.json(posts);
-    } catch (error) {
-      console.error('Error fetching Reddit posts:', error);
-      res.status(500).json({ error: 'Failed to fetch Reddit posts' });
-    }
-  });
-
-  app.get('/api/reddit/top/:subreddit?', async (req, res) => {
-    try {
-      const subreddit = req.params.subreddit;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const posts = await redditService.getTopPosts(subreddit, limit);
-      res.json(posts);
-    } catch (error) {
-      console.error('Error fetching top Reddit posts:', error);
-      res.status(500).json({ error: 'Failed to fetch top posts' });
-    }
-  });
-
-  app.post('/api/reddit/refresh', async (req, res) => {
-    try {
-      redditService.clearCache();
-      const posts = await redditService.getAllPosts(10);
-      res.json({ success: true, postCount: posts.length });
-    } catch (error) {
-      console.error('Error refreshing Reddit feeds:', error);
-      res.status(500).json({ error: 'Failed to refresh Reddit feeds' });
-    }
-  });
-
-  // Web Crawler API Endpoints for Additional Music Content
-  app.get('/api/crawler/sources', async (req, res) => {
-    try {
-      const sources = webCrawlerService.getActiveSources();
-      res.json(sources);
-    } catch (error) {
-      console.error('Error getting crawler sources:', error);
-      res.status(500).json({ error: 'Failed to get crawler sources' });
-    }
-  });
-
-  app.get('/api/crawler/all', async (req, res) => {
-    try {
-      const items = await webCrawlerService.getAllCrawledItems();
-      res.json(items);
-    } catch (error) {
-      console.error('Error fetching crawled items:', error);
-      res.status(500).json({ error: 'Failed to fetch crawled content' });
-    }
-  });
-
-  app.get('/api/crawler/:type', async (req, res) => {
-    try {
-      const type = req.params.type as 'news' | 'event' | 'release';
-      const limit = parseInt(req.query.limit as string) || 10;
-      
-      if (!['news', 'event', 'release'].includes(type)) {
-        return res.status(400).json({ error: 'Invalid type. Must be: news, event, or release' });
-      }
-      
-      const items = await webCrawlerService.getNewsByType(type, limit);
-      res.json(items);
-    } catch (error) {
-      console.error(`Error fetching ${req.params.type} items:`, error);
-      res.status(500).json({ error: `Failed to fetch ${req.params.type} content` });
-    }
-  });
-
-  app.post('/api/crawler/refresh', async (req, res) => {
-    try {
-      webCrawlerService.clearCache();
-      const items = await webCrawlerService.getAllCrawledItems();
-      res.json({ success: true, itemCount: items.length });
-    } catch (error) {
-      console.error('Error refreshing web crawler:', error);
-      res.status(500).json({ error: 'Failed to refresh web crawler' });
-    }
-  });
-
-  // Article Comment API Endpoints - Subscription Required
-  app.post('/api/comments', async (req, res) => {
-    try {
-      const { articleId, articleTitle, articleSource, comment, userTier, userId, userEmail, userName } = req.body;
-      
-      // Validate subscription tier (DHR1, DHR2, VIP only)
-      if (!['DHR1', 'DHR2', 'VIP'].includes(userTier)) {
-        return res.status(403).json({ error: 'Active subscription required to comment' });
-      }
-
-      if (!articleId || !comment || !userId) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
-
-      const newComment = await storage.saveArticleComment({
-        articleId,
-        articleTitle: articleTitle || 'Unknown Article',
-        articleSource: articleSource || 'Unknown Source',
-        userId,
-        userEmail,
-        userName: userName || 'Anonymous',
-        userTier,
-        comment: comment.trim(),
-        isVisible: true
-      });
-
-      res.json(newComment);
-    } catch (error) {
-      console.error('Error saving comment:', error);
-      res.status(500).json({ error: 'Failed to save comment' });
-    }
-  });
-
-  app.get('/api/comments/:articleId', async (req, res) => {
-    try {
-      const { articleId } = req.params;
-      const comments = await storage.getCommentsByArticle(articleId);
-      res.json(comments);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-      res.status(500).json({ error: 'Failed to fetch comments' });
-    }
-  });
-
-  app.get('/api/comments/recent/:limit?', async (req, res) => {
-    try {
-      const limit = parseInt(req.params.limit as string) || 10;
-      const comments = await storage.getRecentComments(limit);
-      res.json(comments);
-    } catch (error) {
-      console.error('Error fetching recent comments:', error);
-      res.status(500).json({ error: 'Failed to fetch recent comments' });
-    }
-  });
-
-  app.delete('/api/comments/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteComment(parseInt(id));
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error deleting comment:', error);
-      res.status(500).json({ error: 'Failed to delete comment' });
-    }
-  });
-
-  // Get prioritized articles (with comments first, then by date)
-  app.get('/api/articles/prioritized', async (req, res) => {
-    try {
-      const [rssItems, crawledItems, recentComments] = await Promise.all([
-        rssService.getAllFeeds(),
-        webCrawlerService.getAllCrawledItems(),
-        storage.getRecentComments(100)
-      ]);
-
-      // Combine all articles
-      const allArticles = [
-        ...rssItems.map(item => ({ ...item, type: 'rss' as const })),
-        ...crawledItems.map(item => ({ ...item, type: 'crawled' as const }))
-      ];
-
-      // Get articles with recent comments (last 24 hours)
-      const articleIds = recentComments
-        .filter(comment => {
-          const commentAge = Date.now() - new Date(comment.createdAt).getTime();
-          return commentAge < 24 * 60 * 60 * 1000; // 24 hours
-        })
-        .map(comment => comment.articleId);
-
-      // Sort articles: commented articles first, then by date
-      const prioritizedArticles = allArticles.sort((a, b) => {
-        const aHasComments = articleIds.includes(a.id);
-        const bHasComments = articleIds.includes(b.id);
-        
-        if (aHasComments && !bHasComments) return -1;
-        if (!aHasComments && bHasComments) return 1;
-        
-        // If both have comments or both don't, sort by date
-        return b.pubDate.getTime() - a.pubDate.getTime();
-      });
-
-      res.json(prioritizedArticles.slice(0, 100));
-    } catch (error) {
-      console.error('Error fetching prioritized articles:', error);
-      res.status(500).json({ error: 'Failed to fetch prioritized articles' });
-    }
-  });
-
-  // Access control middleware and endpoints
-  // Middleware to check user access permissions
-  const requireAccessTier = (tier: 'dhr1' | 'dhr2' | 'vip') => {
-    return async (req: any, res: any, next: any) => {
-      try {
-        const userId = req.user?.claims?.sub || req.headers['x-user-id'];
-        
-        if (!userId) {
-          return res.status(401).json({ 
-            error: 'Authentication required',
-            requiredTier: tier 
-          });
-        }
-
-        const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(401).json({ 
-            error: 'User not found',
-            requiredTier: tier 
-          });
-        }
-
-        // Check if subscription is active and not expired
-        const isActiveSubscription = user.subscriptionStatus === 'active' && 
-          (!user.subscriptionExpiry || new Date(user.subscriptionExpiry) > new Date());
-
-        if (!isActiveSubscription) {
-          return res.status(403).json({ 
-            error: 'Subscription expired or inactive',
-            requiredTier: tier,
-            currentTier: user.subscriptionTier,
-            subscriptionStatus: user.subscriptionStatus
-          });
-        }
-
-        // Check tier-specific access
-        let hasAccess = false;
-        switch (tier) {
-          case 'dhr1':
-            hasAccess = ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier);
-            break;
-          case 'dhr2':
-            hasAccess = ['dhr2', 'vip'].includes(user.subscriptionTier);
-            break;
-          case 'vip':
-            hasAccess = user.subscriptionTier === 'vip';
-            break;
-        }
-
-        if (!hasAccess) {
-          return res.status(403).json({ 
-            error: 'Insufficient subscription tier',
-            requiredTier: tier,
-            currentTier: user.subscriptionTier
-          });
-        }
-
-        req.userAccess = {
-          user,
-          canAccessDHR1: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
-          canAccessDHR2: ['dhr2', 'vip'].includes(user.subscriptionTier),
-          canAccessVIP: user.subscriptionTier === 'vip',
-          canComment: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
-          canDownload: user.subscriptionTier === 'vip',
-          canAutoSignInChat: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
-          dailyDownloadLimit: user.subscriptionTier === 'vip' ? 2 : 0
-        };
-
-        next();
-      } catch (error) {
-        console.error('Access control error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    };
-  };
-
-  // Check daily download limits for VIP users
-  const checkDownloadLimit = async (req: any, res: any, next: any) => {
-    try {
-      const userId = req.userAccess?.user?.id;
-      if (!userId || !req.userAccess?.canDownload) {
-        return res.status(403).json({ 
-          error: 'Download permission required',
-          requiredTier: 'vip'
-        });
-      }
-
-      const today = new Date().toISOString().split('T')[0];
-      const downloadLimit = await storage.getDailyDownloadLimit(userId);
-      
-      if (downloadLimit && downloadLimit.downloadDate === today) {
-        if (downloadLimit.downloadsUsed >= downloadLimit.maxDownloads) {
-          return res.status(429).json({ 
-            error: 'Daily download limit reached',
-            limit: downloadLimit.maxDownloads,
-            used: downloadLimit.downloadsUsed,
-            resetsAt: 'midnight'
-          });
-        }
-      }
-
-      next();
-    } catch (error) {
-      console.error('Download limit check error:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-
-  // User access permissions endpoint
-  app.get('/api/user/permissions', async (req, res) => {
-    try {
-      // Support both Replit auth and simple session auth
-      const userId = req.user?.claims?.sub || req.session?.user?.id || req.headers['x-user-id'];
-      
-      if (!userId) {
-        return res.json({
-          canAccessDHR1: false,
-          canAccessDHR2: false,
-          canAccessVIP: false,
-          canComment: false,
-          canDownload: false,
-          canAutoSignInChat: false,
-          dailyDownloadLimit: 0,
-          authenticated: false
-        });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.json({
-          canAccessDHR1: false,
-          canAccessDHR2: false,
-          canAccessVIP: false,
-          canComment: false,
-          canDownload: false,
-          canAutoSignInChat: false,
-          dailyDownloadLimit: 0,
-          authenticated: false
-        });
-      }
-
-      // Check if subscription is active and not expired
-      const isActiveSubscription = user.subscriptionStatus === 'active' && 
-        (!user.subscriptionExpiry || new Date(user.subscriptionExpiry) > new Date());
-
-      if (!isActiveSubscription) {
-        return res.json({
-          canAccessDHR1: false,
-          canAccessDHR2: false,
-          canAccessVIP: false,
-          canComment: false,
-          canDownload: false,
-          canAutoSignInChat: false,
-          dailyDownloadLimit: 0,
-          authenticated: true,
-          subscriptionExpired: true,
-          subscriptionStatus: user.subscriptionStatus
-        });
-      }
-
-      const permissions = {
-        canAccessDHR1: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
-        canAccessDHR2: ['dhr2', 'vip'].includes(user.subscriptionTier),
-        canAccessVIP: user.subscriptionTier === 'vip',
-        canComment: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
-        canDownload: user.subscriptionTier === 'vip',
-        canAutoSignInChat: ['dhr1', 'dhr2', 'vip'].includes(user.subscriptionTier),
-        dailyDownloadLimit: user.subscriptionTier === 'vip' ? 2 : 0,
-        authenticated: true,
-        subscriptionTier: user.subscriptionTier,
-        subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiry: user.subscriptionExpiry
-      };
-
-      // Get remaining downloads for VIP users
-      if (permissions.canDownload) {
-        const remainingDownloads = await storage.getRemainingDownloads(userId);
-        permissions.remainingDownloads = remainingDownloads;
-      }
-
-      res.json(permissions);
-    } catch (error) {
-      console.error('Error fetching user permissions:', error);
-      res.status(500).json({ error: 'Failed to fetch user permissions' });
-    }
-  });
-
-  // Auto-chatroom sign-in endpoint for subscribers
-  app.post('/api/chatroom/auto-signin', requireAccessTier('dhr1'), async (req, res) => {
-    try {
-      const user = req.userAccess.user;
-      
-      // This would integrate with your chatroom system
-      // For now, return the necessary data for auto sign-in
-      res.json({
-        success: true,
-        username: user.username || user.email,
-        userTier: user.subscriptionTier,
-        autoSignIn: true,
-        chatToken: `chat_${user.id}_${Date.now()}` // Generate a chat session token
-      });
-    } catch (error) {
-      console.error('Error with auto chatroom sign-in:', error);
-      res.status(500).json({ error: 'Failed to auto sign-in to chatroom' });
-    }
-  });
-
-  // CSV Import endpoint for Patreon and BMAC data
-  app.post('/api/admin/import-csv', async (req: any, res) => {
-    try {
-      const file = req.files?.csvFile;
-      if (!file || Array.isArray(file)) {
-        return res.status(400).json({
-          success: false,
-          error: 'No CSV file provided'
-        });
-      }
-
-      const csvContent = file.data.toString('utf8');
-      const lines = csvContent.trim().split('\n');
-      
-      if (lines.length < 2) {
-        return res.status(400).json({
-          success: false,
-          error: 'CSV file must contain headers and at least one data row'
-        });
-      }
-
-      // Parse headers - remove quotes and normalize
-      const headers = lines[0].split(',').map((h: string) => h.replace(/"/g, '').trim());
-      console.log('CSV Headers detected:', headers);
-
-      // Define header mappings for different CSV formats
-      const patreonHeaderMap = new Map([
-        ['Member Email', 'email'],
-        ['Member Name', 'username'], 
-        ['Membership renews on', 'renewsOn'],
-        ['Membership start date', 'startDate'],
-        ['Membership amount', 'amount'],
-        ['Membership amount currency', 'currency'],
-        ['Subscription status', 'status'],
-        ['Subscription cancelled on', 'cancelledOn']
-      ]);
-
-      const bmacHeaderMap = new Map([
-        ['Name', 'username'],
-        ['Email', 'email'],
-        ['Current Tier', 'tier'],
-        ['Total Support (cents)', 'amount'],
-        ['Status', 'status'],
-        ['Join Date', 'startDate'],
-        ['Notes', 'notes'],
-        ['Cancel Date', 'cancelledOn'],
-        ['Access Expiration', 'expiry']
-      ]);
-
-      // Determine CSV type and use appropriate mapping
-      let headerMap;
-      let csvType;
-      
-      if (headers.includes('Member Email') && headers.includes('Membership renews on')) {
-        headerMap = patreonHeaderMap;
-        csvType = 'patreon';
-      } else if (headers.includes('Name') && headers.includes('Total Support (cents)')) {
-        headerMap = bmacHeaderMap;
-        csvType = 'bmac';
-      } else {
-        return res.status(400).json({
-          success: false,
-          error: `Unsupported CSV format. Expected Patreon format with headers: ${Array.from(patreonHeaderMap.keys()).join(', ')} OR BMAC format with headers: ${Array.from(bmacHeaderMap.keys()).join(', ')}`
-        });
-      }
-
-      let imported = 0;
-      let updated = 0;
-      let errors: string[] = [];
-
-      // Process each data row
-      for (let i = 1; i < lines.length; i++) {
-        try {
-          const values = lines[i].split(',').map((v: string) => v.replace(/"/g, '').trim());
-          const rowData: any = {};
-          
-          // Map values using the appropriate header mapping
-          headers.forEach((header: string, index: number) => {
-            const mappedField = headerMap.get(header);
-            if (mappedField && values[index]) {
-              rowData[mappedField] = values[index];
-            }
-          });
-
-          if (!rowData.email || !rowData.username) {
-            errors.push(`Row ${i + 1}: Missing required email or username`);
-            continue;
-          }
-
-          // Generate user data based on CSV type
-          let userData;
-          if (csvType === 'patreon') {
-            const amountCents = parseInt(rowData.amount?.replace(/[€$,]/g, '') || '0') * 100;
-            userData = {
-              id: `patreon_${rowData.username.replace(/\s+/g, '_').toLowerCase()}`,
-              email: rowData.email,
-              username: rowData.username,
-              subscriptionTier: mapPatreonTier(amountCents),
-              subscriptionStatus: rowData.status?.toLowerCase() === 'active' ? 'active' : 'inactive',
-              subscriptionSource: 'patreon',
-              subscriptionStartDate: rowData.startDate ? new Date(rowData.startDate) : null,
-              subscriptionExpiry: rowData.renewsOn ? new Date(rowData.renewsOn) : null,
-              pledgeAmount: amountCents,
-              cancelDate: rowData.cancelledOn ? new Date(rowData.cancelledOn) : null,
-              patreonTier: rowData.tier || null,
-              preferences: {},
-              lastLoginAt: null
-            };
-          } else { // bmac
-            const amountCents = parseInt(rowData.amount || '0');
-            userData = {
-              id: `bmac_${rowData.username.replace(/\s+/g, '_').toLowerCase()}`,
-              email: rowData.email,
-              username: rowData.username,
-              subscriptionTier: mapBmacTier(amountCents / 100), // Convert cents to euros
-              subscriptionStatus: rowData.status?.toLowerCase() === 'active' ? 'active' : 'inactive',
-              subscriptionSource: 'buymeacoffee',
-              subscriptionStartDate: rowData.startDate ? new Date(rowData.startDate) : null,
-              subscriptionExpiry: rowData.expiry ? new Date(rowData.expiry) : null,
-              pledgeAmount: amountCents,
-              cancelDate: rowData.cancelledOn ? new Date(rowData.cancelledOn) : null,
-              notes: rowData.notes || null,
-              preferences: {},
-              lastLoginAt: null
-            };
-          }
-
-          // Check if user exists and create/update
-          const existingUser = await storage.getUser(userData.id);
-          
-          if (existingUser) {
-            await storage.updateUser(userData.id, userData);
-            updated++;
-          } else {
-            await storage.createUser(userData);
-            imported++;
-          }
-
-        } catch (rowError) {
-          console.error(`Error processing row ${i + 1}:`, rowError);
-          errors.push(`Row ${i + 1}: ${(rowError as Error).message}`);
-        }
-      }
-
-      res.json({
-        success: true,
-        csvType,
-        imported,
-        updated,
-        errors,
-        message: `Successfully processed ${imported + updated} users from ${csvType} CSV (${imported} new, ${updated} updated)`
-      });
-
-    } catch (error) {
-      console.error('CSV import error:', error);
-      res.status(500).json({
-        success: false,
-        error: (error as Error).message
-      });
-    }
-  });
-
-  const httpServer = createServer(app);
-  return httpServer;
+  return createServer(app);
 }

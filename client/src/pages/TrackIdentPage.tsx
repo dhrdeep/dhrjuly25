@@ -18,7 +18,7 @@ const TrackIdentPage: React.FC = () => {
   const [identifiedTracks, setIdentifiedTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
-  const [streamUrl] = useState('https://streaming.shoutcast.com/dhr');
+  const [streamUrl, setStreamUrl] = useState('');
   const [identificationStatus, setIdentificationStatus] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'connecting' | 'error'>('idle');
 
@@ -40,6 +40,20 @@ const TrackIdentPage: React.FC = () => {
       setSubscriptionTier('vip');
       setHasAccess(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchStreamUrl = async () => {
+      try {
+        const response = await fetch('/api/stream-url');
+        const data = await response.json();
+        setStreamUrl(data.url);
+      } catch (error) {
+        console.error('Failed to fetch stream URL:', error);
+      }
+    };
+
+    fetchStreamUrl();
   }, []);
 
   useEffect(() => {

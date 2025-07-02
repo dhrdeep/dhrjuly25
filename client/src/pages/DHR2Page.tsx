@@ -9,13 +9,11 @@ import SunsetDanceBackground from '../components/SunsetDanceBackground';
 import SharedBackground from '../components/SharedBackground';
 import { subscriptionService } from '../services/subscriptionService';
 import AmbientMoodGenerator from '../components/AmbientMoodGenerator';
-import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
 const DHR2Page: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:1480/api/v2/current', isPlaying);
   const canAccess = subscriptionService.canAccessContent('dhr2');
   const canDownload = subscriptionService.canDownload();
   const currentUser = subscriptionService.getCurrentUser();

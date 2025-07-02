@@ -30,7 +30,12 @@ export default function TrackWidget({ channel, className = '' }: TrackWidgetProp
 
   // Fetch last 10 tracks for this channel
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
-    queryKey: ['/api/tracks/recent', channel],
+    queryKey: ['recent-tracks', channel],
+    queryFn: async () => {
+      const response = await fetch(`/api/tracks/recent?channel=${channel}`);
+      if (!response.ok) throw new Error('Failed to fetch recent tracks');
+      return response.json();
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 

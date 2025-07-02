@@ -73,7 +73,6 @@ const AdminPage: React.FC = () => {
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [csvContent, setCsvContent] = useState('');
   const [featuredDjSets, setFeaturedDjSets] = useState<any[]>([]);
-  const [vipMixes, setVipMixes] = useState<any[]>([]);
 
   const handleArtworkError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = DHR_LOGO_URL;
@@ -83,20 +82,7 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     loadUsers();
     checkPatreonConfig();
-    loadVipMixes();
   }, []);
-
-  const loadVipMixes = async () => {
-    try {
-      const response = await fetch('/api/vip/mixes');
-      if (response.ok) {
-        const data = await response.json();
-        setVipMixes(data);
-      }
-    } catch (error) {
-      console.error('Failed to load VIP mixes:', error);
-    }
-  };
 
   // Filter users based on search and tier
   useEffect(() => {

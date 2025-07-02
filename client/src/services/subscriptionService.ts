@@ -157,101 +157,7 @@ export class SubscriptionService {
   }
 
   // Initialize with demo data for development
-  constructor() {
-    this.initializeDemoData();
-  }
-
-  private initializeDemoData() {
-    // Demo users for testing
-    const demoUsers: User[] = [
-      {
-        id: 'demo_free',
-        email: 'free@example.com',
-        username: 'FreeUser',
-        subscriptionTier: 'free',
-        subscriptionStatus: 'active',
-        subscriptionSource: 'direct',
-        subscriptionStartDate: new Date().toISOString(),
-        preferences: {
-          emailNotifications: true,
-          newReleaseAlerts: true,
-          eventNotifications: false,
-          autoPlay: true,
-          preferredGenres: ['deep-house']
-        },
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString()
-      },
-      {
-        id: 'demo_premium',
-        email: 'premium@example.com',
-        username: 'PremiumUser',
-        subscriptionTier: 'premium',
-        subscriptionStatus: 'active',
-        subscriptionSource: 'patreon',
-        subscriptionStartDate: new Date().toISOString(),
-        patreonTier: 'dhr_premium',
-        preferences: {
-          emailNotifications: true,
-          newReleaseAlerts: true,
-          eventNotifications: true,
-          autoPlay: true,
-          preferredGenres: ['deep-house', 'tech-house']
-        },
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString()
-      },
-      {
-        id: 'demo_vip',
-        email: 'vip@example.com',
-        username: 'VIPUser',
-        subscriptionTier: 'vip',
-        subscriptionStatus: 'active',
-        subscriptionSource: 'patreon',
-        subscriptionStartDate: new Date().toISOString(),
-        patreonTier: 'dhr_vip',
-        preferences: {
-          emailNotifications: true,
-          newReleaseAlerts: true,
-          eventNotifications: true,
-          autoPlay: true,
-          preferredGenres: ['deep-house', 'tech-house', 'progressive']
-        },
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString()
-      }
-    ];
-
-    demoUsers.forEach(user => {
-      this.users.set(user.id, user);
-    });
-  }
-
-  // Authentication methods
-  async login(email: string, password: string): Promise<User | null> {
-    // In production, this would validate against your backend
-    const user = Array.from(this.users.values()).find(u => u.email === email);
-    if (user) {
-      this.currentUser = user;
-      user.lastLoginAt = new Date().toISOString();
-      localStorage.setItem('dhr_user', JSON.stringify(user));
-      return user;
-    }
-    return null;
-  }
-
-  async loginWithPatreon(patreonData: any): Promise<User | null> {
-    // Handle Patreon OAuth login
-    // This would integrate with Patreon API
-    console.log('Patreon login:', patreonData);
-    return null;
-  }
-
-  async loginWithWix(wixData: any): Promise<User | null> {
-    // Handle Wix subscriber import
-    console.log('Wix import:', wixData);
-    return null;
-  }
+  constructor() {}
 
   logout(): void {
     this.currentUser = null;
@@ -266,17 +172,6 @@ export class SubscriptionService {
       }
     }
     return this.currentUser;
-  }
-
-  // Demo login methods for testing
-  loginAsDemo(tier: SubscriptionTier): User | null {
-    const demoUser = Array.from(this.users.values()).find(u => u.subscriptionTier === tier);
-    if (demoUser) {
-      this.currentUser = demoUser;
-      localStorage.setItem('dhr_user', JSON.stringify(demoUser));
-      return demoUser;
-    }
-    return null;
   }
 
   // Subscription management

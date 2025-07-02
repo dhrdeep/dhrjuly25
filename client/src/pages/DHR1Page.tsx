@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Crown, Play, Download, Star, Clock, Users } from 'lucide-react';
 import SubscriptionGate from '../components/SubscriptionGate';
 import { subscriptionService } from '../services/subscriptionService';
@@ -8,13 +8,11 @@ import TrackWidget from '../components/TrackWidget';
 import ReliableStreamPlayer from '../components/ReliableStreamPlayer';
 import SunsetDanceBackground from '../components/SunsetDanceBackground';
 import SharedBackground from '../components/SharedBackground';
-import { useCurrentTrack } from '../hooks/useCurrentTrack';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
 const DHR1Page: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const { currentTrack } = useCurrentTrack('https://ec1.everestcast.host:2750/api/v2/current', isPlaying);
   const canAccess = subscriptionService.canAccessContent('dhr1');
   const canDownload = subscriptionService.canDownload();
   const currentUser = subscriptionService.getCurrentUser();

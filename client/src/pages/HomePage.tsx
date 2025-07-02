@@ -182,7 +182,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="text-white relative">
-      <SharedBackground intensity="normal" />
       {/* Hero Section - Redesigned */}
       <section className="relative min-h-screen flex items-center justify-center px-4 py-8 z-10">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">

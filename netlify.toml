@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "./client/dist"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-backend-url.com/api/:splat"
+  status = 200
+  force = true
+
+# You might need to add more redirects or proxy rules depending on your backend setup
+# For example, if your backend serves static files or has other routes

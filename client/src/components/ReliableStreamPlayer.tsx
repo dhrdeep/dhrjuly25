@@ -34,30 +34,41 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
 
   // Fetch live metadata
   const { data: liveMetadata } = useQuery({
-    queryKey: ['live-metadata'],
+    queryKey: ['live-metadata', channel],
     queryFn: async () => {
-      const response = await fetch('/api/live-metadata');
+      const response = await fetch(`/api/live-metadata?channel=${channel}`);
       if (!response.ok) throw new Error('Failed to fetch metadata');
       return response.json();
     },
     refetchInterval: 30000,
   });
 
-  // Initialize audio element
+  // Initialize audio element and handle events
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     audio.volume = volume / 100;
+    audio.load(); // Load the audio when component mounts or streamUrl changes
     
     const handleLoadStart = () => setStreamStatus('loading');
-    const handleCanPlay = () => setStreamStatus('ready');
+    const handleCanPlay = () => {
+      if (!isPlaying) { // Only set to ready if not already playing
+        setStreamStatus('ready');
+      }
+    };
     const handleError = () => {
       setStreamStatus('error');
       setIsPlaying(false);
     };
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => {
+      setIsPlaying(true);
+      setStreamStatus('ready'); // Stream is playing, so it's ready
+    };
+    const handlePause = () => {
+      setIsPlaying(false);
+      setStreamStatus('ready'); // Stream is paused, but ready to play
+    };
 
     audio.addEventListener('loadstart', handleLoadStart);
     audio.addEventListener('canplay', handleCanPlay);
@@ -72,7 +83,7 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
     };
-  }, [volume]);
+  }, [volume, config.streamUrl]); // Add config.streamUrl to dependencies
 
   const togglePlayPause = async () => {
     const audio = audioRef.current;
@@ -82,7 +93,7 @@ export default function ReliableStreamPlayer({ channel, className = '' }: Reliab
       if (isPlaying) {
         audio.pause();
       } else {
-        setStreamStatus('loading');
+        setStreamStatus('loading'); // Show loading state immediately
         await audio.play();
       }
     } catch (error) {
