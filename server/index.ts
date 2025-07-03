@@ -1,4 +1,6 @@
-import 'dotenv/config';
+if (process.env.NODE_ENV !== 'production') {
+  import 'dotenv/config';
+}
 import express, { type Request, Response, NextFunction } from "express";
 import fileUpload from "express-fileupload";
 import session from "express-session";
