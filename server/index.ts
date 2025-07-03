@@ -1,29 +1,10 @@
 
 import express, { type Request, Response, NextFunction } from "express";
 import fileUpload from "express-fileupload";
-import session from "express-session";
-import connectPg from "connect-pg-simple";
-
-// Extend Express session type to include user
-declare module 'express-session' {
-  interface SessionData {
-    user?: {
-      id: string;
-      email: string;
-      username?: string;
-      subscriptionTier: string;
-      subscriptionStatus: string;
-      subscriptionExpiry?: Date;
-      isAdmin: boolean;
-      firstName?: string;
-      lastName?: string;
-      profileImageUrl?: string;
-    };
-  }
-}
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { streamMonitor } from "./streamMonitor";
-import express, { type Express } from "express";
+import { storage } from "./storage"; // Assuming storage has session methods
 import fs from "fs";
 import path from "path";
 
@@ -54,30 +35,50 @@ export function serveStatic(app: Express) {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
-import { streamMonitor } from "./streamMonitor";
 
 const app = express();
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: false, limit: "100mb" }));
+app.use(cookieParser());
 
-// Configure session middleware for simple authentication
-const PostgresSessionStore = connectPg(session);
-app.set("trust proxy", 1);
-app.use(session({
-  store: new PostgresSessionStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    tableName: "sessions",
-  }),
-  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-    httpOnly: true,
-    secure: false, // Set to true in production with HTTPS
-  },
-}));
+// Custom session middleware
+app.use(async (req: any, res, next) => {
+  const sessionId = req.cookies.session_id;
+  let sessionData = {};
+
+  if (sessionId) {
+    sessionData = (await storage.getSession(sessionId)) || {};
+  }
+
+  req.session = {
+    ...sessionData,
+    save: async (callback: (err?: Error) => void) => {
+      const newSessionId = sessionId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      res.cookie('session_id', newSessionId, {
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Set to true in production with HTTPS
+        sameSite: 'lax',
+      });
+      await storage.saveSession(newSessionId, req.session);
+      callback();
+    },
+    destroy: async (callback: (err?: Error) => void) => {
+      res.clearCookie('session_id');
+      if (sessionId) {
+        await storage.destroySession(sessionId);
+      }
+      callback();
+    },
+  };
+
+  // Ensure req.session.user is always defined, even if empty
+  if (!req.session.user) {
+    req.session.user = {};
+  }
+
+  next();
+});
 
 // Add file upload support for CSV imports
 app.use(fileUpload({
@@ -96,7 +97,7 @@ app.use((req, res, next) => {
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
-  res.on("finish", () => {
+  res.on("finish", async () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
@@ -109,6 +110,11 @@ app.use((req, res, next) => {
       }
 
       log(logLine);
+    }
+
+    // Save session on response finish
+    if (req.session && req.session.save) {
+      await new Promise(resolve => req.session.save(resolve));
     }
   });
 
