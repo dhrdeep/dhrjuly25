@@ -16,6 +16,7 @@ COPY . .
 # Build the TypeScript code
 RUN npm run build
 RUN npm run build:server
+RUN ls -R dist
 
 # Expose the port your app runs on
 EXPOSE 5000
