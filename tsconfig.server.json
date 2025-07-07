@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist/server",
-    "rootDir": "./server",
+    "outDir": "./dist",
+    "rootDir": ".",
     "module": "ESNext",
     "target": "ESNext",
     "lib": ["ESNext"],
@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "noEmit": false
   },
-  "include": ["server/**/*.ts"],
+  "include": ["server/**/*.ts", "shared/**/*.ts"],
   "exclude": ["node_modules", "client"]
 }
