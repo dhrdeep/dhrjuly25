@@ -13,9 +13,9 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Build the TypeScript code
-RUN npm run build
-RUN npm run build:server
+# Build the TypeScript code directly
+RUN mkdir -p dist/server
+RUN tsc --project tsconfig.server.json
 RUN ls -R dist
 
 # Expose the port your app runs on
