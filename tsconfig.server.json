@@ -5,7 +5,7 @@
     "rootDir": ".",
     "module": "ESNext",
     "target": "ESNext",
-    "lib": ["ESNext", "dom", "dom.iterable", "node"],
+    "lib": ["ESNext"],
     "esModuleInterop": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
