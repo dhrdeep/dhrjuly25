@@ -407,6 +407,25 @@ export class DrizzleStorage implements IStorage {
       .set({ isVisible: false })
       .where(eq(articleComments.id, id));
   }
+
+  // Session methods
+  async getSession(sessionId: string): Promise<any | undefined> {
+    const [session] = await db.select().from(sessions).where(eq(sessions.sid, sessionId));
+    return session ? session.sess : undefined;
+  }
+
+  async saveSession(sessionId: string, sessionData: any): Promise<void> {
+    await db.insert(sessions)
+      .values({ sid: sessionId, sess: sessionData, expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }) // 1 week expiry
+      .onConflictDoUpdate({
+        target: sessions.sid,
+        set: { sess: sessionData, expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+      });
+  }
+
+  async destroySession(sessionId: string): Promise<void> {
+    await db.delete(sessions).where(eq(sessions.sid, sessionId));
+  }
 }
 
 export const storage = new DrizzleStorage();
