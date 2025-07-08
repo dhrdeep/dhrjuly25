@@ -4,9 +4,7 @@ import ws from "ws";
 import * as schema from "@shared/schema";
 
 // Configure WebSocket for Neon in server environment
-if (typeof WebSocket === 'undefined') {
-  neonConfig.webSocketConstructor = ws;
-}
+neonConfig.webSocketConstructor = ws.WebSocket;
 
 // Disable fetch and pipelining for better compatibility
 neonConfig.fetchConnectionCache = true;

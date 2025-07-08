@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { streamMonitor } from "./streamMonitor";
 import { storage } from "./storage"; // Assuming storage has session methods
+import { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
 
@@ -86,7 +87,7 @@ app.use(fileUpload({
   createParentPath: true
 }));
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
