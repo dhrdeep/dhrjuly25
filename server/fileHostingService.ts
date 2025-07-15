@@ -35,42 +35,13 @@ export class S3Provider implements FileHostingProvider {
     }
     
     // For DigitalOcean Spaces, construct the public URL with proper encoding
-    const encodedPath = encodeURIComponent(mix.s3Url);
-    const publicUrl = `${this.endpoint}/${encodedPath}`;
+    const publicUrl = `${this.endpoint}/${encodeURIComponent(mix.s3Url)}`;
     console.log(`Generated Spaces URL: ${publicUrl}`);
     return publicUrl;
   }
 
   async getDownloadUrl(mix: VipMix): Promise<string | null> {
     return this.getStreamUrl(mix); // Same URL for download
-  }
-}
-
-// Fallback provider for uploaded files to Replit
-export class LocalProvider implements FileHostingProvider {
-  name = 'Local';
-  
-  async getStreamUrl(mix: VipMix): Promise<string | null> {
-    if (!mix.localPath) return null;
-    return `/api/local-file/${mix.id}`;
-  }
-
-  async getDownloadUrl(mix: VipMix): Promise<string | null> {
-    return this.getStreamUrl(mix);
-  }
-}
-
-// Direct URL provider (for any direct links)
-export class DirectProvider implements FileHostingProvider {
-  name = 'Direct';
-  
-  async getStreamUrl(mix: VipMix): Promise<string | null> {
-    if (!mix.directUrl) return null;
-    return mix.directUrl;
-  }
-
-  async getDownloadUrl(mix: VipMix): Promise<string | null> {
-    return this.getStreamUrl(mix);
   }
 }
 
@@ -96,10 +67,6 @@ export class FileHostingService {
       'DO00XZCG3UHJKGHWGHK3',
       '43k5T+g++ESLIKOdVhX3u7Zavw3/JNfNrxxxqrltJmc'
     ));
-
-    // Add local and direct providers
-    this.providers.push(new LocalProvider());
-    this.providers.push(new DirectProvider());
   }
 
   async getStreamUrl(mix: VipMix): Promise<string | null> {

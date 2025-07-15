@@ -5,7 +5,6 @@ import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { streamMonitor } from "./streamMonitor";
 import { storage } from "./storage"; // Assuming storage has session methods
-import { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
 
