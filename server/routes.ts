@@ -245,19 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-function mapPatreonTier(amountCents: number): string {
-  if (amountCents >= 1000) return 'vip';
-  if (amountCents >= 500) return 'dhr2';
-  if (amountCents >= 300) return 'dhr1';
-  return 'free';
-}
 
-function mapBmacTier(totalAmount: number): string {
-  if (totalAmount >= 10) return 'vip';
-  if (totalAmount >= 5) return 'dhr2';
-  if (totalAmount >= 3) return 'dhr1';
-  return 'free';
-}
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: express.Request, res: express.Response) => {
@@ -690,7 +678,7 @@ function mapBmacTier(totalAmount: number): string {
         });
       }
 
-      const tokenResult = await tokenResponse.json() as any;
+      const tokenResult = await tokenResponse.json() as { access_token: string, refresh_token: string, expires_in: number, scope: string, token_type: string };
 
       // Save tokens to database (optional for now, focusing on client-side flow)
       try {
@@ -858,7 +846,7 @@ function mapBmacTier(totalAmount: number): string {
         return res.status(pledgesResponse.status).json({ error: errorText });
       }
 
-      const pledgesData = await pledgesResponse.json() as any;
+      const pledgesData = await pledgesResponse.json() as PatreonResponse<any>;
       console.log('Pledges data sample:', {
         dataCount: pledgesData.data?.length || 0,
         meta: pledgesData.meta
@@ -1496,7 +1484,7 @@ function mapBmacTier(totalAmount: number): string {
         });
       }
 
-      const campaignsData = await campaignResponse.json() as any;
+      const campaignsData = await campaignResponse.json() as PatreonResponse<PatreonCampaign>;
       const campaignId = campaignsData.data[0]?.id;
       
       if (!campaignId) {
@@ -1523,7 +1511,7 @@ function mapBmacTier(totalAmount: number): string {
         });
       }
 
-      const campaignData = await membersResponse.json() as any;
+      const campaignData = await membersResponse.json() as PatreonResponse<any>;
       const members = campaignData.data || [];
 
       syncResults.totalPatrons = members.length;
@@ -1635,7 +1623,7 @@ function mapBmacTier(totalAmount: number): string {
 
           if (supportersResponse.ok) {
             const supportersText = await supportersResponse.text();
-            const supportersData = JSON.parse(supportersText);
+            const supportersData = JSON.parse(supportersText) as { data: any[], current_page: number, last_page: number, total: number, count: number, per_page: number };
             const oneTimeSupports = supportersData.data || [];
             
             console.log(`Page ${page} supporters API response structure:`, {
@@ -1694,7 +1682,7 @@ function mapBmacTier(totalAmount: number): string {
 
           if (subscriptionsResponse.ok) {
             const subscriptionsText = await subscriptionsResponse.text();
-            const subscriptionsData = JSON.parse(subscriptionsText);
+            const subscriptionsData = JSON.parse(subscriptionsText) as { data: any[], current_page: number, last_page: number, total: number, count: number, per_page: number };
             const recurringSupports = subscriptionsData.data || [];
             
             console.log(`Page ${page} subscriptions API response structure:`, {
