@@ -307,7 +307,6 @@ export class DrizzleStorage implements IStorage {
       .orderBy(desc(identifiedTracks.identifiedAt));
   }
 
-  .orderBy(desc(identifiedTracks.identifiedAt))
 
   async getRecentTracksByChannel(channel: 'dhr1' | 'dhr2', limit: number = 10): Promise<IdentifiedTrack[]> {
     return await db.select().from(identifiedTracks)
