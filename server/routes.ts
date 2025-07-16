@@ -896,7 +896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
         }
 
-        const data = await response.json() as any;
+        const data = await response.json() as PatreonResponse<any>;
         const members = data.data || [];
         allMembers.push(...members);
         totalFetched += members.length;

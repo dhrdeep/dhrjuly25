@@ -304,19 +304,15 @@ export class DrizzleStorage implements IStorage {
 
   async getAllIdentifiedTracks(): Promise<IdentifiedTrack[]> {
     return await db.select().from(identifiedTracks)
-      .orderBy(identifiedTracks.identifiedAt.desc());
+      .orderBy(desc(identifiedTracks.identifiedAt));
   }
 
-  async getRecentIdentifiedTracks(limit: number = 50): Promise<IdentifiedTrack[]> {
-    return await db.select().from(identifiedTracks)
-      .orderBy(identifiedTracks.identifiedAt.desc())
-      .limit(limit);
-  }
+  .orderBy(desc(identifiedTracks.identifiedAt))
 
   async getRecentTracksByChannel(channel: 'dhr1' | 'dhr2', limit: number = 10): Promise<IdentifiedTrack[]> {
     return await db.select().from(identifiedTracks)
       .where(eq(identifiedTracks.channel, channel))
-      .orderBy(identifiedTracks.identifiedAt.desc())
+      .orderBy(desc(identifiedTracks.identifiedAt))
       .limit(limit);
   }
 
@@ -326,7 +322,7 @@ export class DrizzleStorage implements IStorage {
 
   // Google Ads methods
   async getAllGoogleAdsConfigs(): Promise<GoogleAdsConfig[]> {
-    return await db.select().from(googleAdsConfig).orderBy(googleAdsConfig.createdAt.desc());
+    return await db.select().from(googleAdsConfig).orderBy(desc(googleAdsConfig.createdAt));
   }
 
   async getGoogleAdsConfig(id: number): Promise<GoogleAdsConfig | undefined> {
@@ -363,13 +359,13 @@ export class DrizzleStorage implements IStorage {
         eq(googleAdsStats.dateRecorded, dateFrom), // Simple implementation for single date
         // In real implementation, use proper date range query
       ))
-      .orderBy(googleAdsStats.dateRecorded.desc());
+      .orderBy(desc(googleAdsStats.dateRecorded));
   }
 
   async getGoogleAdsStatsBySlot(adSlotId: string): Promise<GoogleAdsStats[]> {
     return await db.select().from(googleAdsStats)
       .where(eq(googleAdsStats.adSlotId, adSlotId))
-      .orderBy(googleAdsStats.dateRecorded.desc());
+      .orderBy(desc(googleAdsStats.dateRecorded));
   }
 
   async getTotalGoogleAdsRevenue(): Promise<string> {
