@@ -108,7 +108,8 @@ class RedditService {
       const response = await fetch(`https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`, {
         headers: {
           'User-Agent': 'Deep House Radio Bot/1.0'
-        });
+        }
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
