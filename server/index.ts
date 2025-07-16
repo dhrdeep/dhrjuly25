@@ -1,4 +1,5 @@
 
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import fileUpload from "express-fileupload";
 import cookieParser from "cookie-parser";
