@@ -1,28 +1,29 @@
-# Use a lightweight Node.js image as the base
-FROM node:20-alpine
+# Use a more specific Node.js image
+FROM node:20.11.1-alpine
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to install dependencies
-COPY package*.json ./
+# Create a non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy dependency definitions
+COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --only=production
 
 # Copy the rest of the application code
 COPY . .
 
-# Build the TypeScript code directly
-RUN mkdir -p dist/server
-RUN tsc --project tsconfig.server.json
-RUN ls -R dist
-
+# Build the server code
 RUN npm run build:server
-RUN ls -R dist
 
-# Expose the port your app runs on
+# Set the user for the container
+USER appuser
+
+# Expose the port
 EXPOSE 5000
 
-# Command to run the application
+# Start the application
 CMD ["npm", "run", "start"]
