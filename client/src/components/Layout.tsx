@@ -27,6 +27,7 @@ import ChatRoom from './ChatRoom';
 import UserProfile from './UserProfile';
 import AuthModal from './AuthModal';
 import SharedBackground from './SharedBackground';
+import MediaPlayer from './MediaPlayer';
 import { subscriptionService } from '../services/subscriptionService';
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
@@ -124,8 +125,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="floating-dhr-logo"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="relative z-50 bg-gray-900/80 backdrop-blur-xl border-b border-orange-400/10">
+      {/* Top Navigation */}
+      <nav className="relative z-50 bg-gray-900/80 backdrop-blur-xl border-b border-orange-400/10 lg:block hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo with Elegant DHR Title */}
@@ -306,52 +307,44 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Users className="h-5 w-5" />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
               </button>
-              
-              <div className="lg:hidden">
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 transition-all duration-200 border border-orange-400/20"
-                  aria-label="Toggle Menu"
-                >
-                  {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
-              </div>
             </div>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-gray-900/90 backdrop-blur-xl border-t border-orange-400/10">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? 'bg-orange-500/10 text-orange-300 border border-orange-400/20'
-                        : 'text-gray-300 hover:bg-orange-500/5 hover:text-orange-200'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* Main Content */}
-      <main className="relative z-10">
+      <main className="relative z-10 pb-24 lg:pb-0">
         {children}
       </main>
+
+      {/* Bottom Navigation for Mobile */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-xl border-t border-orange-400/10 z-50">
+        <div className="flex justify-around items-center h-16">
+          {navigation.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`flex flex-col items-center justify-center text-xs font-medium transition-all duration-200 ${
+                  isActive
+                    ? 'text-orange-300'
+                    : 'text-gray-400 hover:text-orange-200'
+                }`}
+              >
+                <Icon className="h-6 w-6 mb-1" />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Compact Media Player for Mobile */}
+      <div className="lg:hidden fixed bottom-16 left-0 right-0 z-40 p-2">
+        <MediaPlayer compact />
+      </div>
 
       {/* Modals and Components */}
       <ChatBox isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />

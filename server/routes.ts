@@ -1,34 +1,104 @@
-import type { Express } from "express";
+import express, { type Request, type Response, type NextFunction, type Express } from "express";
 import { createServer, type Server } from "http";
 import { createHmac } from "crypto";
 import crypto from "crypto";
 import FormData from "form-data";
 import fetch from "node-fetch";
 import { storage } from "./storage";
-import { insertVipMixSchema, insertUserDownloadSchema } from "@shared/schema";
+import { insertVipMixSchema, insertUserDownloadSchema, InsertUser, InsertVipMix, InsertUserDownload, CreateVipMixRequestBody } from "@shared/schema";
 import { fileHostingService } from "./fileHostingService";
 import { streamMonitor } from "./streamMonitor";
 import { rssService } from "./rssService";
 import { redditService } from "./redditService";
 import { webCrawlerService } from "./webCrawlerService";
 
-import ffmpeg from 'fluent-ffmpeg';
+import * as ffmpeg from 'fluent-ffmpeg';
 import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { PassThrough } from 'stream';
 import fs from 'fs';
 import { execSync } from 'child_process';
 
+interface AssignTierRequestBody {
+  email: string;
+  tier: string;
+  expiryDays?: number;
+}
+
+interface SetAdminRequestBody {
+  userId: string;
+  isAdmin: boolean;
+}
+
+interface EmailLoginRequestBody {
+  email: string;
+}
+
+interface BulkImportMixesRequestBody {
+  mixes: any[]; // Using any for now, will refine if schema is available
+}
+
+interface DownloadMixRequestBody {
+  userId: string;
+}
+
+interface SyncBmacRequestBody {
+  apiKey: string;
+}
+
+import { isAuthenticated, isAdmin } from "./middleware";
+
 // Configure FFmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath.path);
+
+interface AssignTierRequestBody {
+  email: string;
+  tier: string;
+  expiryDays?: number;
+}
+
+interface SetAdminRequestBody {
+  userId: string;
+  isAdmin: boolean;
+}
+
+interface EmailLoginRequestBody {
+  email: string;
+}
+
+interface PatreonOAuthRequestBody {
+  code: string;
+  state: string;
+  redirectUri?: string;
+}
+
+interface PatreonRefreshRequestBody {
+  refresh_token: string;
+}
+
+interface CreateUserRequestBody extends Omit<InsertUser, 'id' | 'createdAt' | 'updatedAt' | 'lastLoginAt'> {}
+
+interface UpdateVipMixRequestBody extends Partial<InsertVipMix> {}
+
+interface BulkImportMixesRequestBody {
+  mixes: any[]; // Define a more specific type if the structure of mixes is known
+}
+
+interface DownloadMixRequestBody {
+  userId: string;
+}
+
+interface SyncBmacRequestBody {
+  apiKey: string;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Note: Replit authentication disabled for simple email auth
   // await setupAuth(app);
 
   // Firebase Authentication endpoints
-  app.post('/api/auth/firebase-login', async (req, res) => {
+  app.post('/api/auth/firebase-login', async (req: express.Request, res: express.Response) => {
     try {
-      const { idToken, provider } = req.body;
+      const { idToken, provider } = req.body as { idToken: string; provider: string; };
       
       if (!idToken || !provider) {
         return res.status(400).json({ message: "Missing idToken or provider" });
@@ -96,23 +166,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Store user in session
-      (req.session as any).user = {
+      req.session.user = {
         id: user.id,
-        email: user.email,
-        username: user.username,
+        email: user.email || null,
+        username: user.username || null,
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiry: user.subscriptionExpiry,
+        subscriptionExpiry: user.subscriptionExpiry || null,
         isAdmin: user.isAdmin || false,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl,
-        firebaseUid: user.firebaseUid
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+        profileImageUrl: user.profileImageUrl || null,
+        firebaseUid: user.firebaseUid || null
       };
 
       res.json({
         message: "Login successful",
-        user: (req.session as any).user
+        user: req.session.user
       });
 
     } catch (error) {
@@ -122,13 +192,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current Firebase user
-  app.get('/api/auth/firebase-user', async (req, res) => {
+  app.get('/api/auth/firebase-user', async (req: express.Request, res: express.Response) => {
     try {
-      const sessionUser = (req.session as any).user;
-      
-      if (!sessionUser) {
+      if (!req.session.user) {
         return res.status(401).json({ message: "Not authenticated" });
       }
+      const sessionUser = req.session.user;
 
       // Get fresh user data from database
       const user = await storage.getUser(sessionUser.id);
@@ -139,16 +208,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         id: user.id,
-        email: user.email,
-        username: user.username,
+        email: user.email || null,
+        username: user.username || null,
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiry: user.subscriptionExpiry,
+        subscriptionExpiry: user.subscriptionExpiry || null,
         isAdmin: user.isAdmin,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl,
-        firebaseUid: user.firebaseUid
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+        profileImageUrl: user.profileImageUrl || null,
+        firebaseUid: user.firebaseUid || null
       });
 
     } catch (error) {
@@ -158,14 +227,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout endpoint
-  app.post('/api/auth/logout', async (req, res) => {
+  app.post('/api/auth/logout', async (req: express.Request, res: express.Response) => {
     try {
       req.session.destroy((err) => {
         if (err) {
           console.error("Session destroy error:", err);
           return res.status(500).json({ message: "Logout failed" });
         }
-        res.clearCookie('connect.sid');
+        res.clearCookie('connect.sid', { path: '/' });
         res.json({ message: "Logged out successfully" });
       });
     } catch (error) {
@@ -174,10 +243,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
+function mapPatreonTier(amountCents: number): string {
+  if (amountCents >= 1000) return 'vip';
+  if (amountCents >= 500) return 'dhr2';
+  if (amountCents >= 300) return 'dhr1';
+  return 'free';
+}
+
+function mapBmacTier(totalAmount: number): string {
+  if (totalAmount >= 10) return 'vip';
+  if (totalAmount >= 5) return 'dhr2';
+  if (totalAmount >= 3) return 'dhr1';
+  return 'free';
+}
+
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', isAuthenticated, async (req: express.Request, res: express.Response) => {
     try {
-      const userId = req.user.claims.sub;
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      const userId = req.session.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -187,7 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin route to manually assign user tiers
-  app.post('/api/admin/assign-tier', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/admin/assign-tier', isAuthenticated, isAdmin, async (req: express.Request<{}, {}, AssignTierRequestBody>, res: express.Response) => {
     try {
       const { email, tier, expiryDays } = req.body;
       
@@ -218,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin route to set admin status
-  app.post('/api/admin/set-admin', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/admin/set-admin', isAuthenticated, isAdmin, async (req: express.Request<{}, {}, SetAdminRequestBody>, res: express.Response) => {
     try {
       const { userId, isAdmin: adminStatus } = req.body;
       
@@ -235,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all users (admin only)
-  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: express.Request, res: express.Response) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -314,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Email-based authentication - check if email has active subscription
-  app.post('/api/auth/email-login', async (req, res) => {
+  app.post('/api/auth/email-login', async (req: express.Request<{}, {}, EmailLoginRequestBody>, res: express.Response) => {
     try {
       const { email } = req.body;
       
@@ -374,15 +462,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store user in session
       req.session.user = {
         id: user.id,
-        email: user.email,
-        username: user.username,
+        email: user.email || null,
+        username: user.username || null,
         subscriptionTier: user.subscriptionTier,
         subscriptionStatus: user.subscriptionStatus,
-        subscriptionExpiry: user.subscriptionExpiry,
+        subscriptionExpiry: user.subscriptionExpiry || null,
         isAdmin: user.isAdmin || false,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+        profileImageUrl: user.profileImageUrl || null,
+        firebaseUid: user.firebaseUid || null
       };
 
       // Force session save to prevent race conditions on redirect
@@ -406,7 +495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Simple email authentication (bypasses Firebase for now)
-  app.post("/api/auth/simple-login", async (req, res) => {
+  app.post("/api/auth/simple-login", async (req: express.Request<{}, {}, EmailLoginRequestBody>, res: express.Response) => {
     try {
       const { email } = req.body;
       
@@ -460,7 +549,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isAdmin: user.isAdmin || false,
         firstName: user.firstName || undefined,
         lastName: user.lastName || undefined,
-        profileImageUrl: user.profileImageUrl || undefined
+        profileImageUrl: user.profileImageUrl || undefined,
+        firebaseUid: user.firebaseUid || null
       };
 
       // Force session save
@@ -493,10 +583,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current session user (for simple auth)
-  app.get("/api/auth/session-user", async (req, res) => {
+  app.get("/api/auth/session-user", async (req: express.Request, res: express.Response) => {
     try {
-      if (req.session && (req.session as any).user) {
-        const sessionUser = (req.session as any).user;
+      if (req.session && req.session.user) {
+        const sessionUser = req.session.user;
         res.json({
           user: sessionUser,
           authenticated: true
@@ -514,10 +604,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current authenticated user (for useAuth hook)
-  app.get("/api/auth/me", async (req, res) => {
+  app.get("/api/auth/me", async (req: express.Request, res: express.Response) => {
     try {
-      if (req.session && (req.session as any).user) {
-        const sessionUser = (req.session as any).user;
+      if (req.session && req.session.user) {
+        const sessionUser = req.session.user;
         
         // Return user data in the format expected by the frontend
         res.json({
@@ -528,9 +618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           subscriptionStatus: sessionUser.subscriptionStatus,
           subscriptionExpiry: sessionUser.subscriptionExpiry,
           isAdmin: sessionUser.isAdmin || false,
-          firstName: sessionUser.firstName,
-          lastName: sessionUser.lastName,
-          profileImageUrl: sessionUser.profileImageUrl
+          firstName: sessionUser.firstName || null,
+          lastName: sessionUser.lastName || null,
+          profileImageUrl: sessionUser.profileImageUrl || null
         });
       } else {
         res.status(401).json({ message: "Not authenticated" });
@@ -541,12 +631,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/patreon-client-id", (req, res) => {
+  app.get("/api/patreon-client-id", (req: express.Request, res: express.Response) => {
     res.json({ clientId: process.env.VITE_PATREON_CLIENT_ID });
   });
 
   // Patreon OAuth endpoint to replace Supabase edge function
-  app.post("/api/patreon-oauth", async (req, res) => {
+  app.post("/api/patreon-oauth", async (req: express.Request<{}, {}, PatreonOAuthRequestBody>, res: express.Response) => {
     try {
       const { code, state, redirectUri } = req.body;
 
@@ -600,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const tokenResult = await tokenResponse.json();
+      const tokenResult = await tokenResponse.json() as any;
 
       // Save tokens to database (optional for now, focusing on client-side flow)
       try {
@@ -636,7 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Patreon token refresh endpoint
-  app.post("/api/patreon-refresh", async (req, res) => {
+  app.post("/api/patreon-refresh", async (req: express.Request<{}, {}, PatreonRefreshRequestBody>, res: express.Response) => {
     try {
       const { refresh_token } = req.body;
 
@@ -682,7 +772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const tokenData = await tokenResponse.json();
+      const tokenData = await tokenResponse.json() as { access_token: string, refresh_token: string, expires_in: number, scope: string, token_type: string };
 
       res.json({
         success: true,
@@ -703,7 +793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get Patreon campaigns (server-side to avoid CORS)
-  app.get('/api/patreon-campaigns', async (req, res) => {
+  app.get('/api/patreon-campaigns', async (req: express.Request, res: express.Response) => {
     try {
       const tokens = await storage.getPatreonTokens();
       if (!tokens) {
@@ -726,7 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(campaignsResponse.status).json({ error: errorText });
       }
 
-      const campaignsData = await campaignsResponse.json();
+      const campaignsData = await campaignsResponse.json() as PatreonResponse<PatreonCampaign>;
       console.log('Campaigns data:', campaignsData);
       
       res.json(campaignsData);
@@ -737,7 +827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get campaign pledges/members (server-side to avoid CORS)
-  app.get('/api/patreon-campaigns/:campaignId/pledges', async (req, res) => {
+  app.get('/api/patreon-campaigns/:campaignId/pledges', async (req: express.Request, res: express.Response) => {
     try {
       const { campaignId } = req.params;
       const { cursor, count = '100' } = req.query;
@@ -768,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(pledgesResponse.status).json({ error: errorText });
       }
 
-      const pledgesData = await pledgesResponse.json();
+      const pledgesData = await pledgesResponse.json() as any;
       console.log('Pledges data sample:', {
         dataCount: pledgesData.data?.length || 0,
         meta: pledgesData.meta
@@ -782,7 +872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Fetch ALL Patreon members with pagination
-  app.get('/api/patreon-campaigns/:campaignId/all-members', async (req, res) => {
+  app.get('/api/patreon-campaigns/:campaignId/all-members', async (req: express.Request, res: express.Response) => {
     try {
       const { campaignId } = req.params;
       const tokens = await storage.getPatreonTokens();
@@ -818,7 +908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
         }
 
-        const data = await response.json();
+        const data = await response.json() as any;
         const members = data.data || [];
         allMembers.push(...members);
         totalFetched += members.length;
@@ -849,7 +939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User management endpoints
-  app.get("/api/users/:id", async (req, res) => {
+  app.get("/api/users/:id", async (req: express.Request, res: express.Response) => {
     try {
       const user = await storage.getUser(req.params.id);
       if (!user) {
@@ -861,7 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+    app.post("/api/users", async (req: express.Request<{}, {}, CreateUserRequestBody>, res: express.Response) => {
     try {
       const user = await storage.createUser(req.body);
       res.status(201).json(user);
@@ -871,7 +961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // VIP Mixes API
-  app.get("/api/vip-mixes", async (req, res) => {
+  app.get("/api/vip-mixes", async (req: express.Request, res: express.Response) => {
     try {
       const mixes = await storage.getAllVipMixes();
       res.json(mixes);
@@ -881,9 +971,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/vip-mixes/:id", async (req, res) => {
+    app.get("/api/vip-mixes/:id", async (req: express.Request<{ id: string }>, res: express.Response) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt((req.params as any).id);
       const mix = await storage.getVipMix(id);
       if (!mix) {
         return res.status(404).json({ error: "Mix not found" });
@@ -895,7 +985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vip-mixes", async (req, res) => {
+  app.post("/api/vip-mixes", async (req: express.Request<{}, {}, CreateVipMixRequestBody>, res: express.Response) => {
     try {
       const validatedData = insertVipMixSchema.parse(req.body);
       const mix = await storage.createVipMix(validatedData);
@@ -906,9 +996,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/vip-mixes/:id", async (req, res) => {
+  app.patch("/api/vip-mixes/:id", async (req: express.Request<{ id: string }, {}, UpdateVipMixRequestBody>, res: express.Response) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt((req.params as any).id);
       const updates = req.body;
       const mix = await storage.updateVipMix(id, updates);
       res.json(mix);
@@ -918,7 +1008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/vip-mixes/bulk-import", async (req, res) => {
+  app.post("/api/vip-mixes/bulk-import", async (req: express.Request<{}, {}, BulkImportMixesRequestBody>, res: express.Response) => {
     try {
       const { mixes } = req.body;
       if (!Array.isArray(mixes) || mixes.length === 0) {
@@ -953,9 +1043,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Download tracking and access control
-  app.post("/api/download/:mixId", async (req, res) => {
+  app.post("/api/download/:mixId", async (req: express.Request<{ mixId: string }, {}, DownloadMixRequestBody>, res: express.Response) => {
     try {
-      const mixId = parseInt(req.params.mixId);
+      const mixId = parseInt(req.params.mixId as string);
       const { userId } = req.body;
 
       if (!userId) {
@@ -1025,7 +1115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mixId,
         ipAddress: req.ip,
         userAgent: req.get('User-Agent')
-      });
+      } as InsertUserDownload);
 
       // Update daily download count
       const today = new Date().toISOString().split('T')[0];
@@ -1065,7 +1155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check download limits
-  app.get("/api/download-limits/:userId", async (req, res) => {
+  app.get("/api/download-limits/:userId", async (req: express.Request, res: express.Response) => {
     try {
       const { userId } = req.params;
       
@@ -1118,7 +1208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Proxy route to stream audio files without exposing external URLs
-  app.get("/api/stream/:mixId", async (req, res) => {
+    app.get("/api/stream/:mixId", async (req: express.Request<{ mixId: string }>, res: express.Response) => {
     try {
       const mixId = parseInt(req.params.mixId);
       console.log(`Stream request for mix ID: ${mixId}`);
@@ -1198,9 +1288,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Proxy route for downloading files without exposing external source
-  app.get("/api/file/:mixId", async (req, res) => {
+  app.get("/api/file/:mixId", async (req: express.Request<{ mixId: string }>, res: express.Response) => {
     try {
-      const mixId = parseInt(req.params.mixId);
+      const mixId = parseInt(req.params.mixId as string);
       const { userId } = req.query;
 
       if (!userId) {
@@ -1369,7 +1459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sync Patreon subscribers
-  app.post("/api/sync-patreon", async (req, res) => {
+  app.post("/api/sync-patreon", async (req: express.Request, res: express.Response) => {
     try {
       console.log("Starting Patreon sync...");
       
@@ -1406,7 +1496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const campaignsData = await campaignResponse.json();
+      const campaignsData = await campaignResponse.json() as any;
       const campaignId = campaignsData.data[0]?.id;
       
       if (!campaignId) {
@@ -1433,7 +1523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const campaignData = await membersResponse.json();
+      const campaignData = await membersResponse.json() as any;
       const members = campaignData.data || [];
 
       syncResults.totalPatrons = members.length;
@@ -1500,7 +1590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sync Buy Me a Coffee supporters
-  app.post("/api/sync-bmac", async (req, res) => {
+  app.post("/api/sync-bmac", async (req: express.Request<{}, {}, SyncBmacRequestBody>, res: express.Response) => {
     try {
       console.log("Starting Buy Me a Coffee sync...");
       
@@ -1783,223 +1873,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sync DigitalOcean Space with database
-  app.post("/api/sync-space", async (req, res) => {
-    try {
-      const { syncSpaceWithDatabase } = await import('./migration-helper');
-      const result = await syncSpaceWithDatabase();
-      res.json({
-        success: true,
-        message: `Found and added ${result.addedMixes.length} new mixes`,
-        newFiles: result.newFiles.length,
-        addedMixes: result.addedMixes.map(mix => ({
-          id: mix.id,
-          title: mix.title,
-          filename: mix.s3Url
-        }))
-      });
-    } catch (error) {
-      console.error('Sync error:', error);
-      res.status(500).json({ 
-        success: false,
-        error: (error as Error).message 
-      });
-    }
-  });
-
-  // Patreon sync endpoint
-  app.post('/api/sync-patreon', async (req, res) => {
-    try {
-      console.log('Starting Patreon sync...');
-      
-      // Get Patreon tokens from database
-      const tokens = await storage.getPatreonTokens();
-      if (!tokens) {
-        return res.status(401).json({
-          success: false,
-          error: 'No Patreon tokens found. Please authenticate first.'
-        });
-      }
-
-      // Fetch all campaign members with pagination
-      let allMembers: any[] = [];
-      let nextCursor: string | null = null;
-      let totalPatrons = 0;
-      let newUsers = 0;
-      let updatedUsers = 0;
-
-      do {
-        const url = new URL('https://www.patreon.com/api/oauth2/v2/campaigns/421011/members');
-        url.searchParams.set('include', 'currently_entitled_tiers,user');
-        url.searchParams.set('fields[member]', 'patron_status,currently_entitled_amount_cents,pledge_relationship_start,last_charge_date,last_charge_status,lifetime_support_cents');
-        url.searchParams.set('fields[user]', 'email,first_name,last_name,full_name,image_url');
-        url.searchParams.set('fields[tier]', 'title,amount_cents');
-        url.searchParams.set('page[count]', '1000');
-        
-        if (nextCursor) {
-          url.searchParams.set('page[cursor]', nextCursor);
-        }
-
-        const response = await fetch(url.toString(), {
-          headers: {
-            'Authorization': `Bearer ${tokens.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Patreon API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        allMembers = allMembers.concat(data.data || []);
-        nextCursor = data.meta?.pagination?.cursors?.next || null;
-        
-        console.log(`Fetched batch: ${data.data?.length || 0} members, Total so far: ${allMembers.length}`);
-      } while (nextCursor);
-
-      totalPatrons = allMembers.length;
-      console.log(`Total Patreon members fetched: ${totalPatrons}`);
-
-      // Process members and sync to database
-      for (const member of allMembers) {
-        try {
-          const userData = member.relationships?.user?.data;
-          const userInfo = member.included?.find((item: any) => item.type === 'user' && item.id === userData?.id);
-          
-          if (!userInfo || !userInfo.attributes?.email) continue;
-
-          const patronData = {
-            id: userInfo.id,
-            email: userInfo.attributes.email,
-            username: userInfo.attributes.full_name || userInfo.attributes.first_name || 'Unknown',
-            subscriptionTier: mapPatreonTier(member.attributes.currently_entitled_amount_cents),
-            subscriptionStatus: member.attributes.patron_status === 'active_patron' ? 'active' : 'inactive',
-            subscriptionSource: 'patreon',
-            subscriptionStartDate: member.attributes.pledge_relationship_start ? new Date(member.attributes.pledge_relationship_start) : null,
-            patreonTier: member.attributes.currently_entitled_amount_cents ? `€${(member.attributes.currently_entitled_amount_cents / 100).toFixed(2)}` : null,
-            preferences: {},
-            lastLoginAt: null
-          };
-
-          // Check if user exists
-          const existingUser = await storage.getUser(userInfo.id);
-          
-          if (existingUser) {
-            await storage.updateUser(userInfo.id, patronData);
-            updatedUsers++;
-          } else {
-            await storage.createUser(patronData);
-            newUsers++;
-          }
-        } catch (memberError) {
-          console.error('Error processing member:', memberError);
-        }
-      }
-
-      res.json({
-        success: true,
-        message: `Patreon sync completed successfully`,
-        totalPatrons,
-        newUsers,
-        updatedUsers
-      });
-
-    } catch (error) {
-      console.error('Patreon sync error:', error);
-      res.status(500).json({
-        success: false,
-        error: (error as Error).message
-      });
-    }
-  });
-
-  // Buy Me a Coffee sync endpoint
-  app.post('/api/sync-bmac', async (req, res) => {
-    try {
-      const { apiKey } = req.body;
-      
-      if (!apiKey) {
-        return res.status(400).json({
-          success: false,
-          error: 'Buy Me a Coffee API key is required'
-        });
-      }
-
-      console.log('Starting Buy Me a Coffee sync...');
-      
-      // Fetch supporters from BMAC API
-      const response = await fetch('https://developers.buymeacoffee.com/api/v1/supporters', {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`BMAC API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const supporters = data.data || [];
-      
-      let totalSupporters = supporters.length;
-      let newUsers = 0;
-      let updatedUsers = 0;
-
-      // Process supporters
-      for (const supporter of supporters) {
-        try {
-          const supporterData = {
-            id: `bmac_${supporter.supporter_name.replace(/\s+/g, '_').toLowerCase()}`,
-            email: supporter.supporter_email || `${supporter.supporter_name.replace(/\s+/g, '_').toLowerCase()}@buymeacoffee.com`,
-            username: supporter.supporter_name,
-            subscriptionTier: mapBmacTier(supporter.total_amount),
-            subscriptionStatus: 'active',
-            subscriptionSource: 'buymeacoffee',
-            subscriptionStartDate: supporter.coffee_bought_on ? new Date(supporter.coffee_bought_on) : null,
-            patreonTier: null,
-            preferences: {},
-            lastLoginAt: null
-          };
-
-          // Check if user exists
-          const existingUser = await storage.getUser(supporterData.id);
-          
-          if (existingUser) {
-            await storage.updateUser(supporterData.id, supporterData);
-            updatedUsers++;
-          } else {
-            await storage.createUser(supporterData);
-            newUsers++;
-          }
-        } catch (supporterError) {
-          console.error('Error processing supporter:', supporterError);
-        }
-      }
-
-      res.json({
-        success: true,
-        message: `Buy Me a Coffee sync completed successfully`,
-        totalSupporters,
-        newUsers,
-        updatedUsers
-      });
-
-    } catch (error) {
-      console.error('BMAC sync error:', error);
-      res.status(500).json({
-        success: false,
-        error: (error as Error).message
-      });
-    }
-  });
-
   app.get("/api/bmac-api-key", (req, res) => {
     res.json({ apiKey: process.env.VITE_BUYMEACOFFEE_API_KEY });
   });
 
-  app.get("/api/track-monitor/current", async (req, res) => {
+  app.get("/api/stats", async (req: Request, res: Response) => {
     try {
       const { channel } = req.query;
       let streamUrl = '';
@@ -2194,26 +2072,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Test connection by attempting to list objects
       const { testSpacesConnection } = await import('./migration-helper');
-      const testResult = await testSpacesConnection();
+      const isConnected = await testSpacesConnection();
       
-      if (testResult.success) {
+      if (isConnected) {
         res.json({
           success: true,
-          message: 'Successfully connected to DigitalOcean Spaces and listed objects.',
-          files: testResult.files
+          message: 'Successfully connected to DigitalOcean Spaces.'
         });
       } else {
         res.status(500).json({
           success: false,
-          error: 'Failed to connect to DigitalOcean Spaces. Check credentials and permissions.',
-          details: testResult.error
+          error: 'Failed to connect to DigitalOcean Spaces. Check credentials and permissions.'
         });
       }
     } catch (error) {
       console.error('Storage test error:', error);
       res.status(500).json({
         success: false,
-        error: (error as Error).message
+        
+  
+  
+  
+  error: (error as Error).message
       });
     }
   });

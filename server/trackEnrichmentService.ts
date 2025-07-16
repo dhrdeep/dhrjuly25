@@ -82,8 +82,7 @@ export class TrackEnrichmentService {
     try {
       const query = encodeURIComponent(`${artist} ${title}`);
       const response = await fetch(
-        `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${query}&api_key=YOUR_LASTFM_KEY&format=json`,
-        { timeout: 5000 }
+        `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${query}&api_key=YOUR_LASTFM_KEY&format=json`
       );
 
       if (!response.ok) return null;
@@ -111,8 +110,7 @@ export class TrackEnrichmentService {
       const response = await fetch(
         `https://api.discogs.com/database/search?q=${query}&type=release&per_page=1`,
         {
-          headers: { 'User-Agent': 'DHR-TrackIdentifier/1.0' },
-          timeout: 5000
+          headers: { 'User-Agent': 'DHR-TrackIdentifier/1.0' }
         }
       );
 
@@ -137,8 +135,7 @@ export class TrackEnrichmentService {
       const response = await fetch(
         `https://musicbrainz.org/ws/2/recording/?query=${query}&fmt=json&limit=1`,
         {
-          headers: { 'User-Agent': 'DHR-TrackIdentifier/1.0' },
-          timeout: 5000
+          headers: { 'User-Agent': 'DHR-TrackIdentifier/1.0' }
         }
       );
 
@@ -153,7 +150,7 @@ export class TrackEnrichmentService {
           // Fetch cover art from Cover Art Archive
           const artResponse = await fetch(
             `https://coverartarchive.org/release/${releaseId}/front`,
-            { timeout: 5000, redirect: 'manual' }
+            { redirect: 'manual' }
           );
           
           if (artResponse.status === 302 || artResponse.status === 307) {
@@ -174,8 +171,7 @@ export class TrackEnrichmentService {
     try {
       const query = encodeURIComponent(`${artist} ${title}`);
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=1&key=${this.youtubeApiKey}`,
-        { timeout: 5000 }
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=1&key=${this.youtubeApiKey}`
       );
 
       if (!response.ok) return null;
@@ -200,8 +196,7 @@ export class TrackEnrichmentService {
       const response = await fetch(
         `https://soundcloud.com/search/sounds?q=${query}`,
         {
-          headers: { 'User-Agent': 'DHR-TrackIdentifier/1.0' },
-          timeout: 5000
+          headers: { 'User-Agent': 'DHR-TrackIdentifier/1.0' }
         }
       );
 

@@ -8,7 +8,7 @@ import { storage } from "./storage"; // Assuming storage has session methods
 import fs from "fs";
 import path from "path";
 
-export function log(message: string, source = "express") {
+export function log(message: string, source = "express"): void {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -19,7 +19,7 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-export function serveStatic(app: Express) {
+export function serveStatic(app: express.Application) {
   const distPath = path.resolve(import.meta.dirname, "public");
 
   if (!fs.existsSync(distPath)) {
@@ -31,7 +31,7 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+    app.use("*", (_req: express.Request, res: express.Response) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
@@ -42,7 +42,7 @@ app.use(express.urlencoded({ extended: false, limit: "100mb" }));
 app.use(cookieParser());
 
 // Custom session middleware
-app.use(async (req: any, res, next) => {
+app.use(async (req, res, next) => {
   const sessionId = req.cookies.session_id;
   let sessionData = {};
 
@@ -50,9 +50,9 @@ app.use(async (req: any, res, next) => {
     sessionData = (await storage.getSession(sessionId)) || {};
   }
 
-  req.session = {
+  (req as any).session = {
     ...sessionData,
-    save: async (callback: (err?: Error) => void) => {
+    save: function(callback?: (err?: Error) => void) {
       const newSessionId = sessionId || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       res.cookie('session_id', newSessionId, {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
@@ -60,21 +60,31 @@ app.use(async (req: any, res, next) => {
         secure: process.env.NODE_ENV === 'production', // Set to true in production with HTTPS
         sameSite: 'lax',
       });
-      await storage.saveSession(newSessionId, req.session);
-      callback();
+      storage.saveSession(newSessionId, (req as any).session).then(() => {
+        if (callback) callback();
+      }).catch(err => {
+        if (callback) callback(err);
+      });
+      return this;
     },
-    destroy: async (callback: (err?: Error) => void) => {
+    destroy: function(callback?: (err?: Error) => void) {
       res.clearCookie('session_id');
       if (sessionId) {
-        await storage.destroySession(sessionId);
+        storage.destroySession(sessionId).then(() => {
+          if (callback) callback();
+        }).catch(err => {
+          if (callback) callback(err);
+        });
+      } else {
+        if (callback) callback();
       }
-      callback();
+      return this;
     },
   };
 
   // Ensure req.session.user is always defined, even if empty
-  if (!req.session.user) {
-    req.session.user = {};
+  if (!(req as any).session.user) {
+    (req as any).session.user = {} as any;
   }
 
   next();
@@ -142,7 +152,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   // It is the only port that is not firewalled.
   const port = process.env.PORT || 5000;
   server.listen({
-    port: Number(port),
+    port: parseInt(String(port)),
     host: "0.0.0.0",
     reusePort: true,
   }, () => {

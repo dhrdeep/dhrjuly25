@@ -9,6 +9,7 @@ import {
   googleAdsConfig,
   googleAdsStats,
   articleComments,
+  sessions,
   type User, 
   type InsertUser,
   type UpsertUser,

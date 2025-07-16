@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "noEmit": false
   },
-  "include": ["server/**/*.ts", "shared/**/*.ts"],
+  "include": ["server/**/*.ts", "shared/**/*.ts", "server/session.d.ts", "server/types/express.d.ts"],
   "exclude": ["node_modules", "client"]
 }

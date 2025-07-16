@@ -79,6 +79,28 @@ export const vipMixes = pgTable("vip_mixes", {
   s3Url: text("s3_url")
 });
 
+export interface CreateVipMixRequestBody {
+  id?: number; // Optional, as it's auto-generated
+  title: string;
+  artist: string;
+  genre?: string;
+  duration?: string;
+  fileSize?: string;
+  filePath?: string;
+  downloadUrl?: string;
+  streamUrl?: string;
+  artworkUrl?: string;
+  description?: string;
+  rating?: number;
+  totalDownloads?: number;
+  isExclusive?: boolean;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  tags?: string;
+  s3Url?: string;
+}
+
 export const userDownloads = pgTable("user_downloads", {
   id: serial("id").primaryKey(),
   userId: text("user_id").notNull(),
@@ -157,7 +179,9 @@ export const articleComments = pgTable("article_comments", {
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
-export const insertUserSchema = createInsertSchema(users);
+export const insertUserSchema = createInsertSchema(users, {
+  id: z.string().optional(), // Make id optional for insertion
+});
 export const insertPatreonTokenSchema = createInsertSchema(patreonTokens);
 export const insertVipMixSchema = createInsertSchema(vipMixes);
 export const insertUserDownloadSchema = createInsertSchema(userDownloads);

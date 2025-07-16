@@ -1,9 +1,6 @@
 name: dhr-7
 services:
   - name: web
-    build_command: |
-      npm install
-      npm run build:server
     dockerfile_path: Dockerfile
     source_dir: .
     github:

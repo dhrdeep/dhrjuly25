@@ -161,8 +161,7 @@ class RSSService {
       const response = await fetch(feed.url, {
         headers: {
           'User-Agent': 'Deep House Radio RSS Reader/1.0'
-        },
-        timeout: 10000
+        }
       });
 
       if (!response.ok) {
@@ -186,19 +185,23 @@ class RSSService {
       }
 
       const rssItems = items
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
           const dateA = new Date(a.pubDate || a.published || 0);
           const dateB = new Date(b.pubDate || b.published || 0);
           return dateB.getTime() - dateA.getTime();
         })
         .slice(0, 3) // Take only 3 newest items per feed
-        .map(item => this.parseRSSItem(item, feed.name))
-        .filter(item => item.title && item.link);
+        .map((item: any) => this.parseRSSItem(item, feed.name))
+        .filter((item: RSSItem) => item.title && item.link);
 
       console.log(`✅ Fetched ${rssItems.length} items from ${feed.name}`);
       return rssItems;
-    } catch (error) {
-      console.error(`❌ Error fetching ${feed.name}:`, error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(`❌ Error fetching ${feed.name}:`, error.message);
+      } else {
+        console.error(`❌ An unknown error occurred while fetching ${feed.name}`);
+      }
       return [];
     }
   }
@@ -236,7 +239,7 @@ class RSSService {
 
     // Sort by publication date (newest first) and limit to 100 items
     return uniqueItems
-      .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
+      .sort((a: RSSItem, b: RSSItem) => b.pubDate.getTime() - a.pubDate.getTime())
       .slice(0, 100);
   }
 

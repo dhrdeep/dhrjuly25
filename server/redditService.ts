@@ -30,6 +30,37 @@ const REDDIT_FEEDS = [
   'aves'
 ];
 
+interface RedditApiChildData {
+  id: string;
+  title: string;
+  url: string;
+  author: string;
+  score: number;
+  num_comments: number;
+  subreddit: string;
+  created_utc: number;
+  selftext: string;
+  permalink: string;
+  thumbnail?: string;
+  preview?: {
+    images?: {
+      source?: {
+        url: string;
+      };
+    }[];
+  };
+}
+
+interface RedditApiChild {
+  data: RedditApiChildData;
+}
+
+interface RedditApiResponse {
+  data: {
+    children: RedditApiChild[];
+  };
+}
+
 class RedditService {
   private cache: Map<string, { posts: RedditPost[], lastFetch: Date }>;
   private cacheDuration = 15 * 60 * 1000; // 15 minutes
@@ -52,7 +83,7 @@ class RedditService {
     return undefined;
   }
 
-  private parseRedditPost(postData: any): RedditPost {
+  private parseRedditPost(postData: { data: any }): RedditPost {
     const data = postData.data;
     return {
       id: data.id,
@@ -77,15 +108,13 @@ class RedditService {
       const response = await fetch(`https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`, {
         headers: {
           'User-Agent': 'Deep House Radio Bot/1.0'
-        },
-        timeout: 10000
-      });
+        });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as RedditApiResponse;
       const posts = data.data?.children || [];
       
       const redditPosts = posts
@@ -111,8 +140,12 @@ class RedditService {
 
       console.log(`✅ Fetched ${redditPosts.length} relevant posts from r/${subreddit}`);
       return redditPosts;
-    } catch (error) {
-      console.error(`❌ Error fetching r/${subreddit}:`, error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(`❌ Error fetching r/${subreddit}:`, error.message);
+      } else {
+        console.error(`❌ An unknown error occurred while fetching r/${subreddit}`);
+      }
       return [];
     }
   }

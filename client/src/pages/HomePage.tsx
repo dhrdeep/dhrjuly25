@@ -30,7 +30,9 @@ import {
 } from 'lucide-react';
 import ScrollingNewsBanner from '../components/ScrollingNewsBanner';
 import SharedBackground from '../components/SharedBackground';
-import FeaturedDJSets from '../components/FeaturedDJSets';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+
+const FeaturedDJSets = lazy(() => import('../components/FeaturedDJSets'));
 
 const DHR_LOGO_URL = 'https://static.wixstatic.com/media/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png/v1/fill/w_292,h_292,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/da966a_f5f97999e9404436a2c30e3336a3e307~mv2.png';
 
@@ -715,7 +717,9 @@ const HomePage: React.FC = () => {
       {/* Featured DJ Sets Section */}
       <section className="relative z-10 py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <FeaturedDJSets maxSets={6} showTitle={true} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <FeaturedDJSets maxSets={6} showTitle={true} />
+          </Suspense>
         </div>
       </section>
 

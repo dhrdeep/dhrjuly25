@@ -157,8 +157,7 @@ class StreamMonitor {
       const response = await fetch(`https://${this.host}${uri}`, {
         method: 'POST',
         body: formData,
-        headers: formData.getHeaders(),
-        timeout: 10000
+        headers: formData.getHeaders()
       });
 
       if (!response.ok) {
